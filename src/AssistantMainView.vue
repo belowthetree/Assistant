@@ -2,28 +2,68 @@
 import { invoke } from "@tauri-apps/api/core";
 import { ref } from "vue";
 import { inputCommand } from "./lib/llm_interface";
+import { ask, confirm } from "@tauri-apps/plugin-dialog";
+
+const models = [
+	"qwen2.5-coder:1.5b",
+	"qwen2.5-coder:latest",
+	"qwq:latest",
+]
 
 const cmdInput = ref("")
 const response = ref("")
+const model = ref("qwen2.5-coder:1.5b")
 
 async function commitCommand() {
-    response.value = ""
-    response.value = await inputCommand("qwen2.5-coder:1.5b", cmdInput.value)
-    invoke("open_app", {name: "notepad"}).then((e)=>{
-      console.log(e)
-    })
+	const res = await inputCommand(model.value, cmdInput.value)
+    response.value = "回答：" + res
+	console.log(response.value)
+	const js = JSON.parse(res)
+	if (js.function && js.function.length > 0) {
+		let arr = []
+		for (let i = 0;i < js.function.length; ++i) {
+			const param = {}
+			for (let p in js.function[i].parameter) {
+				const t = js.function[i].parameter[p]
+				param[t.name] = t.value
+			}
+			arr.push({
+				name: js.function[i].name,
+				param: param,
+			})
+		}
+		ask('是否执行：' + res,  {
+			title: "确认命令",
+			kind: "warning",
+		}).then((res)=>{
+			if (res) {
+				console.log("准备执行", arr)
+				for (let idx in arr) {
+					const v = arr[idx]
+					console.log(v.name, v.param)
+					invoke(v.name, v.param)
+				}
+			}
+		})
+	}
 }
 
 </script>
 
 <template>
     <main class="container">
-        <h1>LLM 快捷指令转义</h1>
+        <h1>LLM 快捷指令</h1>
 
+        <div class="row">
+			<select name="model" id="select-model" v-model="model">
+				<option v-for="name in models" :value="name">{{ name }}</option>
+			</select>
+			<p>{{ model }}</p>
+        </div>
         <div class="row">
             <form class="row" @submit.prevent="commitCommand">
                 <input id="cmd-input" v-model="cmdInput" placeholder="输入指令"/>
-                <button type="submit">Greet</button>
+                <button type="submit">提交</button>
             </form>
         </div>
         <p>{{ response }}</p>
@@ -65,6 +105,7 @@ h1 {
   justify-content: center;
 }
 
+select,
 input,
 button {
   border-radius: 8px;
@@ -91,6 +132,7 @@ button:active {
   background-color: #e8e8e8;
 }
 
+select,
 input,
 button {
   outline: none;
@@ -98,6 +140,10 @@ button {
 
 #cmd-input {
   margin-right: 5px;
+}
+
+#select-model {
+  margin: 5px;
 }
 
 @media (prefers-color-scheme: dark) {

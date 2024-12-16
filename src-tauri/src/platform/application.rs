@@ -1,11 +1,11 @@
 use std::process::Command;
 
 #[tauri::command]
-pub fn open_app(name: &str) -> Result<String, String> {
+pub fn exec_cmd(cmd: &str) -> Result<String, String> {
     let status;
     if cfg!(target_os = "windows") {
-        let cmd = format!("{}", name);
-        status = Command::new("cmd").args(&["/c", &cmd]).spawn()
+        let newcmd = format!("{}", cmd);
+        status = Command::new("cmd").args(&["/c", &newcmd]).spawn()
     } else {
         println!("不支持的系统");
         return Err("不支持的系统".into());

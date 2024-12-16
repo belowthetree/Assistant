@@ -1,2 +1,2 @@
 mod application;
-pub use application::open_app;
+pub use application::exec_cmd;
