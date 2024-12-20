@@ -1,23 +1,49 @@
 <script setup>
 import { invoke } from "@tauri-apps/api/core";
 import { ref } from "vue";
-import { inputCommand } from "./lib/llm_interface";
+import { chat_with_tool, inputCommand, generate_instructions, generate } from "./lib/llm_interface";
 import { ask, confirm } from "@tauri-apps/plugin-dialog";
+import { CommandProcess } from "./frontend/command_process";
 
 const models = [
 	"qwen2.5-coder:1.5b",
 	"qwen2.5-coder:latest",
+	"deepseek-coder-v2:latest",
 	"qwq:latest",
 ]
 
 const cmdInput = ref("")
+const commandInput = ref("")
 const response = ref("")
 const model = ref("qwen2.5-coder:1.5b")
+var commands = []
+const output = ref("")
+var ps = new CommandProcess(model.value)
 
 async function commitCommand() {
-	const res = await inputCommand(model.value, cmdInput.value)
+	ps.model = model.value
+	ps.inputQuestion(cmdInput.value)
+	// const res = await generate_instructions(model.value, cmdInput.value)
+    // response.value = "回答：" + res
+	// console.log(response.value)
+	// const js = JSON.parse(res)
+	// commands = js.instructions
+	// output.value = ""
+	// processCommand(res)
+}
+
+async function commitCommandRaw() {
+	const res = await generate(model.value, commandInput.value)
     response.value = "回答：" + res
 	console.log(response.value)
+}
+
+async function invokeCommand() {
+	const res = await ps.invokeCommand()
+	console.log(res)
+}
+
+function processCommand(res) {
 	const js = JSON.parse(res)
 	if (js.function && js.function.length > 0) {
 		let arr = []
@@ -32,7 +58,7 @@ async function commitCommand() {
 				param: param,
 			})
 		}
-		ask('是否执行：' + res,  {
+		ask('是否执行：' + res, {
 			title: "确认命令",
 			kind: "warning",
 		}).then((res)=>{
@@ -54,11 +80,19 @@ async function commitCommand() {
     <main class="container">
         <h1>LLM 快捷指令</h1>
 
+		<div>
+			<p>{{ model }}</p>
+		</div>
         <div class="row">
 			<select name="model" id="select-model" v-model="model">
 				<option v-for="name in models" :value="name">{{ name }}</option>
 			</select>
-			<p>{{ model }}</p>
+        </div>
+        <div class="row">
+            <form class="row" @submit.prevent="commitCommandRaw">
+                <input id="chat-input" v-model="commandInput" placeholder="输入指令"/>
+                <button type="submit">提交</button>
+            </form>
         </div>
         <div class="row">
             <form class="row" @submit.prevent="commitCommand">
@@ -67,6 +101,7 @@ async function commitCommand() {
             </form>
         </div>
         <p>{{ response }}</p>
+		<button @click="invokeCommand">下个命令</button>
     </main>
 </template>
 
