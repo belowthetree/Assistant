@@ -33,7 +33,7 @@ export class CommandProcess {
                 this.commands = js.instructions
                 for (let cmd of this.commands.values()) {
                     for (let ins of Instructions.values()) {
-                        if (ins.Desc.name == cmd) {
+                        if (ins.Desc.ability == cmd) {
                             console.log(cmd, ins.name)
                             this.commandToFunc.set(cmd, ins.name)
                         }

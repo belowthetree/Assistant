@@ -82,36 +82,43 @@ export async function inputCommand(model: string, desc: string) {
         return "";
 }
 
-export async function generate(model: string, ctx: string, stream?: boolean) {
+export async function generate(model: string, ctx: string, stream?: boolean, system?: string, format?:any, temperature?:number) {
     console.log(model, ctx)
-    let v = await fetch("http://127.0.0.1:11434/api/generate", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
+    let body;
+    if (format) {
+        body = {
             "model": model,
             "prompt": ctx,
             "stream": stream || false,
             "options": {
                 "temperature": 0,
             },
-            "format": {
-                "type": "object",
-                "properties": {
-                    "result": {
-                        "type": "string"
-                    }
-                }
-            }
-        })
+            "system": system || "",
+        }
+    } else {
+        body = {
+            "model": model,
+            "prompt": ctx,
+            "stream": stream || false,
+            "options": {
+                "temperature": temperature || 0,
+            },
+            format : format,
+            "system": system || "",
+        }
+    }
+    let v = await fetch("http://127.0.0.1:11434/api/generate", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
     })
 
     console.log(v)
 
     if (v.status == 200){
         let t = await v.text()
-        console.log(t)
         return JSON.parse(t).response
     }
     return ""

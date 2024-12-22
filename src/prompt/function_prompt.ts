@@ -25,17 +25,16 @@ export const execCmd = {
     "name": "execCmd",
     "Desc":
     {
-        // "ignore": "exec_cmd",
-        "name": "执行控制台命令",
+        "ability": "执行控制台命令",
         "parameters": {
             "type": "object",
             "properties": {
-                "cmd": {
+                "arg": {
                     "type": "string",
                     "description": "The command to execute, e.g. 'ls -la'"
                 }
             },
-            "required": ["cmd"]
+            "required": ["arg"]
         }
     }
 }
@@ -45,17 +44,16 @@ export const openApp = {
     "name": "open_app_by_shortcut",
     "Desc":
     {
-        // "ignore": "open_app",
-        "name": "通过名字打开应用",
+        "ability": "通过名字打开应用",
         "parameters": {
             "type": "object",
             "properties": {
-                "name": {
+                "arg": {
                     "type": "string",
                     "description": "The name of the application to open"
                 }
             },
-            "required": ["name"]
+            "required": ["arg"]
         }
     }
 }
@@ -64,12 +62,34 @@ export const getAllAppNames = {
     "name": "get_all_app_names",
     "Desc":
     {
-        // "ignore": "get_all_apps_name",
-        "name": "获取所有应用名字",
+        "ability": "获取所有应用名字",
         "parameters": {
             "type": "object",
             "properties": {},
             "required": []
+        }
+    }
+}
+
+export const askWindow = 
+{
+    "name": "ask_window",
+    "Desc":
+    {
+        "ability": "打开一个提问窗口通知用户",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "msg": {
+                    "type": "string",
+                    "description": "The message to display in the window"
+                },
+                "title": {
+                    "type": "string",
+                    "description": "The title of the window"
+                }
+            },
+            "required": ["app", "msg", "title"]
         }
     }
 }
@@ -79,4 +99,5 @@ export const Instructions =
     execCmd,
     openApp,
     getAllAppNames,
+    askWindow,
 ]

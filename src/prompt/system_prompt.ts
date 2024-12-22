@@ -17,9 +17,9 @@ export const SystemPrompt: string = `
 export const Instructions =
 `{
     "instructions": [
-        "${getAllAppNames.Desc.name}",
-        "${execCmd.Desc.name}",
-        "${openApp.Desc.name}"
+        "${getAllAppNames.Desc.ability}",
+        "${execCmd.Desc.ability}",
+        "${openApp.Desc.ability}"
     ]
 }`
 

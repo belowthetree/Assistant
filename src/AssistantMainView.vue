@@ -4,6 +4,8 @@ import { ref } from "vue";
 import { chat_with_tool, inputCommand, generate_instructions, generate } from "./lib/llm_interface";
 import { ask, confirm } from "@tauri-apps/plugin-dialog";
 import { CommandProcess } from "./frontend/command_process";
+import { TypescriptProcess } from "./frontend/typescript_process";
+import { ECmdMode } from "./frontend/frontenddata";
 
 const models = [
 	"qwen2.5-coder:1.5b",
@@ -13,34 +15,38 @@ const models = [
 ]
 
 const cmdInput = ref("")
-const commandInput = ref("")
+const tsInput = ref("")
 const response = ref("")
 const model = ref("qwen2.5-coder:1.5b")
+const cmdMode = ECmdMode.TypescriptCode
 var commands = []
 const output = ref("")
 var ps = new CommandProcess(model.value)
 
 async function commitCommand() {
-	ps.model = model.value
-	ps.inputQuestion(cmdInput.value)
-	// const res = await generate_instructions(model.value, cmdInput.value)
-    // response.value = "回答：" + res
-	// console.log(response.value)
-	// const js = JSON.parse(res)
-	// commands = js.instructions
-	// output.value = ""
-	// processCommand(res)
+	switch (cmdMode) {
+		case ECmdMode.CommandSequence:
+			break
+		case ECmdMode.TypescriptCode:
+			const ps = new TypescriptProcess(model.value, cmdInput.value)
+			break
+	}
 }
 
 async function commitCommandRaw() {
 	const res = await generate(model.value, commandInput.value)
-    response.value = "回答：" + res
+		response.value = "回答：" + res
 	console.log(response.value)
 }
 
 async function invokeCommand() {
 	const res = await ps.invokeCommand()
 	console.log(res)
+}
+
+async function committs() {
+	const ts = new TypescriptProcess(model.value)
+	ts.inputQuestion(tsInput.value)
 }
 
 function processCommand(res) {
@@ -77,127 +83,126 @@ function processCommand(res) {
 </script>
 
 <template>
-    <main class="container">
-        <h1>LLM 快捷指令</h1>
+		<main class="container">
+				<h1>LLM 快捷指令</h1>
 
 		<div>
 			<p>{{ model }}</p>
 		</div>
-        <div class="row">
+		<div class="row">
 			<select name="model" id="select-model" v-model="model">
 				<option v-for="name in models" :value="name">{{ name }}</option>
 			</select>
-        </div>
-        <div class="row">
-            <form class="row" @submit.prevent="commitCommandRaw">
-                <input id="chat-input" v-model="commandInput" placeholder="输入指令"/>
-                <button type="submit">提交</button>
-            </form>
-        </div>
-        <div class="row">
-            <form class="row" @submit.prevent="commitCommand">
-                <input id="cmd-input" v-model="cmdInput" placeholder="输入指令"/>
-                <button type="submit">提交</button>
-            </form>
-        </div>
-        <p>{{ response }}</p>
+		</div>
+		<div class="row">
+			<select name="cmdMode" id="select-mode" v-model="cmdMode">
+				<option v-for="name in ECmdMode" :value="name">{{ name }}</option>
+			</select>
+		</div>
+		<div class="row">
+			<form class="row" @submit.prevent="commitCommand">
+					<input id="cmd-input" v-model="cmdInput" placeholder="输入指令"/>
+					<button type="submit">提交</button>
+			</form>
+		</div>
+		<p>{{ response }}</p>
 		<button @click="invokeCommand">下个命令</button>
-    </main>
+		</main>
 </template>
 
 <style>
 .container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
+	margin: 0;
+	padding-top: 10vh;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	text-align: center;
 }
 
 :root {
-    font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-    font-size: 16px;
-    line-height: 24px;
-    font-weight: 400;
+		font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+		font-size: 16px;
+		line-height: 24px;
+		font-weight: 400;
 
-    color: #0f0f0f;
-    background-color: #f6f6f6;
+		color: #0f0f0f;
+		background-color: #f6f6f6;
 
-    font-synthesis: none;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-text-size-adjust: 100%;
+		font-synthesis: none;
+		text-rendering: optimizeLegibility;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+		-webkit-text-size-adjust: 100%;
 }
 
 h1 {
-    text-align: center;
+		text-align: center;
 }
 
 .row {
-  display: flex;
-  justify-content: center;
+	display: flex;
+	justify-content: center;
 }
 
 select,
 input,
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+	border-radius: 8px;
+	border: 1px solid transparent;
+	padding: 0.6em 1.2em;
+	font-size: 1em;
+	font-weight: 500;
+	font-family: inherit;
+	color: #0f0f0f;
+	background-color: #ffffff;
+	transition: border-color 0.25s;
+	box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
 }
 
 button {
-  cursor: pointer;
+	cursor: pointer;
 }
 
 button:hover {
-  border-color: #396cd8;
+	border-color: #396cd8;
 }
 button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
+	border-color: #396cd8;
+	background-color: #e8e8e8;
 }
 
 select,
 input,
 button {
-  outline: none;
+	outline: none;
 }
 
 #cmd-input {
-  margin-right: 5px;
+	margin-right: 5px;
 }
 
 #select-model {
-  margin: 5px;
+	margin: 5px;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
+	:root {
+		color: #f6f6f6;
+		background-color: #2f2f2f;
+	}
 
-  a:hover {
-    color: #24c8db;
-  }
+	a:hover {
+		color: #24c8db;
+	}
 
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
-  }
+	input,
+	button {
+		color: #ffffff;
+		background-color: #0f0f0f98;
+	}
+	button:active {
+		background-color: #0f0f0f69;
+	}
 }
 </style>

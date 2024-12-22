@@ -19,6 +19,7 @@ pub fn run() {
             open_app_by_name,
             get_all_app_names,
             open_app_by_shortcut,
+            ask_window,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
