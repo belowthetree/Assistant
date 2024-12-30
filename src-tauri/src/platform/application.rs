@@ -1,6 +1,6 @@
+use lnk_parser::{self, LNKParser};
 use std::process::Command;
 use walkdir::WalkDir;
-use lnk_parser::{self, LNKParser};
 
 #[tauri::command]
 pub fn exec_cmd(arg: &str) -> Result<String, String> {
@@ -21,7 +21,7 @@ pub fn exec_cmd(arg: &str) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn open_app_by_shortcut(arg: &str)-> Result<String, String> {
+pub fn open_app_by_shortcut(arg: &str) -> Result<String, String> {
     let status;
     let path = get_path_by_app_name(arg);
     if path.is_err() {
@@ -55,7 +55,7 @@ pub fn open_app_by_shortcut(arg: &str)-> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn open_app_by_name(arg: &str)-> Result<String, String> {
+pub fn open_app_by_name(arg: &str) -> Result<String, String> {
     let status;
     if cfg!(target_os = "windows") {
         let newcmd = format!("start {}", arg);
@@ -73,16 +73,18 @@ pub fn open_app_by_name(arg: &str)-> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn get_all_app_names()->String {
+pub fn get_all_app_names() -> String {
     if cfg!(target_os = "windows") {
-        let mut  res: Vec<String> = Vec::new();
-        for entry in WalkDir::new("C:/Users/ZGG/AppData/Roaming/Microsoft/Windows/Start Menu/Programs")
-            .follow_links(false)
-            .into_iter()
-            .filter_map(|e| e.ok()) {
-                if entry.metadata().is_ok() && entry.metadata().unwrap().is_file() {
-                    res.push(entry.file_name().to_str().unwrap().into());
-                }
+        let mut res: Vec<String> = Vec::new();
+        for entry in
+            WalkDir::new("C:/Users/ZGG/AppData/Roaming/Microsoft/Windows/Start Menu/Programs")
+                .follow_links(false)
+                .into_iter()
+                .filter_map(|e| e.ok())
+        {
+            if entry.metadata().is_ok() && entry.metadata().unwrap().is_file() {
+                res.push(entry.file_name().to_str().unwrap().into());
+            }
         }
         serde_json::to_string(&res).unwrap()
     } else {
@@ -91,17 +93,19 @@ pub fn get_all_app_names()->String {
     }
 }
 
-pub fn get_path_by_app_name(arg: &str)->Result<String, String> {
+pub fn get_path_by_app_name(arg: &str) -> Result<String, String> {
     if cfg!(target_os = "windows") {
-        for entry in WalkDir::new("C:/Users/ZGG/AppData/Roaming/Microsoft/Windows/Start Menu/Programs")
-            .follow_links(false)
-            .into_iter()
-            .filter_map(|e| e.ok()) {
-                if entry.metadata().is_ok() && entry.metadata().unwrap().is_file() {
-                    if entry.file_name().to_str().unwrap() == arg {
-                        return Ok(entry.path().to_str().unwrap().into());
-                    }
+        for entry in
+            WalkDir::new("C:/Users/ZGG/AppData/Roaming/Microsoft/Windows/Start Menu/Programs")
+                .follow_links(false)
+                .into_iter()
+                .filter_map(|e| e.ok())
+        {
+            if entry.metadata().is_ok() && entry.metadata().unwrap().is_file() {
+                if entry.file_name().to_str().unwrap() == arg {
+                    return Ok(entry.path().to_str().unwrap().into());
                 }
+            }
         }
         Err(arg.to_string() + "未找到 app 文件")
     } else {

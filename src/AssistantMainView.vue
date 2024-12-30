@@ -3,89 +3,55 @@ import { invoke } from "@tauri-apps/api/core";
 import { ref } from "vue";
 import { chat_with_tool, inputCommand, generate_instructions, generate } from "./lib/llm_interface";
 import { ask, confirm } from "@tauri-apps/plugin-dialog";
-import { CommandProcess } from "./frontend/command_process";
 import { TypescriptProcess } from "./frontend/typescript_process";
 import { ECmdMode } from "./frontend/frontenddata";
 
 const models = [
-	"qwen2.5-coder:1.5b",
 	"qwen2.5-coder:latest",
 	"deepseek-coder-v2:latest",
+	"deepseek",
 	"qwq:latest",
 ]
 
 const cmdInput = ref("")
-const tsInput = ref("")
 const response = ref("")
-const model = ref("qwen2.5-coder:1.5b")
+const indexInput = ref("")
+const model = ref("qwen2.5-coder:latest")
 const cmdMode = ECmdMode.TypescriptCode
+var modeSelect = "TypescriptCode"
 var commands = []
 const output = ref("")
-var ps = new CommandProcess(model.value)
+var ps = new TypescriptProcess(model.value)
 
 async function commitCommand() {
-	switch (cmdMode) {
+	console.log(modeSelect)
+	ps.model = model.value
+	switch (modeSelect) {
 		case ECmdMode.CommandSequence:
+			{
+				console.log('sequence')
+				ps.generateCommands(cmdInput.value)
+			}
 			break
 		case ECmdMode.TypescriptCode:
-			const ps = new TypescriptProcess(model.value, cmdInput.value)
+			ps.inputQuestion(cmdInput.value)
 			break
 	}
-}
-
-async function commitCommandRaw() {
-	const res = await generate(model.value, commandInput.value)
-		response.value = "回答：" + res
-	console.log(response.value)
 }
 
 async function invokeCommand() {
-	const res = await ps.invokeCommand()
-	console.log(res)
+	ps.nextCommand()
 }
 
-async function committs() {
-	const ts = new TypescriptProcess(model.value)
-	ts.inputQuestion(tsInput.value)
-}
-
-function processCommand(res) {
-	const js = JSON.parse(res)
-	if (js.function && js.function.length > 0) {
-		let arr = []
-		for (let i = 0;i < js.function.length; ++i) {
-			const param = {}
-			for (let p in js.function[i].parameter) {
-				const t = js.function[i].parameter[p]
-				param[t.name] = t.value
-			}
-			arr.push({
-				name: js.function[i].name,
-				param: param,
-			})
-		}
-		ask('是否执行：' + res, {
-			title: "确认命令",
-			kind: "warning",
-		}).then((res)=>{
-			if (res) {
-				console.log("准备执行", arr)
-				for (let idx in arr) {
-					const v = arr[idx]
-					console.log(v.name, v.param)
-					invoke(v.name, v.param)
-				}
-			}
-		})
-	}
+function setIndex() {
+	ps.index = indexInput.value
 }
 
 </script>
 
 <template>
-		<main class="container">
-				<h1>LLM 快捷指令</h1>
-
+	<main class="container">
+		<h1>LLM 快捷指令</h1>
 		<div>
 			<p>{{ model }}</p>
 		</div>
@@ -95,19 +61,25 @@ function processCommand(res) {
 			</select>
 		</div>
 		<div class="row">
-			<select name="cmdMode" id="select-mode" v-model="cmdMode">
-				<option v-for="name in ECmdMode" :value="name">{{ name }}</option>
+			<select name="cmdMode" id="select-mode" v-model="modeSelect">
+				<option v-for="(name, v) in ECmdMode" :value="v">{{ v }}</option>
 			</select>
 		</div>
 		<div class="row">
 			<form class="row" @submit.prevent="commitCommand">
-					<input id="cmd-input" v-model="cmdInput" placeholder="输入指令"/>
-					<button type="submit">提交</button>
+				<input class="cmd-input" v-model="cmdInput" placeholder="输入指令"/>
+				<button type="submit">提交</button>
 			</form>
 		</div>
 		<p>{{ response }}</p>
-		<button @click="invokeCommand">下个命令</button>
-		</main>
+		<div class="row">
+			<form class="row" @submit.prevent="setIndex">
+				<input class="cmd-input" v-model="indexInput" placeholder="输入命令下标"/>
+				<button type="submit">提交</button>
+			</form>
+			<button @click="invokeCommand">下个命令</button>
+		</div>
+	</main>
 </template>
 
 <style>
@@ -178,7 +150,7 @@ button {
 	outline: none;
 }
 
-#cmd-input {
+.cmd-input {
 	margin-right: 5px;
 }
 

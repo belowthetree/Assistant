@@ -82,10 +82,11 @@ export async function inputCommand(model: string, desc: string) {
         return "";
 }
 
-export async function generate(model: string, ctx: string, stream?: boolean, system?: string, format?:any, temperature?:number) {
+export async function generate(model: string, ctx: string, stream?: boolean, system?: string, format?:string, temperature?:number) {
     console.log(model, ctx)
     let body;
-    if (format) {
+    if (!format) {
+        console.log("No format")
         body = {
             "model": model,
             "prompt": ctx,
@@ -121,6 +122,8 @@ export async function generate(model: string, ctx: string, stream?: boolean, sys
         let t = await v.text()
         return JSON.parse(t).response
     }
+    let t = await v.text()
+    console.log(t)
     return ""
 }
 
