@@ -35,8 +35,6 @@
     },
     "http:allow-fetch",
     "http:allow-fetch-send",
-    "dialog:default",
-    "fs:allow-read-text-file",
-    "fs:allow-resource-read-recursive"
+    "dialog:default"
   ]
 }

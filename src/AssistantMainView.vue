@@ -36,6 +36,19 @@ async function commitCommand() {
 		case ECmdMode.TypescriptCode:
 			ps.inputQuestion(cmdInput.value)
 			break
+		case ECmdMode.Exec:
+			try {
+				ps.generateModule(cmdInput.value)
+			}
+			catch (e) {
+				if (e instanceof Error) {
+					console.log(e.stack)
+				}
+				else {
+					console.log(e)
+				}
+			}
+			break
 	}
 }
 

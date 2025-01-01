@@ -1,8 +1,9 @@
 import { DeepSeek } from "../lib/deepseek"
 import { generate } from "../lib/llm_interface"
+import { ModulePrompt } from "../prompt/module_prompt"
 import { TsCommandPrompt, TsPrompt } from "../prompt/typescript_prompt"
-import { invoke } from "@tauri-apps/api/core"
-import { fetch} from "@tauri-apps/plugin-http"
+import { BaseDirectory, writeTextFile } from "@tauri-apps/plugin-fs"
+import {path} from "@tauri-apps/api"
 
 enum EProcessMode
 {
@@ -46,11 +47,19 @@ export class TypescriptProcess {
             e = e.trim()
             console.log(e)
             try {
-                new Function('invoke', 'fetch', e)(invoke, fetch)
+                // new Function('invoke', 'fetch', e)(invoke, fetch)
             }
             catch (e) {
-                console.error(e)
-                this.errorInfo = e as string
+                let errorInfo = ""
+                if (e instanceof Error) {
+                    console.log(e.stack)
+                    errorInfo = e.stack || ""
+                }
+                else {
+                    console.error(e)
+                    errorInfo = e as string
+                }
+                this.errorInfo = errorInfo
                 this.requestion()
             }
         }
@@ -71,11 +80,19 @@ export class TypescriptProcess {
             // e = e.replace(new RegExp("const", 'g'), "let")
             // console.log(e)
             try {
-                new Function('invoke', e)(invoke)
+                // new Function('invoke', e)(invoke)
             }
             catch (e) {
-                console.error(e)
-                this.errorInfo = e as string
+                let errorInfo = ""
+                if (e instanceof Error) {
+                    console.log(e.stack)
+                    errorInfo = e.stack || ""
+                }
+                else {
+                    console.error(e)
+                    errorInfo = e as string
+                }
+                this.errorInfo = errorInfo
                 this.requestion()
             }
         }
@@ -83,14 +100,13 @@ export class TypescriptProcess {
     }
 
     async generateCode(ctx:string):Promise<string> {
-        let res = await this.generate(this.model, ctx, false, TsPrompt, 0)
+        let res = await this.generate(this.model, ctx, false, ModulePrompt, 0)
         // this.deepseek.generate(this.answer + "报错：" + this.errorInfo + "。请重新给出答案", 2, TsPrompt).then(handle)
         // this.deepseek.generate(this.question, 1, TsPrompt).then(handle)
 
         res = res.replace("\`\`\`typescript", "")
         res = res.replace("\`\`\`", "")
         res = res.trim()
-        console.log(res)
         return res
     }
 
@@ -130,5 +146,41 @@ export class TypescriptProcess {
         }
         else
             return generate(model, ctx, stream, system, undefined, temperature)
+    }
+
+    async generateModule(question: string) {
+        if (this.waiting)
+            return
+        this.mode = EProcessMode.Direct
+        console.log("inputQuestion", question)
+        this.waiting = true
+        this.question = question
+        const p = await path.resolve("test.ts")
+        const handle = async (e:string)=>{
+            this.waiting = false
+            this.answer = e
+            e = e.replace("\`\`\`typescript", "")
+            e = e.replace("\`\`\`", "")
+            e = e.trim()
+            console.log(e)
+            try {
+                await writeTextFile(p, e, {baseDir: BaseDirectory.Public})
+            }
+            catch (e) {
+                let errorInfo = ""
+                if (e instanceof Error) {
+                    console.log(e.stack)
+                    errorInfo = e.stack || ""
+                }
+                else {
+                    console.error(e)
+                    errorInfo = e as string
+                }
+                this.errorInfo = errorInfo
+            }
+        }
+        this.generateCode(this.question).then(handle).then(()=>{
+            
+        })
     }
 }

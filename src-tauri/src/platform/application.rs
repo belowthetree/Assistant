@@ -3,37 +3,39 @@ use std::process::Command;
 use walkdir::WalkDir;
 
 #[tauri::command]
-pub fn exec_cmd(arg: &str) -> Result<String, String> {
+pub fn exec_cmd(command: &str) -> Result<isize, isize> {
     let status;
     if cfg!(target_os = "windows") {
-        let newcmd = format!("{}", arg);
+        let newcmd = format!("{}", command);
         status = Command::new("cmd").args(&["/c", &newcmd]).spawn()
     } else {
         println!("不支持的系统");
-        return Err("不支持的系统".into());
+        return Err(-1);
     }
     if status.is_ok() {
         println!("Application opened successfully");
     } else {
         eprintln!("Failed to open application");
+        return Err(-1);
     }
-    Ok("命令执行成功".into())
+    println!("命令执行成功");
+    Ok(0)
 }
 
 #[tauri::command]
-pub fn open_app_by_shortcut(arg: &str) -> Result<String, String> {
+pub fn open_app_by_shortcut(name: &str) -> Result<isize, isize> {
     let status;
-    let path = get_path_by_app_name(arg);
+    let path = get_path_by_app_name(name);
     if path.is_err() {
-        return Err(path.unwrap_err());
+        return Err(-1);
     }
     if cfg!(target_os = "windows") {
         let res_path: String;
-        if arg.ends_with(".lnk") {
+        if name.ends_with(".lnk") {
             let lnk = LNKParser::from_path(path.unwrap().as_str());
             if lnk.is_err() {
                 println!("lnk 获取失败 {:?}", lnk);
-                return Err("".into());
+                return Err(-1);
             }
             res_path = lnk.unwrap().get_target_full_path().clone().unwrap();
         } else {
@@ -44,32 +46,33 @@ pub fn open_app_by_shortcut(arg: &str) -> Result<String, String> {
         status = Command::new("cmd").args(&["/c", &newcmd]).spawn()
     } else {
         println!("不支持的系统");
-        return Err("不支持的系统".into());
+        return Err(-1);
     }
     if status.is_ok() {
-        println!("Application opened successfully");
+        println!("命令执行成功");
     } else {
         eprintln!("Failed to open application");
     }
-    Ok("open app 命令执行成功".into())
+    Ok(0)
 }
 
 #[tauri::command]
-pub fn open_app_by_name(arg: &str) -> Result<String, String> {
+pub fn open_app_by_name(arg: &str) -> Result<isize, isize> {
     let status;
     if cfg!(target_os = "windows") {
         let newcmd = format!("start {}", arg);
         status = Command::new("cmd").args(&["/c", &newcmd]).spawn()
     } else {
         println!("不支持的系统");
-        return Err("不支持的系统".into());
+        return Err(-1);
     }
     if status.is_ok() {
         println!("打开程序成功");
     } else {
         eprintln!("打开程序失败");
+        return Err(-1);
     }
-    Ok("open_app_by_shortcut 命令执行成功".into())
+    Ok(0)
 }
 
 #[tauri::command]
