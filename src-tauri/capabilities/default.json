@@ -35,6 +35,7 @@
     },
     "http:allow-fetch",
     "http:allow-fetch-send",
-    "dialog:default"
+    "dialog:default",
+    "clipboard-manager:default"
   ]
 }

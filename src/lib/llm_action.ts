@@ -1,4 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
+import { ask } from "@tauri-apps/plugin-dialog";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager"
 
 export async function execCmd(command: string):Promise<number>  {
     return await invoke("exec_cmd", {arg: command}) as number
@@ -15,4 +17,12 @@ export async function getAllAppNames():Promise<string[]> {
         res.push(s)
     }
     return res
+}
+
+export async function openAskDialog(title: string, msg: string) {
+    ask(msg, title).then(e=>console.log(e))
+}
+
+export async function writeToClipboard(text:string) {
+    writeText(text)
 }

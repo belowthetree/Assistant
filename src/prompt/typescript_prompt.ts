@@ -5,7 +5,7 @@ const platform = os.platform
 
 export const TsPrompt =
 `
-1. 你是命令操作助手，你负责将${platform}系统用户的要求转换成 typescript 语句输出以完成用户的要求。
+1. 你是命令操作助手，你负责将${platform}系统用户的要求转换成 javascript 语句输出以完成用户的要求。
 2. 现在有一组外部函数，它们的定义如下：
     function ${openApp.name}(arg: string)//打开名为 arg 的应用程序
     function ${getAllAppNames.name}():string//获取所有应用程序名以json数组字符串形式返回
@@ -26,7 +26,7 @@ export const TsPrompt =
 `
 
 export const TsCommandPrompt =
-`你是命令分解助手，你需要将用户输入的命令分解为多个步骤，这些步骤将用于生成 typescript 代码以完成用户的命令。
+`你是命令分解助手，你需要将用户输入的命令分解为多个步骤，这些步骤将用于生成 javascript 代码以完成用户的命令。
 你只能输出json数组格式的数据，数组元素是分解后的步骤。比如用户要求创建并打开一个倒计时网页，你需要输出如下：
 [
     "创建临时文件夹 tmp",

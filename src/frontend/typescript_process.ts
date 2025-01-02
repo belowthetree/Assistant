@@ -4,6 +4,9 @@ import { ModulePrompt } from "../prompt/module_prompt"
 import { TsCommandPrompt, TsPrompt } from "../prompt/typescript_prompt"
 import { BaseDirectory, writeTextFile } from "@tauri-apps/plugin-fs"
 import {path} from "@tauri-apps/api"
+import vm from 'vm'
+import { execCmd, getAllAppNames, openAppByShortcut, openAskDialog, writeToClipboard } from "../lib/llm_action"
+import { invoke } from "@tauri-apps/api/core"
 
 enum EProcessMode
 {
@@ -41,13 +44,13 @@ export class TypescriptProcess {
         const handle = (e:string)=>{
             this.waiting = false
             this.answer = e
-            e = e.replace("\`\`\`typescript", "")
+            e = e.replace("\`\`\`javascript", "")
             e = e.replace("\`\`\`", "")
             // e = e.replace(new RegExp("const", 'g'), "let")
             e = e.trim()
             console.log(e)
             try {
-                // new Function('invoke', 'fetch', e)(invoke, fetch)
+                new Function('invoke', 'fetch', e)(invoke, fetch)
             }
             catch (e) {
                 let errorInfo = ""
@@ -80,7 +83,7 @@ export class TypescriptProcess {
             // e = e.replace(new RegExp("const", 'g'), "let")
             // console.log(e)
             try {
-                // new Function('invoke', e)(invoke)
+                new Function('invoke', e)(invoke)
             }
             catch (e) {
                 let errorInfo = ""
@@ -104,7 +107,7 @@ export class TypescriptProcess {
         // this.deepseek.generate(this.answer + "报错：" + this.errorInfo + "。请重新给出答案", 2, TsPrompt).then(handle)
         // this.deepseek.generate(this.question, 1, TsPrompt).then(handle)
 
-        res = res.replace("\`\`\`typescript", "")
+        res = res.replace("\`\`\`javascript", "")
         res = res.replace("\`\`\`", "")
         res = res.trim()
         return res
@@ -155,16 +158,16 @@ export class TypescriptProcess {
         console.log("inputQuestion", question)
         this.waiting = true
         this.question = question
-        const p = await path.resolve("test.ts")
         const handle = async (e:string)=>{
             this.waiting = false
             this.answer = e
-            e = e.replace("\`\`\`typescript", "")
+            e = e.replace("\`\`\`javascript", "")
             e = e.replace("\`\`\`", "")
             e = e.trim()
             console.log(e)
             try {
-                await writeTextFile(p, e, {baseDir: BaseDirectory.Public})
+                const f = new Function("execCmd", "openAppByShortcut", "getAllAppNames", "openAskDialog", "writeToClipboard", e)
+                f(execCmd, openAppByShortcut, getAllAppNames, openAskDialog, writeToClipboard)
             }
             catch (e) {
                 let errorInfo = ""

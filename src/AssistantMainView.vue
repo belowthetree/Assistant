@@ -7,7 +7,7 @@ import { TypescriptProcess } from "./frontend/typescript_process";
 import { ECmdMode } from "./frontend/frontenddata";
 
 const models = [
-	"qwen2.5-coder:latest",
+	"qwen2.5-coder:7b",
 	"deepseek-coder-v2:latest",
 	"deepseek",
 	"qwq:latest",
@@ -16,7 +16,7 @@ const models = [
 const cmdInput = ref("")
 const response = ref("")
 const indexInput = ref("")
-const model = ref("qwen2.5-coder:latest")
+const model = ref("qwen2.5-coder:7b")
 const cmdMode = ECmdMode.TypescriptCode
 var modeSelect = "TypescriptCode"
 var commands = []
