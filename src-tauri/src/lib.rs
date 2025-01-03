@@ -1,5 +1,7 @@
 mod platform;
+mod web;
 use platform::*;
+use web::*;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -10,6 +12,7 @@ fn greet(name_n: &str) -> String {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -22,6 +25,7 @@ pub fn run() {
             get_all_app_names,
             open_app_by_shortcut,
             ask_window,
+            search_duck_duck_go,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -36,6 +36,16 @@
     "http:allow-fetch",
     "http:allow-fetch-send",
     "dialog:default",
-    "clipboard-manager:default"
+    "clipboard-manager:default",
+    "notification:default",
+    "fs:write-all",
+    {
+      "identifier":"fs:default",
+      "allow": [
+        {
+          "path": "$APPDATA/Assistant/*"
+        }
+      ]
+    }
   ]
 }

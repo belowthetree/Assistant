@@ -5,8 +5,10 @@ import { TsCommandPrompt, TsPrompt } from "../prompt/typescript_prompt"
 import { BaseDirectory, writeTextFile } from "@tauri-apps/plugin-fs"
 import {path} from "@tauri-apps/api"
 import vm from 'vm'
-import { execCmd, getAllAppNames, openAppByShortcut, openAskDialog, writeToClipboard } from "../lib/llm_action"
+import { execCmd, getAllAppNames, notify, openAppByShortcut, openAskDialog, writeToClipboard } from "../lib/llm_action"
 import { invoke } from "@tauri-apps/api/core"
+import * as moduleAction from "../lib/llm_action"
+// import * as duck from "duck-duck-scrape"
 
 enum EProcessMode
 {
@@ -156,7 +158,7 @@ export class TypescriptProcess {
             return
         this.mode = EProcessMode.Direct
         console.log("inputQuestion", question)
-        this.waiting = true
+        // this.waiting = true
         this.question = question
         const handle = async (e:string)=>{
             this.waiting = false
@@ -166,8 +168,15 @@ export class TypescriptProcess {
             e = e.trim()
             console.log(e)
             try {
-                const f = new Function("execCmd", "openAppByShortcut", "getAllAppNames", "openAskDialog", "writeToClipboard", e)
-                f(execCmd, openAppByShortcut, getAllAppNames, openAskDialog, writeToClipboard)
+                let funcStr = []
+                let funcs = []
+                for (let key of Object.keys(moduleAction)) {
+                    if (typeof moduleAction[key] === "function") {
+                        funcStr.push(key)
+                        funcs.push(moduleAction[key])
+                    }
+                }
+                new Function(...funcStr, e)(...funcs)
             }
             catch (e) {
                 let errorInfo = ""
@@ -185,5 +194,6 @@ export class TypescriptProcess {
         this.generateCode(this.question).then(handle).then(()=>{
             
         })
+        // moduleAction.searchWeb(question)
     }
 }

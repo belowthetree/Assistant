@@ -15,6 +15,7 @@
     "@tauri-apps/plugin-dialog": "^2.2.0",
     "@tauri-apps/plugin-fs": "^2.2.0",
     "@tauri-apps/plugin-http": "^2.2.0",
+    "@tauri-apps/plugin-notification": "^2.2.0",
     "@tauri-apps/plugin-opener": "^2",
     "axios": "^1.7.9",
     "child_process": "^1.0.2",
