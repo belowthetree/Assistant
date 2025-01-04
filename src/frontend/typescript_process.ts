@@ -2,18 +2,14 @@ import { DeepSeek } from "../lib/deepseek"
 import { generate } from "../lib/llm_interface"
 import { ModulePrompt } from "../prompt/module_prompt"
 import { TsCommandPrompt, TsPrompt } from "../prompt/typescript_prompt"
-import { BaseDirectory, writeTextFile } from "@tauri-apps/plugin-fs"
-import {path} from "@tauri-apps/api"
-import vm from 'vm'
-import { execCmd, getAllAppNames, notify, openAppByShortcut, openAskDialog, writeToClipboard } from "../lib/llm_action"
 import { invoke } from "@tauri-apps/api/core"
 import * as moduleAction from "../lib/llm_action"
-// import * as duck from "duck-duck-scrape"
 
 enum EProcessMode
 {
     Direct,
     SequenceCommand,
+    Exec,
 }
 
 export class TypescriptProcess {
@@ -156,9 +152,9 @@ export class TypescriptProcess {
     async generateModule(question: string) {
         if (this.waiting)
             return
-        this.mode = EProcessMode.Direct
-        console.log("inputQuestion", question)
-        // this.waiting = true
+        this.mode = EProcessMode.Exec
+        console.log("generateModule", question)
+        this.waiting = true
         this.question = question
         const handle = async (e:string)=>{
             this.waiting = false
@@ -189,11 +185,52 @@ export class TypescriptProcess {
                     errorInfo = e as string
                 }
                 this.errorInfo = errorInfo
+                moduleAction.notify("第一次尝试失败", "正在重试.....")
+                this.regenerateModule()
             }
         }
-        this.generateCode(this.question).then(handle).then(()=>{
-            
-        })
+        this.generateCode(this.question).then(handle)
         // moduleAction.searchWeb(question)
+    }
+
+    async regenerateModule() {
+        if (this.waiting)
+            return
+        if (this.mode != EProcessMode.Exec)
+            return
+        console.log("regenerateModule", this.question)
+        const handle = async (e:string)=>{
+            this.waiting = false
+            this.answer = e
+            e = e.replace("\`\`\`javascript", "")
+            e = e.replace("\`\`\`", "")
+            e = e.trim()
+            console.log(e)
+            try {
+                let funcStr = []
+                let funcs = []
+                for (let key of Object.keys(moduleAction)) {
+                    if (typeof moduleAction[key] === "function") {
+                        funcStr.push(key)
+                        funcs.push(moduleAction[key])
+                    }
+                }
+                new Function(...funcStr, e)(...funcs)
+            }
+            catch (e) {
+                let errorInfo = ""
+                if (e instanceof Error) {
+                    console.log(e.stack)
+                    errorInfo = e.stack || ""
+                }
+                else {
+                    console.error(e)
+                    errorInfo = e as string
+                }
+                this.errorInfo = errorInfo
+                moduleAction.notify(`执行命令${this.question}失败`, `原因：${this.errorInfo}`)
+            }
+        }
+        this.generateCode(`问题${this.question}的回答：${this.answer}报错：${this.errorInfo}。请修复`).then(handle)
     }
 }

@@ -26,6 +26,9 @@ pub fn run() {
             open_app_by_shortcut,
             ask_window,
             search_duck_duck_go,
+            read_text_file,
+            read_text_file_at_project_root,
+            write_text_file_at_project_root,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
