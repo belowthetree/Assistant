@@ -4,18 +4,14 @@ import { ref } from "vue";
 import { chat_with_tool, inputCommand, generate_instructions, generate } from "./lib/llm_interface";
 import { ask, confirm } from "@tauri-apps/plugin-dialog";
 import { TypescriptProcess } from "./frontend/typescript_process";
-import { ECmdMode } from "./frontend/frontenddata";
+import { ECmdMode, EModelType } from "./frontend/frontenddata";
 
-const models = [
-	"qwen2.5-coder:7b",
-	"deepseek-coder-v2:latest",
-	"deepseek",
-	"qwq:latest",
-]
+var models = EModelType.Deepseek
 
 const cmdInput = ref("")
 const response = ref("")
 const indexInput = ref("")
+const apiKey = ref("")
 const model = ref("qwen2.5-coder:7b")
 const cmdMode = ECmdMode.Exec
 var modeSelect = "Exec"
@@ -23,9 +19,18 @@ var commands = []
 const output = ref("")
 var ps = new TypescriptProcess(model.value)
 
+async function setApiKey() {
+	if (model.value == EModelType.Deepseek) {
+		ps.deepseek.setApiKey(apiKey)
+	}
+}
+
 async function commitCommand() {
 	console.log(modeSelect)
 	ps.model = model.value
+	if (model.value == EModelType.Deepseek) {
+		ps.deepseek.setApiKey(apiKey) 
+	}
 	switch (modeSelect) {
 		case ECmdMode.CommandSequence:
 			{
@@ -65,13 +70,11 @@ function setIndex() {
 <template>
 	<main class="container">
 		<h1>LLM 快捷指令</h1>
-		<div>
-			<p>{{ model }}</p>
-		</div>
 		<div class="row">
 			<select name="model" id="select-model" v-model="model">
-				<option v-for="name in models" :value="name">{{ name }}</option>
+				<option v-for="name in EModelType" :value="name">{{ name }}</option>
 			</select>
+			<input class="cmd-input" v-model="apiKey" placeholder="输入 apikey" type="password" @input="setApiKey"/>
 		</div>
 		<div class="row">
 			<select name="cmdMode" id="select-mode" v-model="modeSelect">
@@ -83,14 +86,6 @@ function setIndex() {
 				<input class="cmd-input" v-model="cmdInput" placeholder="输入指令"/>
 				<button type="submit">提交</button>
 			</form>
-		</div>
-		<p>{{ response }}</p>
-		<div class="row">
-			<form class="row" @submit.prevent="setIndex">
-				<input class="cmd-input" v-model="indexInput" placeholder="输入命令下标"/>
-				<button type="submit">提交</button>
-			</form>
-			<button @click="invokeCommand">下个命令</button>
 		</div>
 	</main>
 </template>

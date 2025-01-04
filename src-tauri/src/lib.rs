@@ -29,6 +29,7 @@ pub fn run() {
             read_text_file,
             read_text_file_at_project_root,
             write_text_file_at_project_root,
+            get_project_root_path,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

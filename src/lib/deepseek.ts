@@ -1,11 +1,16 @@
 import { fetch} from "@tauri-apps/plugin-http"
-import { readTextFile } from "@tauri-apps/plugin-fs"
 import { resolveResource } from "@tauri-apps/api/path"
+import { readTextFileAtProjectRoot } from "./llm_action"
 
 export class DeepSeek {
     url="https://api.deepseek.com/chat/completions"
     api_key: string = ""
     messages: any[] = []
+
+    setApiKey(key: string) {
+        this.api_key = "Bearer " + key
+        console.log("set api key", key)
+    }
 
     async chat(content:string, temperature?:number, system?:string): Promise<string> {
         const res = await this.generate(content, temperature, system, this.messages)
@@ -19,8 +24,7 @@ export class DeepSeek {
     async generate(content: string, temperature?:number, system?:string, ctx?:any): Promise<string> {
         console.log(content)
         if (this.api_key.length <= 0) {
-            const path = await resolveResource("resources/api_key")
-            const res = await readTextFile(path)
+            const res = await readTextFileAtProjectRoot("resources/api_key")
             this.api_key = "Bearer " + res
         }
         const messages = ctx || []

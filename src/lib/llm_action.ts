@@ -6,10 +6,13 @@ import { BaseDirectory, writeTextFile } from "@tauri-apps/plugin-fs";
 
 // 执行命令行
 export async function execCmd(command: string):Promise<number> {
-    return await invoke("exec_cmd", {arg: command}) as number
+    return await invoke("exec_cmd", {command: command}) as number
 }
 
-//通过应用的名字打开应用
+/**打开系统中已经注册的快捷方式应用
+ * @param name 快捷方式名字
+ * @return 错误码，如果为 0 代表打开正常
+*/
 export async function openAppByShortcut(name: string):Promise<number> {
     return await invoke("open_app_by_shortcut", {name: name}) as number
 }
@@ -54,13 +57,36 @@ export async function writeToFile(filename:string, content:string) {
 export async function searchWeb(question:string) {
     invoke("search_duck_duck_go", {question: question}).then(e=>console.log(e))
 }
-
-//在项目临时目录写入文本文件
-export async function writeTextFileAtProjectRoot(path:string, content:string) {
+/**
+ * 在临时目录写入相对路径为 path 的文本文件
+ * @param path 临时目录下的相对路径
+ * @param content 写入的文本内容
+ * @returns 结果
+ */
+export async function writeTextFileAtProjectRoot(path:string, content:string):Promise<string> {
     if (path.indexOf("..") >= 0) {
         console.warn("不得传入相对上级的路径：", path)
         return
     }
     path = "temp/" + path
     await invoke("write_text_file_at_project_root", {path: path, content: content})
+}
+/**
+ * 读取临时目录下的文本文件
+ * @param path 临时目录下的相对路径
+ * @returns 文本文件内容
+ */
+export async function readTextFileAtProjectRoot(path:string): Promise<string> {
+    if (path.indexOf("..") >= 0) {
+        console.warn("不得传入相对上级的路径：", path)
+        return
+    }
+    path = "temp/" + path
+    return await invoke("read_text_file_at_project_root", {path: path})
+}
+//获取临时目录绝对路径
+export async function getProjectRootPath():Promise<string> {
+    const path = await invoke("get_project_root_path") + "/temp/"
+    console.log("绝对路径：", path)
+    return path
 }

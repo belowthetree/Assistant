@@ -186,6 +186,7 @@ export class TypescriptProcess {
                 }
                 this.errorInfo = errorInfo
                 moduleAction.notify("第一次尝试失败", "正在重试.....")
+                this.tryTimes = 0
                 this.regenerateModule()
             }
         }
@@ -198,6 +199,12 @@ export class TypescriptProcess {
             return
         if (this.mode != EProcessMode.Exec)
             return
+        if (this.tryTimes >= this.maxTryTimes) {
+            moduleAction.notify(`执行命令${this.question}失败`, `原因：${this.errorInfo}`)
+            console.log("达到最大重试次数，放弃重试")
+            return
+        }
+        this.tryTimes++
         console.log("regenerateModule", this.question)
         const handle = async (e:string)=>{
             this.waiting = false
@@ -228,9 +235,10 @@ export class TypescriptProcess {
                     errorInfo = e as string
                 }
                 this.errorInfo = errorInfo
-                moduleAction.notify(`执行命令${this.question}失败`, `原因：${this.errorInfo}`)
+                moduleAction.notify(`第${this.tryTimes}次尝试失败`, "正在重试.....")
+                this.regenerateModule()
             }
         }
-        this.generateCode(`问题${this.question}的回答：${this.answer}报错：${this.errorInfo}。请修复`).then(handle)
+        this.generateCode(`问题${this.question}的回答：${this.answer}报错：${this.errorInfo}。请重新输出正确的代码（不要生成代码以外的东西）`).then(handle)
     }
 }
