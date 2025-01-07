@@ -1,6 +1,7 @@
 mod platform;
 mod web;
 use platform::*;
+use tauri::tray::TrayIconBuilder;
 use web::*;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -12,6 +13,7 @@ fn greet(name_n: &str) -> String {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_fs::init())
@@ -31,6 +33,15 @@ pub fn run() {
             write_text_file_at_project_root,
             get_project_root_path,
         ])
+        // This is required to get tray-relative positions to work
+        .setup(|app| {
+            TrayIconBuilder::new()
+                .on_tray_icon_event(|app, event| {
+                    tauri_plugin_positioner::on_tray_event(app.app_handle(), &event);
+                })
+                .build(app)?;
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

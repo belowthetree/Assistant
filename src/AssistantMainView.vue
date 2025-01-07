@@ -5,6 +5,7 @@ import { chat_with_tool, inputCommand, generate_instructions, generate } from ".
 import { ask, confirm } from "@tauri-apps/plugin-dialog";
 import { TypescriptProcess } from "./frontend/typescript_process";
 import { ECmdMode, EModelType } from "./frontend/frontenddata";
+import { CurrentApiKey, CurrentModelType } from "./global";
 
 var models = EModelType.Deepseek
 
@@ -20,16 +21,19 @@ const output = ref("")
 var ps = new TypescriptProcess(model.value)
 
 async function setApiKey() {
+	CurrentApiKey = apiKey.value
 	if (model.value == EModelType.Deepseek) {
-		ps.deepseek.setApiKey(apiKey)
+		ps.deepseek.setApiKey(apiKey.value)
 	}
 }
 
 async function commitCommand() {
+	return
 	console.log(modeSelect)
+	CurrentModelType = model.value
 	ps.model = model.value
 	if (model.value == EModelType.Deepseek) {
-		ps.deepseek.setApiKey(apiKey) 
+		ps.deepseek.setApiKey(apiKey.value)
 	}
 	switch (modeSelect) {
 		case ECmdMode.CommandSequence:
@@ -65,64 +69,106 @@ function setIndex() {
 	ps.index = indexInput.value
 }
 
+var isDragging = false
+var startX = 0
+var startY = 0
+
+import { getCurrentWindow, LogicalPosition } from '@tauri-apps/api/window';
+import { Position } from "@tauri-apps/api/dpi";
+
+const Window = getCurrentWindow()
+
+function startDrag(ev) {
+	console.log("start")
+      isDragging = true;
+      startX = ev.clientX;
+      startY = ev.clientY;
+    }
+async function onDrag(ev) {
+	if (isDragging) {
+		console.log(ev)
+		const offsetX = ev.clientX - startX;
+		const offsetY = ev.clientY - startY;
+		const { x, y } = await Window.innerPosition();
+		const p = new LogicalPosition(x + offsetX, y + offsetY)
+		await Window.setPosition(p);
+		startX = ev.clientX;
+		startY = ev.clientY;
+	}
+}
+function stopDrag() {
+	isDragging = false;
+}
+
+function onInput() {
+	const input = document.getElementById("cmdInput")
+	input.style.height = 'auto'
+	input.style.height = `${input.scrollHeight}px`;
+}
+
 </script>
 
 <template>
-	<main class="container">
+	<main class="container drag-area"
+		@mousedown="startDrag"
+		@mousemove="onDrag"
+		@mouseup="stopDrag"
+		@mouseleave="stopDrag">
 		<h1>LLM 快捷指令</h1>
-		<div class="row">
-			<select name="model" id="select-model" v-model="model">
-				<option v-for="name in EModelType" :value="name">{{ name }}</option>
-			</select>
-			<input class="cmd-input" v-model="apiKey" placeholder="输入 apikey" type="password" @input="setApiKey"/>
-		</div>
-		<div class="row">
-			<select name="cmdMode" id="select-mode" v-model="modeSelect">
-				<option v-for="(name, v) in ECmdMode" :value="v">{{ v }}</option>
-			</select>
-		</div>
-		<div class="row">
+		<div class="row no-drag" onmousedown="event.stopPropagation()">
 			<form class="row" @submit.prevent="commitCommand">
-				<input class="cmd-input" v-model="cmdInput" placeholder="输入指令"/>
-				<button type="submit">提交</button>
+				<textarea @input="onInput" id="cmdInput" class="cmd-input" rows="5" v-model="cmdInput" placeholder="输入指令"></textarea>
 			</form>
 		</div>
 	</main>
 </template>
 
 <style>
+.drag-area {
+	 /* 允许拖拽 */
+	-webkit-app-region: drag;
+	/* cursor: grab; */
+}
+.no-drag {
+	-webkit-app-region: no-drag;
+}
 .container {
-	margin: 0;
-	padding-top: 10vh;
+	margin: auto;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	text-align: center;
+	width: 100%;
+	height: 100%;
 }
 
 :root {
-		font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-		font-size: 16px;
-		line-height: 24px;
-		font-weight: 400;
+	font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+	font-size: 16px;
+	line-height: 24px;
+	font-weight: 400;
 
-		color: #0f0f0f;
-		background-color: #f6f6f6;
+	color: #0f0f0f00;
+	background-color: #f6f6f600;
 
-		font-synthesis: none;
-		text-rendering: optimizeLegibility;
-		-webkit-font-smoothing: antialiased;
-		-moz-osx-font-smoothing: grayscale;
-		-webkit-text-size-adjust: 100%;
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-text-size-adjust: 100%;
+	background: transparent;
 }
 
 h1 {
-		text-align: center;
+	text-align: center;
 }
 
 .row {
 	display: flex;
-	justify-content: center;
+	flex-direction: column;
+	padding: 5px;
+	height: auto;
+	min-height: 100px;
 }
 
 select,
@@ -138,6 +184,13 @@ button {
 	background-color: #ffffff;
 	transition: border-color 0.25s;
 	box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+}
+
+.cmd-input {
+	outline: none;
+	height: auto;
+	border-radius: 5px;
+	padding: 5px;
 }
 
 button {
@@ -158,18 +211,16 @@ button {
 	outline: none;
 }
 
-.cmd-input {
-	margin-right: 5px;
-}
-
 #select-model {
 	margin: 5px;
 }
 
 @media (prefers-color-scheme: dark) {
 	:root {
-		color: #f6f6f6;
-		background-color: #2f2f2f;
+		color: #f6f6f600;
+		background-color: #2f2f2f00;
+		background: transparent;
+		border-width: 0;
 	}
 
 	a:hover {

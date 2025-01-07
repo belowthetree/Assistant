@@ -90,3 +90,7 @@ export async function getProjectRootPath():Promise<string> {
     console.log("绝对路径：", path)
     return path
 }
+//用 AI 进行模糊判断
+export async function fuzzyMatch(list:string[], target: string) {
+    
+}

@@ -1,6 +1,6 @@
 mod application;
-mod window;
 mod file;
+mod window;
 pub use application::*;
-pub use window::*;
 pub use file::*;
+pub use window::*;
