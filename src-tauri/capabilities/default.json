@@ -3,7 +3,7 @@
 	"identifier": "default",
 	"description": "Capability for the main window",
 	"windows": [
-		"main"
+		"*"
 	],
 	"permissions": [
 		"core:default",
@@ -44,10 +44,20 @@
 			"allow": [
 				{
 					"path": "$APPDATA/Assistant/*"
+				},
+				{
+					"path": "$APPCONFIG/*"
 				}
 			]
 		},
 		"positioner:allow-move-window",
-		"core:window:allow-set-position"
+		"core:window:allow-set-position",
+		"core:window:allow-set-size",
+		"core:webview:allow-create-webview-window",
+		"positioner:allow-move-window-constrained",
+		"core:window:allow-outer-size",
+		"core:window:allow-inner-size",
+		"core:window:allow-show",
+		"core:window:allow-create"
 	]
 }

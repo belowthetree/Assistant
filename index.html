@@ -9,6 +9,7 @@
 </head>
 
 <body class="app">
+	<router-view></router-view>
 	<div id="app"></div>
 	<script type="module" src="/src/main.ts"></script>
 </body>
@@ -17,17 +18,16 @@
 
 <style>
 	.app {
-		margin: auto;
-		padding: auto;
+		overflow: hidden;
+		margin: 0;
+		padding: 0;
 		background: transparent;
 		height: 100%;
 		width: 100%;
-		background-color: rgba(173, 216, 230, 0.565);
-	}
-
-	.test {
-		color: green;
-		background-color: green;
+		background: transparent;
+		background-color: rgba(173, 216, 230, 0);
+		border: none;
+		outline: none;
 	}
 
 	#app {
@@ -37,13 +37,15 @@
 		bottom: 0;
 		right: 0;
 		margin: 0;
+		padding: 0;
 		text-align: center;
 		align-items: center;
 		align-content: center;
-		margin: 0;
-		padding: 0;
-		height: 100%;
 		width: 100%;
-		background-color: lightgreen;
+		height: 100%;
+		background: transparent;
+		background-color: rgba(173, 216, 230, 0);
+		border: none;
+		outline: none;
 	}
 </style>

@@ -10,16 +10,6 @@
 		"frontendDist": "../dist"
 	},
 	"app": {
-		"windows": [
-			{
-				"title": "助手",
-				"width": 500,
-				"height": 500,
-				"alwaysOnBottom": true,
-				"transparent": true,
-				"decorations": false
-			}
-		],
 		"security": {
 			"csp": null
 		}
