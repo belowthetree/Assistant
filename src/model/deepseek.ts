@@ -1,31 +1,16 @@
-import { notify } from "./llm_action"
+import { fetch} from "@tauri-apps/plugin-http"
+import { readTextFileAtProjectRoot } from "@/lib/llm_action"
+import { LLMBase } from "@/model/llm_base"
+import { EModelType } from "@/data"
 
-export interface LLMInterface {
-    getModelName():string
-    setApiKey(key: string)
-    checkApiKeyValid(): boolean
-    chat(content:string, temperature?:number, system?:string): Promise<string>
-    generate(content: string, temperature?:number, system?:string, ctx?:any): Promise<string>
-}
-
-export class LLMBase implements LLMInterface {
+export class DeepSeek extends LLMBase {
+    url="https://api.deepseek.com/chat/completions"
     api_key: string = ""
     messages: any[] = []
-    url: string = ""
-    modelName: string = ""
 
-    constructor(url: string, modelName: string) {
-        this.url = url
-        this.modelName = modelName
-    }
-
-    getModelName(): string {return ""}
-
-    checkApiKeyValid(): boolean {return true}
-
-    setApiKey(key: string) {
-        this.api_key = "Bearer " + key
-        console.log("set api key" + key)
+    constructor(url: string = "https://api.deepseek.com/chat/completions", model: string = "deepseek-chat", api: string = "") {
+        super(url, model, api)
+        this.modelType = EModelType.DeepSeek
     }
 
     async chat(content:string, temperature?:number, system?:string): Promise<string> {
@@ -39,8 +24,9 @@ export class LLMBase implements LLMInterface {
 
     async generate(content: string, temperature?:number, system?:string, ctx?:any): Promise<string> {
         console.log(content)
-        if (!this.checkApiKeyValid()) {
-            notify("API Key 未设置", `模型${this.getModelName()} api key 未设置`)
+        if (this.api_key.length <= 0) {
+            const res = await readTextFileAtProjectRoot("resources/api_key")
+            this.api_key = "Bearer " + res
         }
         const messages = ctx || []
         messages.push(

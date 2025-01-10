@@ -4,11 +4,13 @@ import { onMounted, ref } from "vue";
 import { chat_with_tool, inputCommand, generate_instructions, generate } from "./lib/llm_interface";
 import { ask, confirm } from "@tauri-apps/plugin-dialog";
 import { TypescriptProcess } from "./frontend/typescript_process";
-import { ECmdMode, EModelType, SetApiKey, SetModelType } from "./config";
+import { SetApiKey, SetModelType } from "./config";
 import { getCurrentWindow, LogicalPosition } from '@tauri-apps/api/window';
 import { LogicalSize, Position } from "@tauri-apps/api/dpi";
 import { Setting } from "@element-plus/icons-vue";
-import { createWindow } from "./lib/window";
+import { openSettingWindow } from "./lib/window";
+import Bubbles from "./components/Bubbles.vue";
+import { EModelType, ECmdMode } from "@/data";
 
 var models = EModelType.Deepseek
 
@@ -19,18 +21,8 @@ const model = ref("qwen2.5-coder:7b")
 const cmdMode = ECmdMode.Exec
 var modeSelect = "Exec"
 var commands = []
-const output = ref("")
-var ps = new TypescriptProcess(model.value)
-
-async function setApiKey() {
-	SetApiKey(apiKey.value)
-	if (model.value == EModelType.Deepseek) {
-		ps.deepseek.setApiKey(apiKey.value)
-	}
-}
 
 async function commitCommand() {
-	return
 	console.log(modeSelect)
 	SetModelType(model.value)
 	ps.model = model.value
@@ -92,21 +84,17 @@ function stopDrag() {
 }
 
 export default {
+	components: {
+		Bubbles,
+	},
+	setup() {
+	},
 	data() {
 		return {
 			inputText: '',
 			maxHeight: 500,
-			currentHeight: 100,
-			bottomHeight: 15,
+			minHeight: 100,
 			cmdInput: ""
-		}
-	},
-	computed: {
-		textareaStyle() {
-			return {
-			height: this.currentHeight,
-			overflowY: this.currentHeight === this.maxHeight ? 'auto' : 'hidden'
-			};
 		}
 	},
 	methods: {
@@ -117,19 +105,12 @@ export default {
 			setTimeout(() => {
 				icon.classList.remove('clicked');
 			}, 300); // 动画持续时间
-			createWindow(
-				'setting',
-				"设置",
-				300,
-				300,
-				true
-			)
+			// this.$refs.bubbles.addBubble()
+			openSettingWindow()
 		},
 		onInput() {
 			console.log("resize")
 			const Window = getCurrentWindow()
-			Window.outerSize().then(e=>console.log(e))
-			Window.innerSize().then(e=>console.log(e))
 			const input = document.getElementById("cmdInput")
 			input.style.height = 'auto'
 			const height = Math.min(input.scrollHeight, this.maxHeight)
@@ -137,11 +118,10 @@ export default {
 			if (input.scrollHeight > this.maxHeight) {
 				input.style.overflowY = 'scroll'
 			}
-			console.log(height, input.style.height)
-			Window.setSize(new LogicalSize(300, height + 65)).catch(e=>console.log(e))
+			Window.setSize(new LogicalSize(300, height)).catch(e=>console.log(e))
 		}
 	},
-	onMounted() {
+	mounted() {
 		this.onInput()
 	}
 }
@@ -152,6 +132,7 @@ export default {
 <template>
 	<main class="container drag-area" id="container">
 		<div class="row macos-background">
+			<Bubbles ref="bubbles" style="color: black;">fff</Bubbles>
 			<textarea @input="onInput" id="cmdInput" class="no-drag" v-model="cmdInput" placeholder="输入指令"></textarea>
 			<button class="right_bottom" @click="clickSetting">
 				<Setting class="hover_color" id="settingIcon" :style="{color: 'black'}" />
@@ -239,21 +220,6 @@ export default {
 	width: 100%;
 }
 
-/* select,
-input,
-button {
-	border-radius: 8px;
-	border: 1px solid transparent;
-	padding: 0.6em 1.2em;
-	font-size: 1em;
-	font-weight: 500;
-	font-family: inherit;
-	color: #0f0f0f;
-	background-color: #ffffff;
-	transition: border-color 0.25s;
-	box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-} */
-
 #cmdInput {
 	outline: none;
 	height: 100%;
@@ -261,10 +227,13 @@ button {
 	resize: none;
 	border: none;
 	text-align: left;
-	padding: 15px;
+	padding: 10px;
 	padding-bottom: 0;
+	margin: 5px;
+	margin-bottom: 40px;
 	background: linear-gradient(135deg, #f0f0f0, #ffffff); /* 浅灰色到白色的渐变 */
-	font-size: 26px;
+	font-size: 21px;
+	min-height: 100px;
 }
 
 .macos-background {

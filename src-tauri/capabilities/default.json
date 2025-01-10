@@ -43,13 +43,15 @@
 			"identifier": "fs:default",
 			"allow": [
 				{
-					"path": "$APPDATA/Assistant/*"
+					"path": "$APPDATA/Roaming/com.assistant.app/*"
 				},
 				{
 					"path": "$APPCONFIG/*"
 				}
 			]
 		},
+		"fs:allow-appconfig-write-recursive",
+		"fs:allow-appconfig-read-recursive",
 		"positioner:allow-move-window",
 		"core:window:allow-set-position",
 		"core:window:allow-set-size",
@@ -58,6 +60,7 @@
 		"core:window:allow-outer-size",
 		"core:window:allow-inner-size",
 		"core:window:allow-show",
-		"core:window:allow-create"
+		"core:window:allow-create",
+		"core:window:allow-close"
 	]
 }

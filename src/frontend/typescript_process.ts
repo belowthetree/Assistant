@@ -1,9 +1,10 @@
-import { DeepSeek } from "../lib/deepseek"
+import { DeepSeek } from "@/model/deepseek"
 import { generate } from "../lib/llm_interface"
 import { ModulePrompt } from "../prompt/module_prompt"
-import { TsCommandPrompt, TsPrompt } from "../prompt/typescript_prompt"
+import { TsCommandPrompt } from "../prompt/typescript_prompt"
 import { invoke } from "@tauri-apps/api/core"
 import * as moduleAction from "../lib/llm_action"
+import { LLMBase } from "../model/llm_base"
 
 enum EProcessMode
 {
@@ -20,7 +21,7 @@ export class TypescriptProcess {
     errorInfo: string = ""
     tryTimes: number = 0
     maxTryTimes: number = 3
-    deepseek: DeepSeek = new DeepSeek()
+    deepseek: LLMBase = new DeepSeek()
     index: number = 0
     mode: EProcessMode = EProcessMode.Direct
 

@@ -33,6 +33,7 @@ export default defineConfig(async () => ({
   resolve: {
     alias: {
       '@': path.resolve(__dirname) + "/src", // @ 指向 src 目录
+      '~': path.resolve(__dirname), // @ 指向项目根目录
     },
   },
 }));

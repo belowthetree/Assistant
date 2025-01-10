@@ -1,14 +1,35 @@
-import { fetch} from "@tauri-apps/plugin-http"
-import { readTextFileAtProjectRoot } from "./llm_action"
-import { LLMBase } from "./llm_base"
+import { EModelType } from "../config"
+import { notify } from "../lib/llm_action"
 
-export class DeepSeek extends LLMBase {
-    url="https://api.deepseek.com/chat/completions"
+export interface LLMInterface {
+    modelType: EModelType
+    getModelName():string
+    setApiKey(key: string)
+    checkApiKeyValid(): boolean
+    chat(content:string, temperature?:number, system?:string): Promise<string>
+    generate(content: string, temperature?:number, system?:string, ctx?:any): Promise<string>
+}
+
+export class LLMBase implements LLMInterface {
+    modelType: EModelType
     api_key: string = ""
     messages: any[] = []
+    url: string = ""
+    modelName: string = ""
 
-    constructor() {
-        super("https://api.deepseek.com/chat/completions", "deepseek-chat")
+    constructor(url: string, modelName: string, api_key: string = "") {
+        this.url = url
+        this.modelName = modelName
+        this.api_key = api_key
+    }
+
+    getModelName(): string {return ""}
+
+    checkApiKeyValid(): boolean {return true}
+
+    setApiKey(key: string) {
+        this.api_key = "Bearer " + key
+        console.log("set api key" + key)
     }
 
     async chat(content:string, temperature?:number, system?:string): Promise<string> {
@@ -22,9 +43,8 @@ export class DeepSeek extends LLMBase {
 
     async generate(content: string, temperature?:number, system?:string, ctx?:any): Promise<string> {
         console.log(content)
-        if (this.api_key.length <= 0) {
-            const res = await readTextFileAtProjectRoot("resources/api_key")
-            this.api_key = "Bearer " + res
+        if (!this.checkApiKeyValid()) {
+            notify("API Key 未设置", `模型${this.getModelName()} api key 未设置`)
         }
         const messages = ctx || []
         messages.push(
@@ -38,7 +58,7 @@ export class DeepSeek extends LLMBase {
                 "Authorization": this.api_key,
             },
             body: JSON.stringify({
-                "model": "deepseek-chat",
+                "model": this.modelName,
                 "messages": messages,
                 "stream": false,
                 "temperature": temperature || 1
