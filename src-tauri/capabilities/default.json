@@ -61,6 +61,7 @@
 		"core:window:allow-inner-size",
 		"core:window:allow-show",
 		"core:window:allow-create",
-		"core:window:allow-close"
+		"core:window:allow-close",
+		"clipboard-manager:allow-write-text"
 	]
 }

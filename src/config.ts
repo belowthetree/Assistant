@@ -4,6 +4,7 @@ import { LLMBase } from "./model/llm_base"
 import { Ollama } from "./model/ollama"
 import { EModelType } from "./data"
 import { DeepSeek } from "./model/deepseek"
+import { listenModelUpdateEvent } from "./events/model_event"
 
 export interface IBaseConfig {
     baseUrl: string
@@ -22,15 +23,11 @@ class BaseConfigBase implements IBaseConfig {
 export var BaseConfig: BaseConfigBase = new BaseConfigBase()
 export var MainModel: LLMBase = new Ollama("http://127.0.0.1:11434/api/generate", "qwen2.5-coder:7b")
 
-export function SetApiKey(key: string) {
-    BaseConfig.apiKey = key
+listenModelUpdateEvent((event)=>{
+    console.log(event.payload)
+    BaseConfig = event.payload.config
     saveConfig()
-}
-
-export function SetModelType(modelType: EModelType) {
-    BaseConfig.modelType = modelType
-    saveConfig()
-}
+})
 
 export async function loadConfig() {
     const dir = await appConfigDir()
@@ -38,22 +35,21 @@ export async function loadConfig() {
     readTextFile("config.json", {baseDir: BaseDirectory.AppConfig}).then((cfg)=>{
         BaseConfig = JSON.parse(cfg) as BaseConfigBase
         console.log(BaseConfig)
+        refreshModel()
     }).catch((e)=>{
         BaseConfig = new BaseConfigBase()
         console.warn(e)
+        refreshModel()
     })
 }
 
 export async function saveConfig() {
     if (MainModel.modelType != BaseConfig.modelType) {
-        switch(BaseConfig.modelType) {
-            case EModelType.Ollama:
-                MainModel = new Ollama(BaseConfig.baseUrl, BaseConfig.modelName, BaseConfig.apiKey)
-                break
-            case EModelType.DeepSeek:
-                MainModel = new DeepSeek(BaseConfig.baseUrl, BaseConfig.modelName, BaseConfig.apiKey)
-                break
-        }
+        refreshModel()
+    }
+    else {
+        MainModel.url = BaseConfig.baseUrl
+        MainModel.modelName = BaseConfig.modelName
     }
     const js = JSON.stringify(BaseConfig)
     console.log(js)
@@ -63,4 +59,17 @@ export async function saveConfig() {
         await mkdir("", {baseDir: BaseDirectory.AppConfig, recursive: true})
     }
     writeTextFile("config.json", js, {baseDir: BaseDirectory.AppConfig})
+}
+
+function refreshModel() {
+    console.log('refresh')
+    switch(BaseConfig.modelType) {
+        case EModelType.Ollama:
+            MainModel = new Ollama(BaseConfig.baseUrl, BaseConfig.modelName, BaseConfig.apiKey)
+            break
+        case EModelType.DeepSeek:
+            MainModel = new DeepSeek(BaseConfig.baseUrl, BaseConfig.modelName, BaseConfig.apiKey)
+            break
+    }
+    console.log(MainModel)
 }

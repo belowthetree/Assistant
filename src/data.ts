@@ -9,3 +9,8 @@ export enum ECmdMode {
     TypescriptCode = "TypescriptCode",
     Exec = "Exec",
 }
+
+export enum EChatMode {
+    Chat,
+    Generate,
+}

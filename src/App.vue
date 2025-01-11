@@ -4,13 +4,17 @@ import { onMounted, ref } from "vue";
 import { chat_with_tool, inputCommand, generate_instructions, generate } from "./lib/llm_interface";
 import { ask, confirm } from "@tauri-apps/plugin-dialog";
 import { TypescriptProcess } from "./frontend/typescript_process";
-import { SetApiKey, SetModelType } from "./config";
+import { MainModel } from "./config";
 import { getCurrentWindow, LogicalPosition } from '@tauri-apps/api/window';
 import { LogicalSize, Position } from "@tauri-apps/api/dpi";
 import { Setting } from "@element-plus/icons-vue";
 import { openSettingWindow } from "./lib/window";
 import Bubbles from "./components/Bubbles.vue";
 import { EModelType, ECmdMode } from "@/data";
+import { ModulePrompt } from "./prompt/module_prompt";
+import { emitModelResultEvent } from "./events/model_event";
+import { webviewWindow } from "@tauri-apps/api";
+import { addBubble } from "./view/Talk/api";
 
 var models = EModelType.Deepseek
 
@@ -22,66 +26,9 @@ const cmdMode = ECmdMode.Exec
 var modeSelect = "Exec"
 var commands = []
 
-async function commitCommand() {
-	console.log(modeSelect)
-	SetModelType(model.value)
-	ps.model = model.value
-	if (model.value == EModelType.Deepseek) {
-		ps.deepseek.setApiKey(apiKey.value)
-	}
-	switch (modeSelect) {
-		case ECmdMode.CommandSequence:
-			{
-				console.log('sequence')
-				ps.generateCommands(cmdInput.value)
-			}
-			break
-		case ECmdMode.TypescriptCode:
-			ps.inputQuestion(cmdInput.value)
-			break
-		case ECmdMode.Exec:
-			try {
-				ps.generateModule(cmdInput.value)
-			}
-			catch (e) {
-				if (e instanceof Error) {
-					console.log(e.stack)
-				}
-				else {
-					console.log(e)
-				}
-			}
-			break
-	}
-}
-
 var isDragging = false
 var startX = 0
 var startY = 0
-
-const Window = getCurrentWindow()
-
-function startDrag(ev) {
-	console.log("start")
-      isDragging = true;
-      startX = ev.clientX;
-      startY = ev.clientY;
-    }
-async function onDrag(ev) {
-	if (isDragging) {
-		console.log(ev)
-		const offsetX = ev.clientX - startX;
-		const offsetY = ev.clientY - startY;
-		const { x, y } = await Window.innerPosition();
-		const p = new LogicalPosition(x + offsetX, y + offsetY)
-		await Window.setPosition(p);
-		startX = ev.clientX;
-		startY = ev.clientY;
-	}
-}
-function stopDrag() {
-	isDragging = false;
-}
 
 export default {
 	components: {
@@ -93,8 +40,9 @@ export default {
 		return {
 			inputText: '',
 			maxHeight: 500,
-			minHeight: 100,
-			cmdInput: ""
+			minHeight: 70,
+			userInput: "",
+			controlDown: false,
 		}
 	},
 	methods: {
@@ -109,31 +57,59 @@ export default {
 			openSettingWindow()
 		},
 		onInput() {
-			console.log("resize")
 			const Window = getCurrentWindow()
-			const input = document.getElementById("cmdInput")
+			const input = document.getElementById("userInput")
 			input.style.height = 'auto'
 			const height = Math.min(input.scrollHeight, this.maxHeight)
 			input.style.height = `${height}px`;
 			if (input.scrollHeight > this.maxHeight) {
 				input.style.overflowY = 'scroll'
 			}
-			Window.setSize(new LogicalSize(300, height)).catch(e=>console.log(e))
+			Window.setSize(new LogicalSize(300, height + 35)).catch(e=>console.log(e))
+		},
+		async commitCommand() {
+			console.log("输入命令", this.userInput)
+			MainModel.chat(this.userInput, 0.2, ModulePrompt).then((res)=>{
+				// this.$refs.bubbles.addBubble(res)
+				console.log(res)
+				addBubble(res)
+				// MainModel.execute_typescript(res)
+			})
+		},
+		onKeyDown(event) {
+			if (event.key == "Control")
+				this.controlDown = true
+			else if (!this.controlDown && event.key == "Enter") {
+				this.commitCommand()
+				event.preventDefault()
+			}
+		},
+		onKeyUp(event) {
+			if (event.key == "Control")
+				this.controlDown = false
 		}
 	},
 	mounted() {
-		this.onInput()
+			this.onInput()
+			const mainWindow = webviewWindow.getCurrentWebviewWindow()
+			// 监听窗口显示事件
+			mainWindow.once('tauri://focus', () => {
+			// 窗口显示时，聚焦输入框
+			const input = document.getElementById("userInput")
+			console.log("focus")
+			input.focus()
+		});
 	}
 }
-
+//创建 vue 页面基本模板并复制到剪贴板
 
 </script>
 
 <template>
 	<main class="container drag-area" id="container">
 		<div class="row macos-background">
-			<Bubbles ref="bubbles" style="color: black;">fff</Bubbles>
-			<textarea @input="onInput" id="cmdInput" class="no-drag" v-model="cmdInput" placeholder="输入指令"></textarea>
+			<!-- <Bubbles ref="bubbles" style="color: black;">fff</Bubbles> -->
+			<textarea @input="onInput" @keydown="onKeyDown" @keyup="onKeyUp" id="userInput" class="no-drag" v-model="userInput" placeholder="输入指令"></textarea>
 			<button class="right_bottom" @click="clickSetting">
 				<Setting class="hover_color" id="settingIcon" :style="{color: 'black'}" />
 			</button>
@@ -220,7 +196,7 @@ export default {
 	width: 100%;
 }
 
-#cmdInput {
+#userInput {
 	outline: none;
 	height: 100%;
 	border-radius: 5px;

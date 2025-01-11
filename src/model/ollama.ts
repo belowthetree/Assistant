@@ -6,5 +6,16 @@ export class Ollama extends LLMBase {
     constructor(url: string, model: string, api_key: string = "") {
         super(url, model, api_key)
         this.modelType = EModelType.Ollama
+        console.log(this.modelName)
+    }
+
+    async chat(content: string, temperature?: number, system?: string): Promise<string> {
+        this.url = this.url.replace("generate", "chat")
+        return super.chat(content, temperature, system)
+    }
+
+    async generate(content: string, temperature?: number, system?: string): Promise<string> {
+        this.url = this.url.replace("chat", "generate")
+        return super.generate(content, temperature, system)
     }
 }

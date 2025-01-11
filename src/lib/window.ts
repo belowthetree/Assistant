@@ -11,12 +11,18 @@ export async function createWindow(
     center: boolean,
     resizable: boolean,
     offset: LogicalSize = new LogicalSize(0, 0),
-):Promise<Window> {
-    console.log("创建" + `/${label}`)
+):Promise<WebviewWindow> {
+    let win = await WebviewWindow.getByLabel(label)
+    if (win) {
+        console.log(`已存在 ${label}`)
+        if (!win.isVisible())
+            win.show()
+        return win
+    }
+    console.log("创建" + `${label}`)
     const monitor = await window.currentMonitor()
     const size = monitor.size
-    console.log(size)
-    const win = new WebviewWindow(label, {
+    win = new WebviewWindow(label, {
         title,
         url: `/${label}`,
         width,
@@ -49,6 +55,10 @@ export async function createWindow(
     return win
 }
 
-export async function openSettingWindow() {
+export async function openSettingWindow():Promise<WebviewWindow> {
     return createWindow("setting","设置", 500, 600, false, false)
+}
+
+export async function openTalkView():Promise<WebviewWindow> {
+    return createWindow('talk', "对话", 500, 500, false, false)
 }

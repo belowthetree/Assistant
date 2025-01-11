@@ -1,8 +1,10 @@
 <script lang="ts">
 import { Close } from "@element-plus/icons-vue"
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { BaseConfig, loadConfig, saveConfig } from "~/src/config";
+import { BaseConfig, loadConfig } from "~/src/config";
 import { EModelType } from "~/src/data";
+import { emitModelUpdateEvent } from "~/src/events/model_event";
+
 export default {
     setup() {
         console.log("Init")
@@ -35,7 +37,7 @@ export default {
             BaseConfig.apiKey = this.apiKey
             BaseConfig.modelName = this.modelName
             BaseConfig.modelType = this.modelType
-            saveConfig()
+            emitModelUpdateEvent()
         }
     }
 }
