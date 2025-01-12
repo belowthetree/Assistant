@@ -4,7 +4,7 @@ import { onMounted, ref } from "vue";
 import { chat_with_tool, inputCommand, generate_instructions, generate } from "./lib/llm_interface";
 import { ask, confirm } from "@tauri-apps/plugin-dialog";
 import { TypescriptProcess } from "./frontend/typescript_process";
-import { MainModel } from "./config";
+import { MainModel } from "./model/global";
 import { getCurrentWindow, LogicalPosition } from '@tauri-apps/api/window';
 import { LogicalSize, Position } from "@tauri-apps/api/dpi";
 import { Setting } from "@element-plus/icons-vue";
@@ -73,7 +73,7 @@ export default {
 				// this.$refs.bubbles.addBubble(res)
 				console.log(res)
 				// addBubble(res)
-				MainModel.execute_typescript(res)
+				// MainModel.execute_typescript(res)
 			})
 		},
 		onKeyDown(event) {

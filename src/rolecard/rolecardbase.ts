@@ -1,4 +1,6 @@
 export class RoleCardBase {
+    // 名字
+    name: string = "默认"
     // 身份介绍
     roleDesc: string = ""
     // 是否保留上下文

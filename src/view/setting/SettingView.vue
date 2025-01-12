@@ -1,11 +1,17 @@
 <script lang="ts">
 import { Close } from "@element-plus/icons-vue"
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { BaseConfig, loadConfig } from "~/src/config";
+import { confirm } from "@tauri-apps/plugin-dialog";
+import test from "node:test";
+import Toast from "~/src/components/Toast.vue";
+import { ModelConfig, ModelList, loadConfig, saveConfig } from "~/src/config";
 import { EModelType } from "~/src/data";
 import { emitModelUpdateEvent } from "~/src/events/model_event";
 
 export default {
+    components: {
+        'toast': Toast
+    },
     setup() {
         console.log("Init")
     },
@@ -13,22 +19,22 @@ export default {
         return {
             currentPage: "modelList",
             transitionName: "slide-left",
-            baseUrl: '',
-            modelName: '',
-            modelType: EModelType.Ollama,
-            apiKey: '',
-            modelTypes: Object.values(EModelType),
+            model: new ModelConfig(""),
+            modelTypes: [],
             roleCards: [],
+            models: {'a':new ModelConfig("")},
+            currentModelName: "",
         }
     },
     mounted() {
         loadConfig().then(()=>{
-            console.log(BaseConfig)
-            this.baseUrl = BaseConfig.baseUrl
-            this.modelType = BaseConfig.modelType
-            this.modelName = BaseConfig.modelName
-            this.apiKey = BaseConfig.apiKey
-            this.roleCards = BaseConfig.roleCards
+            const model = ModelList.getCurrentModelConfig()
+            console.log(model)
+            this.model = model
+            this.modelTypes = Object.values(EModelType)
+            console.log(ModelList.Models)
+            this.models = ModelList.Models
+            this.currentModelName = model.name
         })
     },
     methods: {
@@ -37,26 +43,50 @@ export default {
             WebviewWindow.getCurrent().close()
         },
         onConfigChange() {
-            console.log("保存配置")
-            BaseConfig.baseUrl = this.baseUrl
-            BaseConfig.apiKey = this.apiKey
-            BaseConfig.modelName = this.modelName
-            BaseConfig.modelType = this.modelType
-            emitModelUpdateEvent()
+            // const model = ModelList.getCurrentModelConfig()
+            // model.baseUrl = this.baseUrl
+            // model.apiKey = this.apiKey
+            // model.modelName = this.modelName
+            // model.modelType = this.modelType
         },
-        switchView() {
+        switchView(model) {
+            this.model = model
+            this.currentModelName = model.name
             this.currentPage = this.currentPage === "modelList" ? "modelDetail" : "modelList"
             if (this.currentPage !== "modelList")
                 this.transitionName = "slide-left"
             else
                 this.transitionName = "slide-right"
-        }
+        },
+        saveModel() {
+            console.log("保存配置")
+            ModelList.saveModel(this.currentModelName, this.model)
+            ModelList.validate()
+            console.log(ModelList)
+            const model = ModelList.getModelConfigByName(this.model.name)
+            if (model && model.name !== this.model.name) {
+                this.$refs.toast.danger("存在同名配置")
+                return
+            }
+            console.log(this.models)
+            this.models = ModelList.Models
+            console.log(ModelList.Models)
+            saveConfig().then(()=>{
+                this.$refs.toast.show("保存成功")
+                emitModelUpdateEvent()
+            })
+        },
+        addModel() {
+            this.model = new ModelConfig("模型")
+            this.currentModelName = this.model.name
+            this.$refs.toast.show("添加配置")
+        },
     }
 }
 </script>
 
 <template>
-    <main class="drag-area macos-background">
+    <main class="drag-area maincontainer">
         <div class="header">
             <div class="header-left"></div>
             <div class="header-center">
@@ -70,26 +100,41 @@ export default {
                 </button>
             </div>
         </div>
+        <toast ref="toast" class="toast"></toast>
         <transition :name="transitionName">
             <div :key="currentPage" class="panel">
                 <div v-if="currentPage === 'modelList'" class="inputcontainer">
-                    <button id="rightbutton" @click="switchView">
-                        <el-icon ><ArrowRightBold /></el-icon>
-                    </button>
-                    <p>ttt</p>
+                    <div class="modelcard lightShadow no-drag" v-for="(v, key) in models">
+                        <div style="text-align: left;">
+                            <label>昵称：{{ key }}</label><br/>
+                            <label>地址：{{ v.baseUrl }}</label><br/>
+                            <label>类型：{{ v.modelType }}</label><br/>
+                            <label>名字：{{ v.modelName }}</label><br/>
+                            <label>角色：{{ v.roleCard.name }}</label><br/>
+                        </div>
+                        <button style="margin-left: auto;" id="rightbutton" @click="switchView(v)">
+                            <el-icon ><ArrowRightBold /></el-icon>
+                        </button>
+                    </div>
                 </div>
                 <div class="inputcontainer no-drag" v-else>
+                    <div class="" style="margin-top: 15px;">
+                        <button @click="saveModel">保存</button>
+                        <button @click="addModel">新增</button>
+                    </div>
                     <button id="leftbutton" @click="switchView">
                         <el-icon ><ArrowLeftBold /></el-icon>
                     </button>
+                    <label>名字</label>
+                    <input class="input" @input="onConfigChange" v-model="this.model.name"/>
                     <label>API Key</label>
-                    <input class="input" @input="onConfigChange" type="password" v-model="apiKey" style="width: 240px"/>
+                    <input class="input" @input="onConfigChange" type="password" v-model="this.model.apiKey"/>
                     <label>模型网址</label>
-                    <input class="input" @input="onConfigChange" v-model="baseUrl" style="width: 240px"/>
+                    <input class="input" @input="onConfigChange" v-model="this.model.baseUrl"/>
                     <label>模型名称</label>
-                    <input class="input" @input="onConfigChange" v-model="modelName" style="width: 240px"/>
+                    <input class="input" @input="onConfigChange" v-model="this.model.modelName"/>
                     <label>模型类型</label>
-                    <el-select class="lightShadow" @change="onConfigChange" v-model="modelType" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
+                    <el-select class="lightShadow" @change="onConfigChange" v-model="this.model.modelType" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
                         <el-option v-for="item in modelTypes" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>
                     </el-select>
                     <!-- <el-select class="lightShadow" @change="onConfigChange" v-model="modelType" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
@@ -102,6 +147,25 @@ export default {
 </template>
 
 <style>
+/**弹窗 tips */
+.toast {
+    position: absolute;
+}
+/**模型选择 */
+.modelcard {
+    background: linear-gradient(135deg, #f0f0f0, #ffffff);
+    width: 400px;
+    height: 120px;
+    padding: 15px;
+    padding-left: 25px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 15px;
+    outline: none;
+    border: none;
+    border-radius: 10px;
+    display: flex;
+}
 /**面板过度 */
 .panel {
     position: absolute;
@@ -112,18 +176,18 @@ export default {
     transform: translate(-50%, 0);
 }
 .slide-left-enter-from {
-  transform: translateX(100%);
+  transform: translateX(150%);
 }
 .slide-left-leave-to {
-  transform: translateX(-100%);
+  transform: translateX(-150%);
 }
 
 /* 从右到左的动画 */
 .slide-right-enter-from {
-  transform: translateX(-100%);
+  transform: translateX(-150%);
 }
 .slide-right-leave-to {
-  transform: translateX(100%);
+  transform: translateX(150%);
 }
 .slide-left-enter-active,
 .slide-left-leave-active,
@@ -142,20 +206,20 @@ export default {
     top:50%;
 }
 #leftbutton:hover {
-    background: radial-gradient(closest-side, rgba(189, 189, 189, 0.35), rgba(255, 255, 255, 0)); /* 中心向四周渐变透明 */
+    background: radial-gradient(closest-side, rgba(211, 211, 211, 0.35), rgba(255, 255, 255, 0)); /* 中心向四周渐变透明 */
 }
 #rightbutton {
     background-color: #00000000;
     outline: none;
     border: none;
-    height: 200px;
+    height: 70px;
     transform: translate(0, -50%);
-    position: absolute;
-    right: 5px;
+    position: relative;
+    right: 0%;
     top:50%;
 }
 #rightbutton:hover {
-    background: radial-gradient(closest-side, rgba(189, 189, 189, 0.35), rgba(255, 255, 255, 0)); /* 中心向四周渐变透明 */
+    background: radial-gradient(closest-side, rgba(211, 211, 211, 0.35), rgba(255, 255, 255, 0)); /* 中心向四周渐变透明 */
 }
 /**面板过度结束 */
 /**输入框 */
@@ -166,20 +230,21 @@ export default {
     border-radius: 8px;
     outline: none;
     background-color: white;
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 5px 6px rgba(0, 0, 0, 0.1);
     outline: none;
     border: none;
     margin-left: auto;
     margin-right: auto;
     margin-bottom: 15px;
+    width: 240px;
 }
 .lightShadow {
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 5px 6px rgba(0, 0, 0, 0.1);
 }
 /**输入面板 */
 .inputcontainer {
     background: #ffffff00;
-    padding: 20px;
+    padding-top: 20px;
     width: 100%;
     height: 500px;
     text-align: center;
@@ -260,7 +325,7 @@ main {
     flex-direction: column;
 }
 
-.macos-background {
+.maincontainer {
     height: 100vh;
     /* 使背景占满整个视口高度 */
     background: linear-gradient(135deg, #f0f0f0, #ffffff);

@@ -1,11 +1,10 @@
 import { emit, EventCallback, listen } from "@tauri-apps/api/event";
-import { BaseConfig } from "../config";
 
 const ModelUpdate = "ModelUpdate"
 const ModelResult = "ModelResult"
 
 export async function emitModelUpdateEvent() {
-    await emit(ModelUpdate, {config : BaseConfig})
+    await emit(ModelUpdate)
 }
 
 export async function listenModelUpdateEvent(callback: EventCallback<any>) {
