@@ -63,7 +63,7 @@ export async function searchWeb(question:string) {
  * @param content 写入的文本内容
  * @returns 结果
  */
-export async function writeTextFileAtProjectRoot(path:string, content:string):Promise<string> {
+export async function writeTextFileAtProjectTemp(path:string, content:string):Promise<string> {
     if (path.indexOf("..") >= 0) {
         console.warn("不得传入相对上级的路径：", path)
         return
@@ -76,7 +76,7 @@ export async function writeTextFileAtProjectRoot(path:string, content:string):Pr
  * @param path 临时目录下的相对路径
  * @returns 文本文件内容
  */
-export async function readTextFileAtProjectRoot(path:string): Promise<string> {
+export async function readTextFileAtProjectTemp(path:string): Promise<string> {
     if (path.indexOf("..") >= 0) {
         console.warn("不得传入相对上级的路径：", path)
         return
@@ -85,7 +85,7 @@ export async function readTextFileAtProjectRoot(path:string): Promise<string> {
     return await invoke("read_text_file_at_project_root", {path: path})
 }
 //获取临时目录绝对路径
-export async function getProjectRootPath():Promise<string> {
+export async function getProjectTempPath():Promise<string> {
     const path = await invoke("get_project_root_path") + "/temp/"
     console.log("绝对路径：", path)
     return path

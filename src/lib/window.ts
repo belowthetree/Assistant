@@ -33,6 +33,7 @@ export async function createWindow(
         visible: true,
         x: size.width - width + offset.width,
         y: (size.height - height) / 2 + offset.height,
+        maximizable: false,
     })
 
     // let win = await Window.getByLabel(label)

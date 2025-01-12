@@ -1,19 +1,16 @@
 import { fetch} from "@tauri-apps/plugin-http"
-import { readTextFileAtProjectRoot } from "@/lib/llm_action"
+import { readTextFileAtProjectTemp } from "@/lib/llm_action"
 import { LLMBase } from "@/model/llm_base"
 import { EModelType } from "@/data"
 
 export class DeepSeek extends LLMBase {
-    url="https://api.deepseek.com/chat/completions"
-    api_key: string = ""
-    messages: any[] = []
-
     constructor(url: string = "https://api.deepseek.com/chat/completions", model: string = "deepseek-chat", api: string = "") {
         super(url, model, api)
         this.modelType = EModelType.DeepSeek
     }
 
     async chat(content:string, temperature?:number, system?:string): Promise<string> {
+        console.log("deep input", content)
         const res = await this.generate(content, temperature, system, this.messages)
         this.messages.push({
             "role": "assistant",
@@ -25,7 +22,8 @@ export class DeepSeek extends LLMBase {
     async generate(content: string, temperature?:number, system?:string, ctx?:any): Promise<string> {
         console.log(content)
         if (this.api_key.length <= 0) {
-            const res = await readTextFileAtProjectRoot("resources/api_key")
+            console.log("没有 api key")
+            const res = await readTextFileAtProjectTemp("resources/api_key")
             this.api_key = "Bearer " + res
         }
         const messages = ctx || []

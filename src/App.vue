@@ -72,8 +72,8 @@ export default {
 			MainModel.chat(this.userInput, 0.2, ModulePrompt).then((res)=>{
 				// this.$refs.bubbles.addBubble(res)
 				console.log(res)
-				addBubble(res)
-				// MainModel.execute_typescript(res)
+				// addBubble(res)
+				MainModel.execute_typescript(res)
 			})
 		},
 		onKeyDown(event) {

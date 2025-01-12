@@ -1,6 +1,7 @@
 import { EModelType } from "@/data"
 import { notify } from "../lib/llm_action"
 import * as moduleAction from "../lib/llm_action"
+import { RoleCardBase } from "../rolecard/rolecardbase"
 
 export interface LLMInterface {
     modelType: EModelType
@@ -17,11 +18,12 @@ export class LLMBase implements LLMInterface {
     messages: any[] = []
     url: string = ""
     modelName: string = ""
+    roleCard: RoleCardBase = null
 
     constructor(url: string, modelName: string, api_key: string = "") {
         this.url = url
         this.modelName = modelName
-        this.api_key = api_key
+        this.api_key = "Bearer " + api_key
     }
 
     getModelName(): string {return ""}
