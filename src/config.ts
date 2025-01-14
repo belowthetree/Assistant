@@ -132,6 +132,9 @@ function loadRoleCards() {
     }).catch((e)=>{
         // 加载基础角色卡
         RoleCards = []
+        let card = new RoleCardBase()
+        card.systemPrompt = 
+        RoleCards.push(card)
         console.warn(e)
     })
 }

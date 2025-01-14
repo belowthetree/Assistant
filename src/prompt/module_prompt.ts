@@ -1,29 +1,8 @@
-import { invoke } from "@tauri-apps/api/core"
+import { BaseDirectory, readTextFile } from "@tauri-apps/plugin-fs"
 
-const content = await invoke("read_text_file_at_project_root", {path: "src/lib/llm_action.ts"}) as string
-const ctxArr = content.split("\n")
-let funcDesc = ""
-for (let i = 0; i < ctxArr.length;++i) {
-    const line = ctxArr[i]
-    if (line.indexOf("export") >= 0) {
-        // 如果存在注释，添加上
-        let mark = ""
-        for (let k = i - 1;k >= 0; --k) {
-            const tempLine = ctxArr[k].trim()
-            if (tempLine.indexOf("//") >= 0 || tempLine.indexOf("*") >= 0) {
-                mark = ctxArr[k] + "\n" + mark
-            }
-            else {
-                break
-            }
-        }
-        funcDesc += mark + line.replace("export", "").replace("{", "").trim() + "\n"
-    }
-}
-
-// console.log(funcDesc)
-
-export const ModulePrompt =
+readTextFile("./resource/defaultprompt.txt").then((funcDesc: string)=>{
+    console.log("拿到")
+    ModulePrompt =
 `# 角色
 你是一个指令执行助手，用户提出要求后你将输出一段 javascript 代码，这段代码将作为字符串被执行。你只会生成代码。
 
@@ -45,3 +24,27 @@ ${funcDesc}
 输出：
 notify("2 的三次方", "2 的三次方是 8")
 `
+})
+// const ctxArr = content.split("\n")
+// let funcDesc = ""
+// for (let i = 0; i < ctxArr.length;++i) {
+//     const line = ctxArr[i]
+//     if (line.indexOf("export") >= 0) {
+//         // 如果存在注释，添加上
+//         let mark = ""
+//         for (let k = i - 1;k >= 0; --k) {
+//             const tempLine = ctxArr[k].trim()
+//             if (tempLine.indexOf("//") >= 0 || tempLine.indexOf("*") >= 0) {
+//                 mark = ctxArr[k] + "\n" + mark
+//             }
+//             else {
+//                 break
+//             }
+//         }
+//         funcDesc += mark + line.replace("export", "").replace("{", "").trim() + "\n"
+//     }
+// }
+
+// console.log(funcDesc)
+
+export var ModulePrompt =""

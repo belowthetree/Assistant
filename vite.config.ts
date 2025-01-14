@@ -18,6 +18,7 @@ export default defineConfig(async () => ({
     port: 5710,
     strictPort: true,
     host: '0.0.0.0',
+    cors: false, // 配置 CORS
     hmr: host
       ? {
           protocol: "ws",

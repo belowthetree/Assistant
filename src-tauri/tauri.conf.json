@@ -4,7 +4,7 @@
 	"version": "0.1.0",
 	"identifier": "com.assistant.app",
 	"build": {
-		"beforeDevCommand": "npm run dev",
+		"beforeDevCommand": "npm run dev && npx ts-node 'E:/LLM/Assistant/Assistant/public/buildprompt.js'",
 		"devUrl": "http://localhost:5710",
 		"beforeBuildCommand": "npm run build",
 		"frontendDist": "../dist"
@@ -23,6 +23,9 @@
 			"icons/128x128@2x.png",
 			"icons/icon.icns",
 			"icons/icon.ico"
+		],
+		"resources": [
+			"./resource"
 		]
 	}
 }

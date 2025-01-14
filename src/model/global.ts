@@ -4,7 +4,7 @@ import { DeepSeek } from "./deepseek";
 import { LLMBase } from "./llm_base";
 import { Ollama } from "./ollama";
 
-export var MainModel: LLMBase = new Ollama("http://127.0.0.1:11434/api/generate", "qwen2.5-coder:3b")
+export var MainModel: LLMBase = new Ollama("http://127.0.0.1:11434/api/generate", "qwen2.5-coder:latest")
 
 export function generateModelFromConfig(config: ModelConfig): LLMBase {
     let model

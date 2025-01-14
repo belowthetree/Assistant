@@ -2,6 +2,7 @@ import { EModelType } from "@/data"
 import { notify } from "../lib/llm_action"
 import * as moduleAction from "../lib/llm_action"
 import { RoleCardBase } from "../rolecard/rolecardbase"
+import {fetch} from "@tauri-apps/plugin-http"
 
 export interface LLMInterface {
     modelType: EModelType
@@ -36,7 +37,7 @@ export class LLMBase implements LLMInterface {
     }
 
     async chat(content:string, temperature?:number, system?:string): Promise<string> {
-        console.log("chat", content)
+        console.log("chat", content, system)
         if (!this.checkApiKeyValid()) {
             notify("API Key 未设置", `模型${this.getModelName()} api key 未设置`)
         }
@@ -61,6 +62,7 @@ export class LLMBase implements LLMInterface {
             })
         })
 
+        console.log(response)
         if (response.status == 200) {
             const text = await response.text()
             const js = JSON.parse(text)

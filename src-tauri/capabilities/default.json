@@ -8,33 +8,27 @@
 	"permissions": [
 		"core:default",
 		"opener:default",
+		"http:allow-fetch",
+		"http:default",
+		"http:allow-fetch-read-body",
+		"http:allow-fetch-send",
 		{
-			"identifier": "http:default",
+			"identifier": "http:allow-fetch",
 			"allow": [
 				{
-					"url": "http://127.0.0.1:11434/api/generate"
+					"url": "http://127.0.0.1:11434/*"
 				},
 				{
-					"url": "http://127.0.0.1:11434/api/chat"
+					"url": "http://*.*"
 				},
 				{
-					"url": "http://localhost:11434/api/generate"
-				},
-				{
-					"url": "http://localhost:11434/api/chat"
+					"url": "https://*.*"
 				},
 				{
 					"url": "https://api.deepseek.com/chat/completions"
 				}
-			],
-			"deny": [
-				{
-					"url": "https://private.tauri.app"
-				}
 			]
 		},
-		"http:allow-fetch",
-		"http:allow-fetch-send",
 		"dialog:default",
 		"clipboard-manager:default",
 		"notification:default",
@@ -47,6 +41,9 @@
 				},
 				{
 					"path": "$APPCONFIG/*"
+				},
+				{
+					"path": "./resource/*"
 				}
 			]
 		},
@@ -62,6 +59,7 @@
 		"core:window:allow-show",
 		"core:window:allow-create",
 		"core:window:allow-close",
-		"clipboard-manager:allow-write-text"
+		"clipboard-manager:allow-write-text",
+		"log:allow-log"
 	]
 }

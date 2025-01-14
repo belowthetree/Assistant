@@ -50,7 +50,7 @@ export async function inputCommand(model: string, desc: string) {
     let v = await fetch("http://127.0.0.1:11434/api/generate", {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         },
         body: JSON.stringify({
             "model": model,

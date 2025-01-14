@@ -68,13 +68,18 @@ export default {
 			Window.setSize(new LogicalSize(300, height + 35)).catch(e=>console.log(e))
 		},
 		async commitCommand() {
-			console.log("输入命令", this.userInput)
-			MainModel.chat(this.userInput, 0.2, ModulePrompt).then((res)=>{
-				// this.$refs.bubbles.addBubble(res)
-				console.log(res)
-				// addBubble(res)
-				// MainModel.execute_typescript(res)
-			})
+			try {
+				console.log("输入命令", this.userInput)
+				MainModel.chat(this.userInput, 0.2, ModulePrompt).then((res)=>{
+					// this.$refs.bubbles.addBubble(res)
+					console.log(res)
+					// addBubble(res)
+					MainModel.execute_typescript(res)
+				})
+			}
+			catch(e) {
+				console.log(e)
+			}
 		},
 		onKeyDown(event) {
 			if (event.key == "Control")

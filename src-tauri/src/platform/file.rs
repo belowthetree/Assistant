@@ -1,5 +1,5 @@
 use project_root::get_project_root;
-use std::{fs, path::Path};
+use std::{env, fs, path::Path};
 
 #[tauri::command]
 pub fn get_project_root_path() -> Result<String, String> {
@@ -8,12 +8,19 @@ pub fn get_project_root_path() -> Result<String, String> {
             let root = p.to_str().unwrap().to_string();
             let t = fs::canonicalize(root + "/../");
             if let Ok(res) = t {
-                Ok(res.to_str().unwrap().replace(r"\\?\", "").to_string())
+                let mut str = res.to_str().unwrap().replace(r"\\?\", "").to_string();
+                str.push('/');
+                Ok(str)
             } else {
                 Err(format!("{}", t.unwrap_err()))
             }
         }
-        Err(e) => Err(format!("获取根目录失败：{}", e).into()),
+        Err(e) => {
+            let mut str: String = env::current_exe().unwrap().to_str().unwrap().into();
+            str.push_str("/../");
+            println!("{}", str);
+            Ok(str)
+        },
     }
 }
 
@@ -52,10 +59,9 @@ pub fn write_text_file(path: &str, content: &str) -> Result<(), String> {
 
 #[tauri::command]
 pub fn read_text_file_at_project_root(path: &str) -> Result<String, String> {
-    match get_project_root() {
-        Ok(p) => {
-            let root = p.to_str().unwrap().to_string();
-            let s = root + "/../" + path;
+    match get_project_root_path() {
+        Ok(root) => {
+            let s = root + path;
             read_text_file(s.as_str())
         }
         Err(e) => Err(format!("获取根目录失败：{}", e).into()),
@@ -64,10 +70,9 @@ pub fn read_text_file_at_project_root(path: &str) -> Result<String, String> {
 
 #[tauri::command]
 pub fn write_text_file_at_project_root(path: &str, content: &str) -> Result<(), String> {
-    match get_project_root() {
-        Ok(p) => {
-            let root = p.to_str().unwrap().to_string();
-            let s = root + "/../" + path;
+    match get_project_root_path() {
+        Ok(root) => {
+            let s = root + path;
             write_text_file(&s, content)
         }
         Err(e) => Err(format!("获取根目录失败 {}", e).into()),

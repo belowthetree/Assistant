@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Close } from "@element-plus/icons-vue"
+import { Close, Refresh } from "@element-plus/icons-vue"
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import test from "node:test";
@@ -29,10 +29,8 @@ export default {
     mounted() {
         loadConfig().then(()=>{
             const model = ModelList.getCurrentModelConfig()
-            console.log(model)
             this.model = model
             this.modelTypes = Object.values(EModelType)
-            console.log(ModelList.Models)
             this.models = ModelList.Models
             this.currentModelName = model.name
         })
@@ -81,6 +79,10 @@ export default {
             this.currentModelName = this.model.name
             this.$refs.toast.show("添加配置")
         },
+        refresh() {
+            console.log(this.models)
+            this.$forceUpdate(); // 强制刷新
+        },
     }
 }
 </script>
@@ -104,6 +106,7 @@ export default {
         <transition :name="transitionName">
             <div :key="currentPage" class="panel">
                 <div v-if="currentPage === 'modelList'" class="inputcontainer">
+                    <button @click="refresh">刷新</button>
                     <div class="modelcard lightShadow no-drag" v-for="(v, key) in models">
                         <div style="text-align: left;">
                             <label>昵称：{{ key }}</label><br/>
