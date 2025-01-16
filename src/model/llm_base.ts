@@ -3,6 +3,7 @@ import { notify } from "../lib/llm_action"
 import * as moduleAction from "../lib/llm_action"
 import { RoleCardBase } from "../rolecard/rolecardbase"
 import {fetch} from "@tauri-apps/plugin-http"
+import { ModulePrompt } from "../prompt/module_prompt"
 
 export interface LLMInterface {
     modelType: EModelType
@@ -19,9 +20,10 @@ export class LLMBase implements LLMInterface {
     messages: any[] = []
     url: string = ""
     modelName: string = ""
-    roleCard: RoleCardBase = null
+    roleCard: RoleCardBase = new RoleCardBase()
 
     constructor(url: string, modelName: string, api_key: string = "") {
+        this.roleCard.systemPrompt = ModulePrompt
         this.url = url
         this.modelName = modelName
         this.api_key = "Bearer " + api_key

@@ -24,6 +24,7 @@ export default {
             roleCards: [],
             models: {'a':new ModelConfig("")},
             currentModelName: "",
+            prompt: "",
         }
     },
     mounted() {
@@ -33,6 +34,7 @@ export default {
             this.modelTypes = Object.values(EModelType)
             this.models = ModelList.Models
             this.currentModelName = model.name
+            console.log(this.model.roleCard.systemPrompt)
         })
     },
     methods: {
@@ -83,6 +85,10 @@ export default {
             console.log(this.models)
             this.$forceUpdate(); // 强制刷新
         },
+        onPromptChanged() {
+            console.log(this.model.roleCard.systemPrompt)
+            // 
+        }
     }
 }
 </script>
@@ -106,7 +112,6 @@ export default {
         <transition :name="transitionName">
             <div :key="currentPage" class="panel">
                 <div v-if="currentPage === 'modelList'" class="inputcontainer">
-                    <button @click="refresh">刷新</button>
                     <div class="modelcard lightShadow no-drag" v-for="(v, key) in models">
                         <div style="text-align: left;">
                             <label>昵称：{{ key }}</label><br/>
@@ -140,6 +145,7 @@ export default {
                     <el-select class="lightShadow" @change="onConfigChange" v-model="this.model.modelType" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
                         <el-option v-for="item in modelTypes" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>
                     </el-select>
+                    <textarea id="userInput" @input="onPromptChanged" class="no-drag" v-model="this.model.roleCard.systemPrompt" placeholder="系统提示词"></textarea>
                     <!-- <el-select class="lightShadow" @change="onConfigChange" v-model="modelType" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
                         <el-option v-for="item in modelTypes" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>
                     </el-select> -->

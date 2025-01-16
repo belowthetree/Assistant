@@ -3,17 +3,19 @@ import { exists, mkdir, readTextFile, writeTextFile } from "@tauri-apps/plugin-f
 import { EModelType } from "./data"
 import { listenModelUpdateEvent } from "./events/model_event"
 import { RoleCardBase } from "./rolecard/rolecardbase"
+import { ModulePrompt } from "./prompt/module_prompt"
 
 export class ModelConfig {
     name: string = ""
     baseUrl: string = "127.0.0.1:11434"
     modelType: EModelType = EModelType.Ollama
     apiKey: string = ""
-    modelName: string = "qwen2.5-coder:3b"
+    modelName: string = "qwen2.5-coder:7b"
     roleCard: RoleCardBase = new RoleCardBase()
 
     constructor(name: string) {
         this.name = name
+        this.roleCard.systemPrompt = ModulePrompt
     }
 }
 
@@ -83,7 +85,7 @@ listenModelUpdateEvent(()=>{
     // loadConfig()
 })
 
-export async function loadConfig() {
+export async function loadConfig():Promise<void> {
     await loadBaseConfig()
     await loadRoleCards()
 }
@@ -104,8 +106,9 @@ export async function saveConfig() {
 }
 
 // 读取模型列表配置
-function loadBaseConfig() {
-    readTextFile("config.json", {baseDir: BaseDirectory.AppConfig}).then((cfg)=>{
+async function loadBaseConfig() {
+    try {
+        const cfg = await readTextFile("config.json", {baseDir: BaseDirectory.AppConfig})
         ModelList = JSON.parse(cfg)
         const t = new ModelListConfig()
         for (const key in ModelList) {
@@ -118,23 +121,25 @@ function loadBaseConfig() {
         }
         ModelList.getCurrentModelConfig()
         console.log(ModelList)
-    }).catch((e)=>{
+    }
+    catch(e) {
         ModelList = new ModelListConfig()
         console.warn(e)
-    })
+    }
 }
 
 // 读取角色卡
-function loadRoleCards() {
-    readTextFile("rolecards.json", {baseDir: BaseDirectory.AppConfig}).then((cfg)=>{
+async function loadRoleCards() {
+    try {
+        const cfg = await readTextFile("rolecards.json", {baseDir: BaseDirectory.AppConfig})
         RoleCards = JSON.parse(cfg) as RoleCardBase[]
         console.log(RoleCards)
-    }).catch((e)=>{
+    }
+    catch(e) {
         // 加载基础角色卡
         RoleCards = []
         let card = new RoleCardBase()
-        card.systemPrompt = 
         RoleCards.push(card)
         console.warn(e)
-    })
+    }
 }
