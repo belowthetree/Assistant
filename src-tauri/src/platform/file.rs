@@ -15,7 +15,7 @@ pub fn get_project_root_path() -> Result<String, String> {
                 Err(format!("{}", t.unwrap_err()))
             }
         }
-        Err(e) => {
+        Err(_e) => {
             let mut str: String = env::current_exe().unwrap().to_str().unwrap().into();
             str.push_str("/../");
             println!("{}", str);

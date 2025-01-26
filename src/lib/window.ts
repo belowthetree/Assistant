@@ -17,6 +17,7 @@ export async function createWindow(
         console.log(`已存在 ${label}`)
         if (!win.isVisible())
             win.show()
+        win.setFocus()
         return win
     }
     console.log("创建" + `${label}`)
@@ -62,4 +63,8 @@ export async function openSettingWindow():Promise<WebviewWindow> {
 
 export async function openTalkView():Promise<WebviewWindow> {
     return createWindow('talk', "对话", 500, 500, false, false)
+}
+
+export async function openRoleCardView() {
+    return createWindow('rolecard', "角色卡", 500, 600, false, false)
 }

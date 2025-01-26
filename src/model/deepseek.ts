@@ -4,8 +4,8 @@ import { LLMBase } from "@/model/llm_base"
 import { EModelType } from "@/data"
 
 export class DeepSeek extends LLMBase {
-    constructor(url: string = "https://api.deepseek.com/chat/completions", model: string = "deepseek-chat", api: string = "") {
-        super(url, model, api)
+    constructor(url: string = "https://api.deepseek.com/chat/completions", model: string = "deepseek-chat", roleCard: string, api: string = "") {
+        super(url, model, roleCard, api)
         this.modelType = EModelType.DeepSeek
     }
 

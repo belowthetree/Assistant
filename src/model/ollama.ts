@@ -3,8 +3,8 @@ import { EModelType } from "@/data"
 
 export class Ollama extends LLMBase {
     url="http://127.0.0.1:11434/api/generate"
-    constructor(url: string, model: string, api_key: string = "") {
-        super(url, model, api_key)
+    constructor(url: string, model: string, roleCard: string, api_key: string = "") {
+        super(url, model, roleCard, api_key)
         this.modelType = EModelType.Ollama
         console.log(this.modelName)
     }

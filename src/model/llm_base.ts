@@ -4,6 +4,7 @@ import * as moduleAction from "../lib/llm_action"
 import { RoleCardBase } from "../rolecard/rolecardbase"
 import {fetch} from "@tauri-apps/plugin-http"
 import { ModulePrompt } from "../prompt/module_prompt"
+import { getRoleCard } from "../config"
 
 export interface LLMInterface {
     modelType: EModelType
@@ -22,11 +23,12 @@ export class LLMBase implements LLMInterface {
     modelName: string = ""
     roleCard: RoleCardBase = new RoleCardBase()
 
-    constructor(url: string, modelName: string, api_key: string = "") {
+    constructor(url: string, modelName: string, roleCard: string, api_key: string) {
         this.roleCard.systemPrompt = ModulePrompt
         this.url = url
         this.modelName = modelName
         this.api_key = "Bearer " + api_key
+        this.roleCard = getRoleCard(roleCard)
     }
 
     getModelName(): string {return ""}
@@ -42,6 +44,9 @@ export class LLMBase implements LLMInterface {
         console.log("chat", content, system)
         if (!this.checkApiKeyValid()) {
             notify("API Key 未设置", `模型${this.getModelName()} api key 未设置`)
+        }
+        if (!system) {
+            system = this.roleCard.systemPrompt
         }
         const messages = this.messages || []
         messages.push(
@@ -115,7 +120,12 @@ export class LLMBase implements LLMInterface {
         return await response.text()
     }
 
-    execute_typescript(content) {
+    execute_typescript(content: string) {
+        const arr = content.split("</think>")
+        console.log(arr)
+        if (arr.length > 1) {
+            content = arr[1]
+        }
         let code = content.replace("\`\`\`javascript", "")
         code = code.replace("\`\`\`", "")
         code = code.trim()

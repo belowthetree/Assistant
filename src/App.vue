@@ -4,7 +4,7 @@ import { onMounted, ref } from "vue";
 import { chat_with_tool, inputCommand, generate_instructions, generate } from "./lib/llm_interface";
 import { ask, confirm } from "@tauri-apps/plugin-dialog";
 import { TypescriptProcess } from "./frontend/typescript_process";
-import { MainModel } from "./model/global";
+import { generateModelFromConfig } from "./model/global";
 import { getCurrentWindow, LogicalPosition } from '@tauri-apps/api/window';
 import { LogicalSize, Position } from "@tauri-apps/api/dpi";
 import { Setting } from "@element-plus/icons-vue";
@@ -12,9 +12,11 @@ import { openSettingWindow } from "./lib/window";
 import Bubbles from "./components/Bubbles.vue";
 import { EModelType, ECmdMode } from "@/data";
 import { ModulePrompt } from "./prompt/module_prompt";
-import { emitModelResultEvent } from "./events/model_event";
+import { emitModelResultEvent, listenModelUpdateEvent } from "./events/model_event";
 import { webviewWindow } from "@tauri-apps/api";
 import { addBubble } from "./view/Talk/api";
+import { moveWindow, Position as WindowPosition } from "@tauri-apps/plugin-positioner";
+import { loadConfig, ModelList } from "./config";
 
 var models = EModelType.Deepseek
 
@@ -35,6 +37,7 @@ export default {
 		Bubbles,
 	},
 	setup() {
+		moveWindow(WindowPosition.RightCenter)
 	},
 	data() {
 		return {
@@ -70,11 +73,12 @@ export default {
 		async commitCommand() {
 			try {
 				console.log("输入命令", this.userInput)
-				MainModel.chat(this.userInput, 0.2, ModulePrompt).then((res)=>{
+				const model = generateModelFromConfig(ModelList.getCurrentModelConfig())
+				model.chat(this.userInput, 0.2).then((res)=>{
 					// this.$refs.bubbles.addBubble(res)
 					console.log(res)
 					// addBubble(res)
-					MainModel.execute_typescript(res)
+					model.execute_typescript(res)
 				})
 			}
 			catch(e) {
@@ -95,6 +99,10 @@ export default {
 		}
 	},
 	mounted() {
+			listenModelUpdateEvent(()=>{
+				loadConfig()
+				console.log(ModelList)
+			})
 			this.onInput()
 			const mainWindow = webviewWindow.getCurrentWebviewWindow()
 			// 监听窗口显示事件

@@ -59,6 +59,7 @@
 		"core:window:allow-show",
 		"core:window:allow-create",
 		"core:window:allow-close",
+		"core:window:allow-set-focus",
 		"clipboard-manager:allow-write-text",
 		"log:allow-log"
 	]

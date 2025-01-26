@@ -1,12 +1,10 @@
 <script lang="ts">
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import Toast from "~/src/components/Toast.vue";
-import { ModelConfig, ModelList, RoleCards, loadConfig, saveConfig } from "~/src/config";
-import { EModelType } from "~/src/data";
-import { emitModelUpdateEvent } from "~/src/events/model_event";
+import { RoleCards, loadConfig, saveConfig } from "~/src/config";
 import { moveWindow, Position as WindowPosition } from "@tauri-apps/plugin-positioner";
-import { openRoleCardView } from "~/src/lib/window";
 import { RoleCardBase } from "~/src/rolecard/rolecardbase";
+import { emitModelUpdateEvent } from "~/src/events/model_event";
 
 export default {
     components: {
@@ -17,31 +15,18 @@ export default {
     },
     data() {
         return {
-            currentPage: "modelList",
+            currentPage: "roleCardList",
+            roleCards: RoleCards,
             transitionName: "slide-left",
-            model: new ModelConfig(""),
-            modelTypes: [],
-            models: {'a':new ModelConfig("")},
-            editModelName: "",
-            currentModelName: "",
-            roleCard: "",
-            rolecards: [RoleCardBase],
-            created : false,
+            currentRoleName: "",
+            roleCard: new RoleCardBase(),
+            created: false,
         }
     },
     mounted() {
         loadConfig().then(()=>{
-            const model = ModelList.getCurrentModelConfig()
-            this.model = model
-            this.modelTypes = Object.values(EModelType)
-            this.models = ModelList.Models
-            this.editModelName = ""
-            this.currentModelName = ModelList.currentConfig
-            this.rolecards = []
-            for (let v of RoleCards) {
-                this.rolecards.push(v.name)
-            }
-            this.roleCard = this.rolecards[0]
+            this.roleCard = RoleCards[0]
+            this.currentRoleName = this.roleCard.name
         })
     },
     methods: {
@@ -50,55 +35,37 @@ export default {
             WebviewWindow.getCurrent().close()
         },
         onConfigChange() {
-            // const model = ModelList.getCurrentModelConfig()
-            // model.baseUrl = this.baseUrl
-            // model.apiKey = this.apiKey
-            // model.modelName = this.modelName
-            // model.modelType = this.modelType
+
         },
         switchView(model) {
             this.created = false
-            console.log(model)
             this.model = model
-            this.roleCard = model.roleCard
-            console.log(this.roleCard)
-            this.editModelName = model.name
-            this.currentPage = this.currentPage === "modelList" ? "modelDetail" : "modelList"
-            if (this.currentPage !== "modelList")
+            this.currentModelName = model.name
+            this.currentPage = this.currentPage === "roleCardList" ? "roleCardDetail" : "roleCardList"
+            if (this.currentPage !== "roleCardList")
                 this.transitionName = "slide-left"
             else
                 this.transitionName = "slide-right"
         },
-        saveModel() {
-            console.log("保存配置")
-            const model = ModelList.getModelConfigByName(this.model.name)
-            if (model && this.created) {
-                this.$refs.toast.danger("存在同名配置")
-                return
+        saveRoleCard() {
+            console.log("保存角色卡配置")
+            if (this.created) {
+                for (let v of RoleCards) {
+                    if (v.name === this.rolecard) {
+                        this.$refs.toast.danger("存在同名角色卡")
+                        return
+                    }
+                }
+                RoleCards.push(this.roleCard)
             }
-            ModelList.saveModel(this.editModelName, this.model)
-            ModelList.validate()
-            console.log(ModelList)
-            console.log(this.models)
-            this.models = ModelList.Models
-            console.log(ModelList.Models)
             saveConfig().then(()=>{
                 this.$refs.toast.show("保存成功")
                 emitModelUpdateEvent()
             })
         },
-        saveSelect() {
-            ModelList.currentConfig = this.currentModelName
-            saveConfig().then(()=>{
-                this.$refs.toast.show("保存成功")
-                emitModelUpdateEvent()
-            })
-        },
-        addModel() {
-            this.model = new ModelConfig("模型")
-            this.editModelName = this.model.name
-            this.$refs.toast.show("添加配置")
+        addRoleCard() {
             this.created = true
+            this.roleCard = new RoleCardBase()
         },
         refresh() {
             console.log(this.models)
@@ -106,16 +73,6 @@ export default {
         },
         onPromptChanged() {
             // 
-        },
-        openRoleCardView() {
-            console.log("open role")
-            openRoleCardView()
-        },
-        selectModel(name) {
-            const model = ModelList.getModelConfigByName(name)
-            if (model) {
-                this.currentModelName = name
-            }
         }
     }
 }
@@ -124,15 +81,9 @@ export default {
 <template>
     <main class="drag-area maincontainer">
         <div class="header">
-            <div class="header-left">
-                <button id="rolecardbutton" @click="openRoleCardView">
-                    <div style="margin: auto;">
-                        <Tickets style="width: 15px;height: 15px;margin: auto;"/>
-                    </div>
-                </button>
-            </div>
+            <div class="header-left"></div>
             <div class="header-center">
-                <span class="app-name">设置</span>
+                <span class="app-name">角色卡</span>
             </div>
             <div class="header-right no-drag" style="">
                 <button id="closebutton" @click="closeWindow">
@@ -145,16 +96,12 @@ export default {
         <toast ref="toast" class="toast"></toast>
         <transition :name="transitionName">
             <div :key="currentPage" class="panel">
-                <div v-if="currentPage === 'modelList'" class="inputcontainer">
-                    <el-button type="info" @click="saveSelect" style="width: 80%;margin-left: auto;margin-right: auto;">保存</el-button>
-                    <div :class="{'modelcard lightShadow no-drag': true, modelcard_selected: currentModelName===key}" v-for="(v, key) in models">
-                        <button style="text-align: left;" class="cardbutton" @click="selectModel(v.name)">
-                            <label>昵称：{{ key }}</label><br/>
-                            <label>地址：{{ v.baseUrl }}</label><br/>
-                            <label>类型：{{ v.modelType }}</label><br/>
-                            <label>名字：{{ v.modelName }}</label><br/>
-                            <label>角色：{{ v.roleCard }}</label><br/>
-                        </button>
+                <div v-if="currentPage === 'roleCardList'" class="inputcontainer">
+                    <div class="rolecard lightShadow no-drag" v-for="(v, _) in roleCards">
+                        <div style="text-align: left;">
+                            <label>角色名：{{ v.name }}</label><br/><br/>
+                            <label style="text-overflow: ellipsis;overflow: hidden;display: -webkit-box;-webkit-box-orient: vertical;-webkit-line-clamp: 2;">简述：{{ v.roleDesc }}</label><br/>
+                        </div>
                         <button style="margin-left: auto;" id="rightbutton" @click="switchView(v)">
                             <el-icon ><ArrowRightBold /></el-icon>
                         </button>
@@ -162,27 +109,22 @@ export default {
                 </div>
                 <div class="inputcontainer no-drag" v-else>
                     <div class="" style="margin-top: 15px;">
-                        <button @click="saveModel">保存</button>
-                        <button @click="addModel">新增</button>
+                        <button @click="saveRoleCard">保存</button>
+                        <button @click="addRoleCard">新增</button>
                     </div>
                     <button id="leftbutton" @click="switchView">
                         <el-icon ><ArrowLeftBold /></el-icon>
                     </button>
                     <label>名字</label>
-                    <input class="input" @input="onConfigChange" v-model="this.model.name"/>
-                    <label>API Key</label>
-                    <input class="input" @input="onConfigChange" type="password" v-model="this.model.apiKey"/>
-                    <label>模型网址</label>
-                    <input class="input" @input="onConfigChange" v-model="this.model.baseUrl"/>
-                    <label>模型名称</label>
-                    <input class="input" @input="onConfigChange" v-model="this.model.modelName"/>
-                    <label>模型类型</label>
-                    <el-select class="lightShadow" @change="onConfigChange" v-model="this.model.modelType" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
+                    <input class="input" @input="onConfigChange" v-model="this.roleCard.name"/>
+                    <textarea id="systemPromptInput" @input="onPromptChanged" class="no-drag" v-model="roleCard.systemPrompt" placeholder="系统提示词"></textarea>
+                    <!-- <el-select class="lightShadow" @change="onConfigChange" v-model="this.model.modelType" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
                         <el-option v-for="item in modelTypes" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>
                     </el-select>
-                    <el-select class="lightShadow" @change="onConfigChange" v-model="roleCard" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
-                        <el-option v-for="item in rolecards" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>
-                    </el-select>
+                    <textarea id="userInput" @input="onPromptChanged" class="no-drag" v-model="this.model.roleCard.systemPrompt" placeholder="系统提示词"></textarea> -->
+                    <!-- <el-select class="lightShadow" @change="onConfigChange" v-model="modelType" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
+                        <el-option v-for="item in modelTypes" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>
+                    </el-select> -->
                 </div>
             </div>
         </transition>
@@ -195,10 +137,10 @@ export default {
     position: absolute;
 }
 /**模型选择 */
-.modelcard {
+.rolecard {
     background: linear-gradient(135deg, #f0f0f0, #ffffff);
     width: 400px;
-    height: 120px;
+    height: 80px;
     padding: 15px;
     padding-left: 25px;
     margin-left: auto;
@@ -208,9 +150,6 @@ export default {
     border: none;
     border-radius: 10px;
     display: flex;
-}
-.modelcard_selected {
-    background: linear-gradient(135deg, #c9dcff, #ffffff);
 }
 /**面板过度 */
 .panel {
@@ -285,7 +224,7 @@ export default {
     width: 240px;
 }
 .lightShadow {
-    box-shadow: 0 5px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 6px 10px 12px 10px rgba(0, 0, 0, 0.1);
 }
 /**输入面板 */
 .inputcontainer {
@@ -311,38 +250,6 @@ export default {
     /* 毛玻璃效果 */
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     /* 底部边框 */
-}
-
-.cardbutton {
-    border: none;
-    outline: none;
-    background: transparent;
-    width: 100%;
-}
-.cardbutton:hover {
-    cursor: pointer;
-}
-.cardbutton:hover * {
-    cursor: pointer;
-}
-
-#rolecardbutton {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    outline: none;
-    border-top: none;
-    border-bottom: none;
-    border-right: none;
-    border-left: 1px solid #00000022;
-    background-color: rgba(245, 245, 247, 0.8);
-}
-#rolecardbutton:hover {
-    background-color: rgba(214, 214, 214, 0.8);
-}
-#rolecardbutton:active {
-    background-color: rgba(214, 214, 214, 0.8);
 }
 
 #closebutton {
@@ -412,5 +319,12 @@ main {
     color: #333;
     /* 深灰色文字 */
     text-align: center;
+}
+
+#systemPromptInput {
+    height: 500px;
+    margin: 25px;
+    margin-top: 0;
+    padding: 5px;
 }
 </style>

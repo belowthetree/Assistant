@@ -50,18 +50,12 @@ pub fn run() {
         // This is required to get tray-relative positions to work
         .setup(|app| {
             // 创建第一个 webview，指向主页
-            let binding = app.primary_monitor().unwrap().unwrap();
-            let screen_size = binding.size();
             WebviewWindowBuilder::new(app, "home", tauri::WebviewUrl::App("/home".into()))
                 .title("智能助手")
                 .inner_size(300.0, 100.0)
                 .decorations(false)
                 .transparent(true)
                 .maximizable(false)
-                .position(
-                    (screen_size.width - 300) as f64,
-                    (screen_size.height / 2 - 50) as f64,
-                )
                 .build()?;
             TrayIconBuilder::new()
                 .on_tray_icon_event(|app, event| {

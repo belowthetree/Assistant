@@ -11,11 +11,11 @@ export class ModelConfig {
     modelType: EModelType = EModelType.Ollama
     apiKey: string = ""
     modelName: string = "qwen2.5-coder:7b"
-    roleCard: RoleCardBase = new RoleCardBase()
+    roleCard: string
 
     constructor(name: string) {
         this.name = name
-        this.roleCard.systemPrompt = ModulePrompt
+        this.roleCard = "电脑小助手"
     }
 }
 
@@ -90,6 +90,15 @@ export async function loadConfig():Promise<void> {
     await loadRoleCards()
 }
 
+export function getRoleCard(name: string): RoleCardBase {
+    for (const role of RoleCards) {
+        if (role.name === name) {
+            return role
+        }
+    }
+    return RoleCards[0]
+}
+
 export async function saveConfig() {
     // 保存模型列表
     const js = JSON.stringify(ModelList)
@@ -138,8 +147,13 @@ async function loadRoleCards() {
     catch(e) {
         // 加载基础角色卡
         RoleCards = []
-        let card = new RoleCardBase()
-        RoleCards.push(card)
         console.warn(e)
+    }
+    if (RoleCards.length <= 0) {
+        let card = new RoleCardBase()
+        card.name = "电脑小助手"
+        card.systemPrompt = ModulePrompt
+        card.roleDesc = "一个帮助你使用电脑的小助手，你可以跟他对话，或者让他帮助你在电脑上做点事情"
+        RoleCards.push(card)
     }
 }
