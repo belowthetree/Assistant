@@ -11,6 +11,8 @@ export async function createWindow(
     center: boolean,
     resizable: boolean,
     offset: LogicalSize = new LogicalSize(0, 0),
+    minWidth?: number,
+    minHeight?: number,
 ):Promise<WebviewWindow> {
     let win = await WebviewWindow.getByLabel(label)
     if (win) {
@@ -35,6 +37,8 @@ export async function createWindow(
         x: size.width - width + offset.width,
         y: (size.height - height) / 2 + offset.height,
         maximizable: false,
+        minHeight: minHeight,
+        minWidth: minWidth,
     })
 
     // let win = await Window.getByLabel(label)
@@ -66,5 +70,5 @@ export async function openTalkView():Promise<WebviewWindow> {
 }
 
 export async function openRoleCardView() {
-    return createWindow('rolecard', "角色卡", 500, 600, false, false)
+    return createWindow('rolecard', "角色卡", 500, 600, false, true, undefined, undefined, 450)
 }

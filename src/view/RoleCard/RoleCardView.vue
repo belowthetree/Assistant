@@ -5,6 +5,7 @@ import { RoleCards, loadConfig, saveConfig } from "~/src/config";
 import { moveWindow, Position as WindowPosition } from "@tauri-apps/plugin-positioner";
 import { RoleCardBase } from "~/src/rolecard/rolecardbase";
 import { emitModelUpdateEvent } from "~/src/events/model_event";
+import { PromptTemplate } from "~/src/prompt/template";
 
 export default {
     components: {
@@ -66,6 +67,7 @@ export default {
         addRoleCard() {
             this.created = true
             this.roleCard = new RoleCardBase()
+            this.roleCard.prompt = PromptTemplate
         },
         refresh() {
             console.log(this.models)
@@ -117,7 +119,7 @@ export default {
                     </button>
                     <label>名字</label>
                     <input class="input" @input="onConfigChange" v-model="this.roleCard.name"/>
-                    <textarea id="systemPromptInput" @input="onPromptChanged" class="no-drag" v-model="roleCard.systemPrompt" placeholder="系统提示词"></textarea>
+                    <textarea id="systemPromptInput" @input="onPromptChanged" class="no-drag lightShadow" v-model="roleCard.systemPrompt" placeholder="系统提示词"></textarea>
                     <!-- <el-select class="lightShadow" @change="onConfigChange" v-model="this.model.modelType" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
                         <el-option v-for="item in modelTypes" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>
                     </el-select>
@@ -158,6 +160,7 @@ export default {
     left: 50%;
     top: 35px;
     width: 100%;
+    height: 100%;
     transform: translate(-50%, 0);
 }
 .slide-left-enter-from {
@@ -231,9 +234,11 @@ export default {
     background: #ffffff00;
     padding-top: 20px;
     width: 100%;
-    height: 500px;
+    height: 90%;
+    min-height: 400px;
     text-align: center;
     margin: auto;
+    margin-bottom: 0;
     display: flex;
     flex-direction: column;
 }
@@ -322,9 +327,13 @@ main {
 }
 
 #systemPromptInput {
-    height: 500px;
     margin: 25px;
-    margin-top: 0;
+    height: 100%;
+    margin-top: 15px;
     padding: 5px;
+    resize: none;
+    outline: none;
+    border: none;
+    border-radius: 5px;
 }
 </style>
