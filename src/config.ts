@@ -99,7 +99,7 @@ export function getRoleCard(name: string): RoleCardBase {
     return RoleCards[0]
 }
 
-export async function saveConfig() {
+export async function saveConfig():Promise<void> {
     // 保存模型列表
     const js = JSON.stringify(ModelList)
     const exis = await exists("", {baseDir: BaseDirectory.AppConfig})
@@ -115,7 +115,7 @@ export async function saveConfig() {
 }
 
 // 读取模型列表配置
-async function loadBaseConfig() {
+async function loadBaseConfig():Promise<void> {
     try {
         const cfg = await readTextFile("config.json", {baseDir: BaseDirectory.AppConfig})
         ModelList = JSON.parse(cfg)
@@ -138,7 +138,7 @@ async function loadBaseConfig() {
 }
 
 // 读取角色卡
-async function loadRoleCards() {
+async function loadRoleCards():Promise<void> {
     try {
         const cfg = await readTextFile("rolecards.json", {baseDir: BaseDirectory.AppConfig})
         RoleCards = JSON.parse(cfg) as RoleCardBase[]
@@ -149,6 +149,7 @@ async function loadRoleCards() {
         RoleCards = []
         console.warn(e)
     }
+    RoleCards = RoleCards.filter((v)=>{return v})
     if (RoleCards.length <= 0) {
         let card = new RoleCardBase()
         card.name = "电脑小助手"

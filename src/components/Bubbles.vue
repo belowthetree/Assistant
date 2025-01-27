@@ -7,7 +7,8 @@ export default {
         return {
             bubbles: [],
             bubbleHeight: 60, // 每个气泡的高度
-            bubbleMargin: 10, // 气泡之间的间距
+            bubbleMargin: 30, // 气泡之间的间距
+            baseHeight: 50,
         };
     },
     methods: {
@@ -28,7 +29,7 @@ export default {
         },
         getBubbleStyle(index) {
             return {
-                bottom: `${(this.bubbleHeight + this.bubbleMargin) * index}px`,
+                bottom: `${(this.bubbleHeight + this.bubbleMargin) * index + this.baseHeight}px`,
                 transition: 'bottom 0.5s ease-in-out',
             };
         },

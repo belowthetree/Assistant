@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "fs"
 
-const content = readFileSync("../src/lib/llm_action.ts").toString()
+const content = readFileSync("./src/lib/llm_action.ts").toString()
 const ctxArr = content.split("\n")
 let funcDesc = ""
 for (let i = 0; i < ctxArr.length;++i) {
@@ -46,4 +46,4 @@ ${funcDesc}
 notify("2 的三次方", "2 的三次方是 8")
 `
 
-writeFileSync("defaultprompt.txt", ModulePrompt)
+writeFileSync("./src-tauri/resource/defaultprompt.txt", ModulePrompt)

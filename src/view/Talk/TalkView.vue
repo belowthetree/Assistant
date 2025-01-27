@@ -5,8 +5,11 @@
 </template>
 
 <script>
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { moveWindow, Position } from '@tauri-apps/plugin-positioner';
 import Bubbles from '~/src/components/Bubbles.vue';
 import { listenModelResultEvent } from '~/src/events/model_event';
+import { emitTalkViewQueryEvent } from '~/src/events/window_event';
 
 export default {
     components: {
@@ -18,6 +21,7 @@ export default {
         };
     },
     setup() {
+        moveWindow(Position.BottomRight);
     },
     methods: {
         onAddBubble(event) {
@@ -28,7 +32,9 @@ export default {
         }
     },
     created() {
+        console.log("listen")
         listenModelResultEvent(this.onAddBubble)
+        emitTalkViewQueryEvent()
     }
 };
 </script>
@@ -37,5 +43,7 @@ export default {
 .app {
     text-align: center;
     margin-top: 50px;
+    background: transparent;
+    background-color: rgba(240, 248, 255, 0);
 }
 </style>

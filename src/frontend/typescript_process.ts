@@ -186,7 +186,7 @@ export class TypescriptProcess {
                     errorInfo = e as string
                 }
                 this.errorInfo = errorInfo
-                moduleAction.notify("第一次尝试失败", "正在重试.....")
+                moduleAction.system_notify("第一次尝试失败", "正在重试.....")
                 this.tryTimes = 0
                 this.regenerateModule()
             }
@@ -201,7 +201,7 @@ export class TypescriptProcess {
         if (this.mode != EProcessMode.Exec)
             return
         if (this.tryTimes >= this.maxTryTimes) {
-            moduleAction.notify(`执行命令${this.question}失败`, `原因：${this.errorInfo}`)
+            moduleAction.system_notify(`执行命令${this.question}失败`, `原因：${this.errorInfo}`)
             console.log("达到最大重试次数，放弃重试")
             return
         }
@@ -236,7 +236,7 @@ export class TypescriptProcess {
                     errorInfo = e as string
                 }
                 this.errorInfo = errorInfo
-                moduleAction.notify(`第${this.tryTimes}次尝试失败`, "正在重试.....")
+                moduleAction.system_notify(`第${this.tryTimes}次尝试失败`, "正在重试.....")
                 this.regenerateModule()
             }
         }

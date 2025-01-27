@@ -1,5 +1,7 @@
-import { listen } from "@tauri-apps/api/event";
+import { emit, EventCallback, listen } from "@tauri-apps/api/event";
 import { ask } from "@tauri-apps/plugin-dialog";
+
+const TalkViewQuery = "TalkViewQuery"
 
 export function registerWindowEvents() {
     listen<{
@@ -12,4 +14,12 @@ export function registerWindowEvents() {
             console.log(e)
         })
     })
+}
+
+export async function listenTalkViewQueryEvent(callback:EventCallback<any>) {
+    await listen(TalkViewQuery, callback)
+}
+
+export function emitTalkViewQueryEvent() {
+    emit(TalkViewQuery)
 }

@@ -17,6 +17,7 @@ import { webviewWindow } from "@tauri-apps/api";
 import { addBubble } from "./view/Talk/api";
 import { moveWindow, Position as WindowPosition } from "@tauri-apps/plugin-positioner";
 import { loadConfig, ModelList } from "./config";
+import { listenTalkViewQueryEvent } from "./events/window_event";
 
 var models = EModelType.Deepseek
 
@@ -46,6 +47,7 @@ export default {
 			minHeight: 70,
 			userInput: "",
 			controlDown: false,
+			reply: "",
 		}
 	},
 	methods: {
@@ -75,7 +77,7 @@ export default {
 				console.log("输入命令", this.userInput)
 				const model = generateModelFromConfig(ModelList.getCurrentModelConfig())
 				model.chat(this.userInput, 0.2).then((res)=>{
-					// this.$refs.bubbles.addBubble(res)
+					this.reply = res
 					console.log(res)
 					// addBubble(res)
 					model.execute_typescript(res)

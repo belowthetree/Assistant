@@ -3,6 +3,7 @@ import { ask } from "@tauri-apps/plugin-dialog";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager"
 import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
 import { BaseDirectory, writeTextFile } from "@tauri-apps/plugin-fs";
+import { addBubble } from "../view/Talk/api";
 
 // 执行命令行
 export async function execCmd(command: string):Promise<number> {
@@ -34,7 +35,11 @@ export async function openAskDialog(title: string, msg: string) {
 export async function writeToClipboard(text:string) {
     writeText(text)
 }
-//向用户发送一个标题为 title，内容为 msg 的通知
+//与用户对话，内容为 content，与用户交互优先使用这个函数
+export function chat(content: string) {
+    addBubble(content)
+}
+//发送一个标题为 title，内容为 msg 的系统级通知，此函数仅作系统级别通知
 export async function notify(title: string, msg: string) {
     let permissionGranted = await isPermissionGranted();
 

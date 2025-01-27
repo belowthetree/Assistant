@@ -4,7 +4,7 @@
 	"version": "0.1.0",
 	"identifier": "com.assistant.app",
 	"build": {
-		"beforeDevCommand": "npm run dev && npx ts-node 'E:/LLM/Assistant/Assistant/public/buildprompt.js'",
+		"beforeDevCommand": "npm run dev",
 		"devUrl": "http://localhost:5710",
 		"beforeBuildCommand": "npm run build",
 		"frontendDist": "../dist"

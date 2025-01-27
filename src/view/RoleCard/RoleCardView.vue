@@ -22,12 +22,16 @@ export default {
             currentRoleName: "",
             roleCard: new RoleCardBase(),
             created: false,
+            selectedIndex: 0,
         }
     },
     mounted() {
         loadConfig().then(()=>{
+            console.log(RoleCards)
             this.roleCard = RoleCards[0]
+            this.roleCards = RoleCards
             this.currentRoleName = this.roleCard.name
+            this.currentPage = "roleCardList"
         })
     },
     methods: {
@@ -38,10 +42,14 @@ export default {
         onConfigChange() {
 
         },
-        switchView(model) {
+        switchView(roleCard) {
             this.created = false
-            this.model = model
-            this.currentModelName = model.name
+            if (roleCard)
+                this.selectedIndex = RoleCards.findIndex((v)=>{return v.name === roleCard.name})
+            else
+                this.selectedIndex = -1
+            this.roleCard = roleCard
+            this.currentRoleName = this.roleCard.name
             this.currentPage = this.currentPage === "roleCardList" ? "roleCardDetail" : "roleCardList"
             if (this.currentPage !== "roleCardList")
                 this.transitionName = "slide-left"
@@ -58,16 +66,23 @@ export default {
                     }
                 }
                 RoleCards.push(this.roleCard)
+                console.log(RoleCards)
+            }
+            else {
+                if (this.selectedIndex in RoleCards){
+                    RoleCards[this.selectedIndex] = this.roleCard
+                }
             }
             saveConfig().then(()=>{
                 this.$refs.toast.show("保存成功")
+                this.roleCards = RoleCards
                 emitModelUpdateEvent()
             })
         },
         addRoleCard() {
             this.created = true
             this.roleCard = new RoleCardBase()
-            this.roleCard.prompt = PromptTemplate
+            this.roleCard.systemPrompt = PromptTemplate
         },
         refresh() {
             console.log(this.models)
@@ -119,6 +134,8 @@ export default {
                     </button>
                     <label>名字</label>
                     <input class="input" @input="onConfigChange" v-model="this.roleCard.name"/>
+                    <label>简述</label>
+                    <input class="input" @input="onConfigChange" v-model="this.roleCard.roleDesc"/>
                     <textarea id="systemPromptInput" @input="onPromptChanged" class="no-drag lightShadow" v-model="roleCard.systemPrompt" placeholder="系统提示词"></textarea>
                     <!-- <el-select class="lightShadow" @change="onConfigChange" v-model="this.model.modelType" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
                         <el-option v-for="item in modelTypes" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>

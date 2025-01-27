@@ -11,10 +11,10 @@ export function generateModelFromConfig(config: ModelConfig): LLMBase {
     switch(config.modelType) {
         case EModelType.OpenAI:
         case EModelType.DeepSeek:
-            model = new DeepSeek(config.baseUrl, config.modelName, config.apiKey)
+            model = new DeepSeek(config.baseUrl, config.modelName, config.roleCard, config.apiKey)
             break
         case EModelType.Ollama:
-            model = new Ollama(config.baseUrl, config.modelName, config.apiKey)
+            model = new Ollama(config.baseUrl, config.modelName, config.roleCard, config.apiKey)
             break
     }
     return model

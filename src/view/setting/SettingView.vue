@@ -24,24 +24,13 @@ export default {
             models: {'a':new ModelConfig("")},
             editModelName: "",
             currentModelName: "",
-            roleCard: "",
             rolecards: [RoleCardBase],
             created : false,
         }
     },
     mounted() {
         loadConfig().then(()=>{
-            const model = ModelList.getCurrentModelConfig()
-            this.model = model
-            this.modelTypes = Object.values(EModelType)
-            this.models = ModelList.Models
-            this.editModelName = ""
-            this.currentModelName = ModelList.currentConfig
-            this.rolecards = []
-            for (let v of RoleCards) {
-                this.rolecards.push(v.name)
-            }
-            this.roleCard = this.rolecards[0]
+            this.refresh()
         })
     },
     methods: {
@@ -60,8 +49,6 @@ export default {
             this.created = false
             console.log(model)
             this.model = model
-            this.roleCard = model.roleCard
-            console.log(this.roleCard)
             this.editModelName = model.name
             this.currentPage = this.currentPage === "modelList" ? "modelDetail" : "modelList"
             if (this.currentPage !== "modelList")
@@ -76,6 +63,7 @@ export default {
                 this.$refs.toast.danger("存在同名配置")
                 return
             }
+            console.log(this.model)
             ModelList.saveModel(this.editModelName, this.model)
             ModelList.validate()
             console.log(ModelList)
@@ -83,6 +71,7 @@ export default {
             this.models = ModelList.Models
             console.log(ModelList.Models)
             saveConfig().then(()=>{
+                this.refresh()
                 this.$refs.toast.show("保存成功")
                 emitModelUpdateEvent()
             })
@@ -101,7 +90,16 @@ export default {
             this.created = true
         },
         refresh() {
-            console.log(this.models)
+            const model = ModelList.getCurrentModelConfig()
+            this.model = model
+            this.modelTypes = Object.values(EModelType)
+            this.models = ModelList.Models
+            this.editModelName = ""
+            this.currentModelName = ModelList.currentConfig
+            this.rolecards = []
+            for (let v of RoleCards) {
+                this.rolecards.push(v.name)
+            }
             this.$forceUpdate(); // 强制刷新
         },
         onPromptChanged() {
@@ -180,7 +178,7 @@ export default {
                     <el-select class="lightShadow" @change="onConfigChange" v-model="this.model.modelType" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
                         <el-option v-for="item in modelTypes" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>
                     </el-select>
-                    <el-select class="lightShadow" @change="onConfigChange" v-model="roleCard" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
+                    <el-select class="lightShadow" @change="onConfigChange" v-model="this.model.roleCard" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
                         <el-option v-for="item in rolecards" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>
                     </el-select>
                 </div>
