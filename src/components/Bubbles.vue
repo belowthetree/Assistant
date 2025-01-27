@@ -31,6 +31,7 @@ export default {
             return {
                 bottom: `${(this.bubbleHeight + this.bubbleMargin) * index + this.baseHeight}px`,
                 transition: 'bottom 0.5s ease-in-out',
+                right: `0`,
             };
         },
     },
@@ -49,13 +50,15 @@ export default {
     height: 400px;
     /* 容器高度 */
     overflow: hidden;
+    width: 100%;
+    justify-content: right;
+    text-align: right;
 }
 
 .bubble {
     white-space: normal;
     position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    right: 0;
     width: 200px;
     padding: 10px;
     color: rgb(0, 0, 0);

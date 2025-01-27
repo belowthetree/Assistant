@@ -1,5 +1,5 @@
 import { EModelType } from "@/data"
-import { system_notify } from "../lib/llm_action"
+import { notify } from "../lib/llm_action"
 import * as moduleAction from "../lib/llm_action"
 import { RoleCardBase } from "../rolecard/rolecardbase"
 import {fetch} from "@tauri-apps/plugin-http"
@@ -43,7 +43,7 @@ export class LLMBase implements LLMInterface {
     async chat(content:string, temperature?:number, system?:string): Promise<string> {
         console.log("chat", content, system)
         if (!this.checkApiKeyValid()) {
-            system_notify("API Key 未设置", `模型${this.getModelName()} api key 未设置`)
+            notify("API Key 未设置", `模型${this.getModelName()} api key 未设置`)
         }
         if (!system) {
             system = this.roleCard.systemPrompt
@@ -89,7 +89,7 @@ export class LLMBase implements LLMInterface {
 
     async generate(content: string, temperature?:number, system?:string): Promise<string> {
         if (!this.checkApiKeyValid()) {
-            system_notify("API Key 未设置", `模型${this.getModelName()} api key 未设置`)
+            notify("API Key 未设置", `模型${this.getModelName()} api key 未设置`)
         }
         const response = await fetch(this.url, {
             method: "POST",
@@ -153,7 +153,7 @@ export class LLMBase implements LLMInterface {
                 console.error(e)
                 errorInfo = e as string
             }
-            moduleAction.system_notify("执行失败", errorInfo)
+            moduleAction.notify("执行失败", errorInfo)
         }
     }
 }
