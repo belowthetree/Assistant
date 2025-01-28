@@ -7,6 +7,8 @@ import { emitModelUpdateEvent } from "~/src/events/model_event";
 import { moveWindow, Position as WindowPosition } from "@tauri-apps/plugin-positioner";
 import { openRoleCardView } from "~/src/lib/window";
 import { RoleCardBase } from "~/src/rolecard/rolecardbase";
+import { Ollama } from "~/src/model/ollama";
+import { generateModelFromConfig } from "~/src/model/global";
 
 export default {
     components: {
@@ -26,6 +28,7 @@ export default {
             currentModelName: "",
             rolecards: [RoleCardBase],
             created : false,
+            selectableModels: [],
         }
     },
     mounted() {
@@ -100,6 +103,14 @@ export default {
             for (let v of RoleCards) {
                 this.rolecards.push(v.name)
             }
+            this.selectableModels = []
+            const m = generateModelFromConfig(model)
+            if (m instanceof Ollama) {
+                m.getModels().then((models)=>{
+                    this.selectableModels = models
+                    console.log(models)
+                })
+            }
             this.$forceUpdate(); // 强制刷新
         },
         onPromptChanged() {
@@ -173,7 +184,10 @@ export default {
                     <label>模型网址</label>
                     <input class="input" @input="onConfigChange" v-model="this.model.baseUrl"/>
                     <label>模型名称</label>
-                    <input class="input" @input="onConfigChange" v-model="this.model.modelName"/>
+                    <input v-if="this.selectableModels.length <= 0" class="input" @input="onConfigChange" v-model="this.model.modelName"/>
+                    <el-select v-else class="lightShadow" @change="onConfigChange" v-model="this.model.modelName" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
+                        <el-option v-for="item in selectableModels" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>
+                    </el-select>
                     <label>模型类型</label>
                     <el-select class="lightShadow" @change="onConfigChange" v-model="this.model.modelType" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
                         <el-option v-for="item in modelTypes" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>

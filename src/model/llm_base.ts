@@ -40,6 +40,10 @@ export class LLMBase implements LLMInterface {
         console.log("set api key" + key)
     }
 
+    get_chat_url(): string {
+        return this.url
+    }
+
     async chat(content:string, temperature?:number, system?:string): Promise<string> {
         console.log("chat", content, system)
         if (!this.checkApiKeyValid()) {
@@ -53,7 +57,7 @@ export class LLMBase implements LLMInterface {
             {"role": "system", "content": `${system || ""}`},
             {"role": "user", "content": `${content}`}
         )
-        const response = await fetch(this.url, {
+        const response = await fetch(this.get_chat_url(), {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -87,11 +91,15 @@ export class LLMBase implements LLMInterface {
         return await response.text()
     }
 
+    get_generate_url(): string {
+        return this.url
+    }
+
     async generate(content: string, temperature?:number, system?:string): Promise<string> {
         if (!this.checkApiKeyValid()) {
             notify("API Key 未设置", `模型${this.getModelName()} api key 未设置`)
         }
-        const response = await fetch(this.url, {
+        const response = await fetch(this.get_generate_url(), {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
