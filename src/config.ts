@@ -101,7 +101,7 @@ export function getRoleCard(name: string): RoleCardBase {
 
 export async function saveConfig():Promise<void> {
     // 保存模型列表
-    const js = JSON.stringify(ModelList)
+    const js = JSON.stringify(ModelList, undefined, "\t")
     const exis = await exists("", {baseDir: BaseDirectory.AppConfig})
     if (!exis) {
         console.log("创建配置文件夹")
@@ -110,7 +110,7 @@ export async function saveConfig():Promise<void> {
     await writeTextFile("config.json", js, {baseDir: BaseDirectory.AppConfig})
     console.log(ModelList)
     // 保存角色卡
-    const rolecardJs = JSON.stringify(RoleCards)
+    const rolecardJs = JSON.stringify(RoleCards, undefined, "\t")
     await writeTextFile("rolecards.json", rolecardJs, {baseDir: BaseDirectory.AppConfig})
 }
 

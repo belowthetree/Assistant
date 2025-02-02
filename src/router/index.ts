@@ -30,7 +30,7 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/knowledge',
         name: 'knowledge',
-        component: () => import("@/view/Knowledge/FileuploadView.vue")
+        component: () => import("@/view/Knowledge/KnowledgeView.vue")
     }
 ]
 

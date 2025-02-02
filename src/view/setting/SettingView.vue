@@ -309,6 +309,7 @@ export default {
     margin: auto;
     display: flex;
     flex-direction: column;
+    overflow-y: scroll;
 }
 /**页头 */
 .header {
