@@ -44,14 +44,15 @@ export class DeepSeek extends LLMBase {
                 "temperature": temperature || 1
             })
         })
+        console.log(response, this.modelName)
 
         if (response.status == 200) {
             const text = await response.text()
             const js = JSON.parse(text)
             if (js.choices) {
-                return js.choices[0].message.content
+                return Promise.resolve(js.choices[0].message.content)
             }
         }
-        return await response.text()
+        return Promise.reject(response.text())
     }
 }

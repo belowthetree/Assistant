@@ -7,6 +7,7 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import { loadConfig } from "./config";
 import router from "./router";
+import { test } from "./model/rag";
 
 const app = createApp(App)
 for (const [key, com] of Object.entries(ElementPlusIconsVue)) {
@@ -19,3 +20,5 @@ app.mount("#app")
 registerWindowEvents()
 
 loadConfig()
+
+test()

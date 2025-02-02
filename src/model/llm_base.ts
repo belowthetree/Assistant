@@ -83,12 +83,12 @@ export class LLMBase implements LLMInterface {
                     "role": "assistant",
                     "content": res,
                 })
-                return res
+                return Promise.resolve(res)
             }
             else
-                return text
+                return Promise.reject(text)
         }
-        return await response.text()
+        return Promise.reject(await response.text())
     }
 
     get_generate_url(): string {
@@ -120,12 +120,12 @@ export class LLMBase implements LLMInterface {
             const text = await response.text()
             const js = JSON.parse(text)
             if (js.message) {
-                return js.message.content
+                return Promise.resolve(js.message.content)
             }
             else
-                return text
+                return Promise.reject(text)
         }
-        return await response.text()
+        return Promise.reject(await response.text())
     }
 
     execute_typescript(content: string) {

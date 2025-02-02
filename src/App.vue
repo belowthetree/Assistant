@@ -8,7 +8,7 @@ import { generateModelFromConfig } from "./model/global";
 import { getCurrentWindow, LogicalPosition } from '@tauri-apps/api/window';
 import { LogicalSize, Position } from "@tauri-apps/api/dpi";
 import { Setting } from "@element-plus/icons-vue";
-import { openSettingWindow } from "./lib/window";
+import { openKnowledgeWindow, openSettingWindow } from "./lib/window";
 import Bubbles from "./components/Bubbles.vue";
 import { EModelType, ECmdMode } from "@/data";
 import { ModulePrompt } from "./prompt/module_prompt";
@@ -61,6 +61,15 @@ export default {
 			// this.$refs.bubbles.addBubble()
 			openSettingWindow()
 		},
+		clickKnowledge() {
+			const icon = document.getElementById("knowledgeIcon")
+			// 触发动画
+			icon.classList.add('clicked');
+			setTimeout(() => {
+				icon.classList.remove('clicked');
+			}, 300); // 动画持续时间
+			openKnowledgeWindow()
+		},
 		onInput() {
 			const Window = getCurrentWindow()
 			const input = document.getElementById("userInput")
@@ -76,7 +85,7 @@ export default {
 			try {
 				console.log("输入命令", this.userInput)
 				const model = generateModelFromConfig(ModelList.getCurrentModelConfig())
-				model.chat(this.userInput, 0.2).then((res)=>{
+				model.generate(this.userInput, 0.2).then((res)=>{
 					this.reply = res
 					console.log(res)
 					// addBubble(res)
@@ -127,6 +136,9 @@ export default {
 			<textarea @input="onInput" @keydown="onKeyDown" @keyup="onKeyUp" id="userInput" class="no-drag" v-model="userInput" placeholder="输入指令"></textarea>
 			<button class="right_bottom" @click="clickSetting">
 				<Setting class="hover_color" id="settingIcon" :style="{color: 'black'}" />
+			</button>
+			<button class="right_bottom" @click="clickKnowledge" style="right: 35px;">
+				<Coin class="hover_color" id="knowledgeIcon" :style="{color: 'black'}" />
 			</button>
 		</div>
 	</main>

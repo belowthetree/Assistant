@@ -7,7 +7,7 @@ import { ModulePrompt } from "./prompt/module_prompt"
 
 export class ModelConfig {
     name: string = ""
-    baseUrl: string = "127.0.0.1:11434"
+    baseUrl: string = "http://127.0.0.1:11434"
     modelType: EModelType = EModelType.Ollama
     apiKey: string = ""
     modelName: string = "qwen2.5-coder:7b"

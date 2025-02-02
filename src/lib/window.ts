@@ -68,3 +68,7 @@ export async function openTalkView():Promise<WebviewWindow> {
 export async function openRoleCardView() {
     return createWindow('rolecard', {title: "角色卡", width: 500, height: 600, resizable: false, decorations: false, minHeight: 450})
 }
+
+export async function openKnowledgeWindow() {
+    return createWindow('knowledge', {title: "知识库", width: 500, height: 600, resizable: false, decorations: false, minHeight: 450})
+}

@@ -26,6 +26,11 @@ const routes: Array<RouteRecordRaw> = [
         path: '/rolecard',
         name: 'rolecard',
         component: () => import("@/view/RoleCard/RoleCardView.vue")
+    },
+    {
+        path: '/knowledge',
+        name: 'knowledge',
+        component: () => import("@/view/Knowledge/FileuploadView.vue")
     }
 ]
 

@@ -42,11 +42,17 @@ export default {
             WebviewWindow.getCurrent().close()
         },
         onConfigChange() {
-            // const model = ModelList.getCurrentModelConfig()
-            // model.baseUrl = this.baseUrl
-            // model.apiKey = this.apiKey
-            // model.modelName = this.modelName
-            // model.modelType = this.modelType
+        },
+        onURLChange() {
+            this.selectableModels = []
+            const m = generateModelFromConfig(this.model)
+            console.log(m)
+            if (m instanceof Ollama) {
+                m.getModels().then((models)=>{
+                    this.selectableModels = models
+                    console.log(models)
+                }).catch((e)=>console.warn(e))
+            }
         },
         switchView(model) {
             this.created = false
@@ -58,6 +64,7 @@ export default {
                 this.transitionName = "slide-left"
             else
                 this.transitionName = "slide-right"
+            this.onURLChange()
         },
         saveModel() {
             console.log("保存配置")
@@ -91,6 +98,7 @@ export default {
             this.editModelName = this.model.name
             this.$refs.toast.show("添加配置")
             this.created = true
+            this.onURLChange()
         },
         refresh() {
             const model = ModelList.getCurrentModelConfig()
@@ -102,14 +110,6 @@ export default {
             this.rolecards = []
             for (let v of RoleCards) {
                 this.rolecards.push(v.name)
-            }
-            this.selectableModels = []
-            const m = generateModelFromConfig(model)
-            if (m instanceof Ollama) {
-                m.getModels().then((models)=>{
-                    this.selectableModels = models
-                    console.log(models)
-                })
             }
             this.$forceUpdate(); // 强制刷新
         },
@@ -181,8 +181,8 @@ export default {
                     <input class="input" @input="onConfigChange" v-model="this.model.name"/>
                     <label>API Key</label>
                     <input class="input" @input="onConfigChange" type="password" v-model="this.model.apiKey"/>
-                    <label>模型网址</label>
-                    <input class="input" @input="onConfigChange" v-model="this.model.baseUrl"/>
+                    <label>模型地址</label>
+                    <input class="input" @input="onURLChange" v-model="this.model.baseUrl"/>
                     <label>模型名称</label>
                     <input v-if="this.selectableModels.length <= 0" class="input" @input="onConfigChange" v-model="this.model.modelName"/>
                     <el-select v-else class="lightShadow" @change="onConfigChange" v-model="this.model.modelName" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">

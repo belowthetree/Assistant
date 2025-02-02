@@ -25,6 +25,7 @@ export class Ollama extends LLMBase {
     }
 
     async getModels():Promise<string[]> {
+        console.log(this.url)
         const response = await fetch(this.url + "/api/tags")
         console.log(response)
         if (response.status == 200) {
