@@ -20,5 +20,3 @@ app.mount("#app")
 registerWindowEvents()
 
 loadConfig()
-
-test()

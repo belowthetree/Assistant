@@ -17,6 +17,6 @@ export default {
 </script>
 
 <template>
-    <FileUploader api-url="/api/upload" :max-size="20" accept="image/*, .pdf" @upload-success="handleSuccess"
+    <FileUpload api-url="/api/upload" :max-size="20" accept="image/*, .pdf" @upload-success="handleSuccess"
         @upload-error="handleError" />
 </template>

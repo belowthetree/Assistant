@@ -4,7 +4,7 @@ import { LLMBase } from "@/model/llm_base"
 import { EModelType } from "@/data"
 
 export class DeepSeek extends LLMBase {
-    constructor(url: string = "https://api.deepseek.com/chat/completions", model: string = "deepseek-chat", roleCard: string, api: string = "") {
+    constructor(url: string = "https://api.deepseek.com/chat/completions", model: string = "deepseek-chat", roleCard: string = "", api: string = "") {
         super(url, model, roleCard, api)
         this.modelType = EModelType.DeepSeek
     }
@@ -27,6 +27,9 @@ export class DeepSeek extends LLMBase {
             this.api_key = "Bearer " + res
         }
         const messages = ctx || []
+        if (!system) {
+            system = this.roleCard.systemPrompt
+        }
         messages.push(
             {"role": "system", "content": `${system}`},
             {"role": "user", "content": `${content}`}
