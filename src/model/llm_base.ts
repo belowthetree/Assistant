@@ -99,6 +99,9 @@ export class LLMBase implements LLMInterface {
         if (!this.checkApiKeyValid()) {
             notify("API Key 未设置", `模型${this.getModelName()} api key 未设置`)
         }
+        if (!system) {
+            system = this.roleCard.systemPrompt
+        }
         const response = await fetch(this.get_generate_url(), {
             method: "POST",
             headers: {
@@ -121,6 +124,9 @@ export class LLMBase implements LLMInterface {
             const js = JSON.parse(text)
             if (js.message) {
                 return Promise.resolve(js.message.content)
+            }
+            else if (js.response) {
+                return Promise.resolve(js.response)
             }
             else
                 return Promise.reject(text)

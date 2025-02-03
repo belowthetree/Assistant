@@ -1,14 +1,52 @@
 mod platform;
 mod web;
 use platform::*;
-use tauri::{tray::TrayIconBuilder, WebviewWindowBuilder};
+use tauri::{tray::TrayIconBuilder, window::Color, App, Manager, WebviewWindowBuilder};
 use tauri_plugin_autostart::MacosLauncher;
+use tauri_plugin_positioner::{Position, WindowExt};
 use web::*;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
 fn greet(name_n: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name_n)
+}
+
+#[cfg(target_os = "windows")]
+fn build_first_webview(app: &mut App) {
+    WebviewWindowBuilder::new(app, "home", tauri::WebviewUrl::App("/home".into()))
+        .title("智能助手")
+        .inner_size(300.0, 100.0)
+        .decorations(false)
+        .transparent(true)
+        .maximizable(false)
+        .build()?;
+}
+
+#[cfg(target_os="macos")]
+fn build_first_webview(app: &mut App) {
+    use cocoa::appkit::{NSColor, NSWindow};
+    use cocoa::base::{id, nil};
+    use tauri::TitleBarStyle;
+    let window = WebviewWindowBuilder::new(app, "home", tauri::WebviewUrl::App("/home".into()))
+        .title("智能助手")
+        .inner_size(300.0, 100.0)
+        .decorations(false)
+        .maximizable(false)
+        .title_bar_style(TitleBarStyle::Transparent)
+        .build().unwrap();
+
+    let ns_window = window.ns_window().unwrap() as id;
+    unsafe {
+        let bg_color = NSColor::colorWithRed_green_blue_alpha_(
+            nil,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+        );
+        ns_window.setBackgroundColor_(bg_color);
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -50,13 +88,13 @@ pub fn run() {
         // This is required to get tray-relative positions to work
         .setup(|app| {
             // 创建第一个 webview，指向主页
-            WebviewWindowBuilder::new(app, "home", tauri::WebviewUrl::App("/home".into()))
-                .title("智能助手")
-                .inner_size(300.0, 100.0)
-                .decorations(false)
-                .transparent(true)
-                .maximizable(false)
-                .build()?;
+            build_first_webview(app);
+            if let Some(window) = app.get_webview_window("home") {
+                window.move_window(Position::RightCenter).expect("移动窗口失败");
+                window.set_background_color(Some(Color(0, 0, 0, 0))).expect("设置背景颜色失败");
+            } else {
+                println!("创建 home 失败");
+            }
             TrayIconBuilder::new()
                 .on_tray_icon_event(|app, event| {
                     tauri_plugin_positioner::on_tray_event(app.app_handle(), &event);

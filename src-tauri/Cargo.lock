@@ -148,6 +148,7 @@ dependencies = [
 name = "assistant"
 version = "0.1.0"
 dependencies = [
+ "cocoa",
  "lnk_parser",
  "log",
  "project-root",
