@@ -25,3 +25,13 @@
 .lineargray {
     background: linear-gradient(135deg, #f0f0f0, #ffffff);
 }
+
+.drag-area {
+    /* 允许拖拽 */
+    -webkit-app-region: drag;
+    cursor: grab;
+}
+
+.no-drag {
+    -webkit-app-region: no-drag;
+}

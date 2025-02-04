@@ -18,6 +18,11 @@ const routes: Array<RouteRecordRaw> = [
         component: ()=> import('@/view/Setting/SettingView.vue')
     },
     {
+        path: '/modelSetting',
+        name: 'modelSetting',
+        component: ()=> import('@/view/Setting/ModelSettingView.vue')
+    },
+    {
         path: '/talk',
         name: 'talk',
         component: () => import("@/view/Talk/TalkView.vue")
@@ -25,7 +30,7 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/rolecard',
         name: 'rolecard',
-        component: () => import("@/view/RoleCard/RoleCardView.vue")
+        component: () => import("@/view/Setting/RoleCardSettingView.vue")
     },
     {
         path: '/knowledge',

@@ -45,30 +45,21 @@ export async function createWindow(
 }
 
 export async function openSettingWindow():Promise<WebviewWindow> {
-    // const monitor = await window.currentMonitor()
-    // const size = monitor.size
-    // win = new WebviewWindow(label, {
-    //     title,
-    //     url: `/${label}`,
-    //     width,
-    //     height,
-    //     resizable,
-    //     decorations: false,
-    //     center,
-    //     visible: true,
-    //     x: size.width - width + offset.width,
-    //     y: (size.height - height) / 2 + offset.height,
-    return createWindow("setting", {title: "设置", width: 500, height: 600, resizable: false, decorations: false})
+    return createWindow("setting", {title: "设置", width: 500, height: 600, resizable: true, decorations: true})
+}
+
+export async function openModelSettingWindow() {
+    return createWindow("modelSetting", {title: "设置", width: 500, height: 600, resizable: true, decorations: true})
 }
 
 export async function openTalkView():Promise<WebviewWindow> {
-    return createWindow('talk', {title: "对话", width: 500, height: 500, resizable: false, decorations: false, transparent: true, shadow: false, visible: true}, false)
+    return createWindow('talk', {title: "对话", width: 500, height: 500, resizable: true, decorations: true, transparent: true, shadow: false, visible: true}, false)
 }
 
 export async function openRoleCardView() {
-    return createWindow('rolecard', {title: "角色卡", width: 500, height: 600, resizable: false, decorations: false, minHeight: 450})
+    return createWindow('rolecard', {title: "角色卡", width: 500, height: 600, resizable: true, decorations: true, minHeight: 450})
 }
 
 export async function openKnowledgeWindow() {
-    return createWindow('knowledge', {title: "知识库", width: 500, height: 600, resizable: false, decorations: false, minHeight: 450})
+    return createWindow('knowledge', {title: "知识库", width: 500, height: 600, resizable: true, decorations: true, minHeight: 450})
 }

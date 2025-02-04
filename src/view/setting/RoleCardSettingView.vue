@@ -97,19 +97,6 @@ export default {
 
 <template>
     <main class="drag-area maincontainer">
-        <div class="header">
-            <div class="header-left"></div>
-            <div class="header-center">
-                <span class="app-name">角色卡</span>
-            </div>
-            <div class="header-right no-drag" style="">
-                <button id="closebutton" @click="closeWindow">
-                    <div style="margin: auto;">
-                        <Close style="width: 15px;height: 15px;margin: auto;"/>
-                    </div>
-                </button>
-            </div>
-        </div>
         <toast ref="toast" class="toast"></toast>
         <transition :name="transitionName">
             <div :key="currentPage" class="panel">
@@ -249,7 +236,6 @@ export default {
 /**输入面板 */
 .inputcontainer {
     background: #ffffff00;
-    padding-top: 20px;
     width: 100%;
     height: 90%;
     min-height: 400px;
@@ -259,60 +245,7 @@ export default {
     display: flex;
     flex-direction: column;
 }
-/**页头 */
-.header {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    height: 35px;
-    background-color: rgba(245, 245, 247, 0.8);
-    /* 浅色背景 */
-    backdrop-filter: blur(10px);
-    /* 毛玻璃效果 */
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    /* 底部边框 */
-}
 
-#closebutton {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    outline: none;
-    border-top: none;
-    border-bottom: none;
-    border-right: none;
-    border-left: 1px solid #00000022;
-    background: linear-gradient(135deg, #f0f0f0, #ffffff);
-}
-#closebutton:hover {
-    background: linear-gradient(135deg, #ff0000de, #ff0000de);
-}
-#closebutton:active {
-    background: linear-gradient(135deg, #ad0000de, #ad0000de);
-}
-
-.header-left,
-.header-center,
-.header-right {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    align-content: center;
-}
-
-.header-left,
-.header-right {
-    width: 40px;
-    height: 100%;
-    border: none;
-}
-.header-center {
-    width: 100%;
-}
-/**页头结束 */
 .drag-area {
     /* 允许拖拽 */
     -webkit-app-region: drag;
