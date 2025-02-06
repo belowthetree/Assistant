@@ -2,7 +2,7 @@
 
 ## Links
 - [中文 README](README.md)
-- [English README](README_EN.md)
+- [English README](README-EN.md)
 
 A frontend for an AI assistant that provides intelligent assistant services through prompt engineering and API integration with a specified large model service.
 > Default model used: ollama qwen2.5-coder:latest
