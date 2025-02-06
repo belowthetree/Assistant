@@ -1,6 +1,6 @@
 <template>
     <div class="app">
-        <bubbles ref="bubbles"></Bubbles>
+        <bubbles ref="bubbles" @empty="closeView"></Bubbles>
     </div>
 </template>
 
@@ -29,6 +29,9 @@ export default {
             console.log(this.$refs.bubbles)
             this.$refs.bubbles.addBubble(event.payload.ctx)
             console.log(this.$refs.bubbles)
+        },
+        closeView() {
+            WebviewWindow.getCurrent().close()
         }
     },
     created() {

@@ -25,6 +25,9 @@ export default {
             // 设置气泡消失的定时器
             setTimeout(() => {
                 this.bubbles.pop(); // 移除最后一个气泡
+                if (this.bubbles.length <= 0) {
+                    this.$emit("empty")
+                }
             }, 5000); // 5秒后气泡消失
         },
         getBubbleStyle(index) {

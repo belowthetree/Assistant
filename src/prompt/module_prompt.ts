@@ -22,7 +22,9 @@ ${funcDesc}
 输入：
 计算 2 的三次方
 输出：
-notify("2 的三次方", "2 的三次方是 8")
+{
+    "code":"notify('2 的三次方', '2 的三次方是 8')"
+}
 `
 })
 // const ctxArr = content.split("\n")

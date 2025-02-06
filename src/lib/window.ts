@@ -53,7 +53,7 @@ export async function openModelSettingWindow() {
 }
 
 export async function openTalkView():Promise<WebviewWindow> {
-    return createWindow('talk', {title: "对话", width: 500, height: 500, resizable: true, decorations: true, transparent: true, shadow: false, visible: true}, false)
+    return createWindow('talk', {title: "对话", width: 500, height: 500, resizable: true, decorations: false, transparent: true, shadow: false, visible: true}, false)
 }
 
 export async function openRoleCardView() {

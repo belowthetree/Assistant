@@ -5,6 +5,8 @@ import { RoleCardBase } from "../rolecard/rolecardbase"
 import {fetch} from "@tauri-apps/plugin-http"
 import { ModulePrompt } from "../prompt/module_prompt"
 import { getRoleCard } from "../config"
+import {z} from "zod"
+import {zodToJsonSchema} from "zod-to-json-schema"
 
 export interface LLMInterface {
     modelType: EModelType
@@ -102,6 +104,9 @@ export class LLMBase implements LLMInterface {
         if (!system) {
             system = this.roleCard.systemPrompt
         }
+        const fmt = z.object({
+            "code": z.string()
+        })
         const response = await fetch(this.get_generate_url(), {
             method: "POST",
             headers: {
@@ -116,17 +121,21 @@ export class LLMBase implements LLMInterface {
                 "options": {
                     "temperature": temperature || 1
                 },
+                "format": zodToJsonSchema(fmt)
             })
         })
 
         if (response.status == 200) {
             const text = await response.text()
             const js = JSON.parse(text)
+            console.log(js)
             if (js.message) {
-                return Promise.resolve(js.message.content)
+                const code = JSON.parse(js.message.content)
+                return Promise.resolve(code.code)
             }
             else if (js.response) {
-                return Promise.resolve(js.response)
+                const code = JSON.parse(js.response)
+                return Promise.resolve(code.code)
             }
             else
                 return Promise.reject(text)
