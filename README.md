@@ -1,4 +1,9 @@
 # Assistant
+
+## Links
+- [中文 README](README.md)
+- [English README](README_EN.md)
+
 一款 AI 助手前端，通过提示词工程+接口的形式配合指定地址的大模型服务提供智能助手的服务
 > 默认使用 ollama qwen2.5-coder:latest
 
