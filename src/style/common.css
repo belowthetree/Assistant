@@ -1,0 +1,37 @@
+.macos-background {
+    /* 使背景占满整个视口高度 */
+    background: linear-gradient(135deg, #f0f0f0, #ffffff);
+    /* 浅灰色到白色的渐变 */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: #333;
+}
+
+.lightshadow {
+    box-shadow: 0 5px 13px rgba(0, 0, 0, 0.1);
+}
+
+.macosfont {
+    /* 浅灰色到白色的渐变 */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: #333;
+}
+
+.lightbutton {
+    padding: 15px;
+    border: none;
+    outline: none;
+}
+
+.lineargray {
+    background: linear-gradient(135deg, #f0f0f0, #ffffff);
+}
+
+.drag-area {
+    /* 允许拖拽 */
+    -webkit-app-region: drag;
+    cursor: grab;
+}
+
+.no-drag {
+    -webkit-app-region: no-drag;
+}
