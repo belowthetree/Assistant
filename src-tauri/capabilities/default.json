@@ -61,6 +61,7 @@
 		"core:window:allow-close",
 		"core:window:allow-set-focus",
 		"clipboard-manager:allow-write-text",
-		"log:allow-log"
+		"log:allow-log",
+		"core:window:allow-start-dragging"
 	]
 }

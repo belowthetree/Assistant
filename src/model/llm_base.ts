@@ -11,8 +11,10 @@ import {zodToJsonSchema} from "zod-to-json-schema"
 export interface LLMInterface {
     modelType: EModelType
     getModelName():string
+    setModelName(name: string)
+    getModels():Promise<string[]>
     setApiKey(key: string)
-    checkApiKeyValid(): boolean
+    checkApiKeyValid(): Promise<boolean> 
     chat(content:string, temperature?:number, system?:string): Promise<string>
     generate(content: string, temperature?:number, system?:string, ctx?:any): Promise<string>
 }
@@ -35,7 +37,15 @@ export class LLMBase implements LLMInterface {
 
     getModelName(): string {return ""}
 
-    checkApiKeyValid(): boolean {return true}
+    setModelName(name: string) {
+        this.modelName = name
+    }
+
+    getModels():Promise<string[]> {
+        return Promise.resolve([])
+    }
+
+    async checkApiKeyValid(): Promise<boolean> {return Promise.resolve(true)}
 
     setApiKey(key: string) {
         this.api_key = "Bearer " + key

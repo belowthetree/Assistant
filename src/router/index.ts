@@ -15,12 +15,12 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/setting',
         name: 'setting',
-        component: ()=> import('@/view/Setting/SettingView.vue')
+        component: ()=> import('@/view/setting/CommonSettingView.vue')
     },
     {
         path: '/modelSetting',
         name: 'modelSetting',
-        component: ()=> import('@/view/Setting/ModelSettingView.vue')
+        component: ()=> import('@/view/setting/ModelSettingView.vue')
     },
     {
         path: '/talk',
@@ -30,7 +30,7 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/rolecard',
         name: 'rolecard',
-        component: () => import("@/view/Setting/RoleCardSettingView.vue")
+        component: () => import("@/view/setting/RoleCardSettingView.vue")
     },
     {
         path: '/knowledge',

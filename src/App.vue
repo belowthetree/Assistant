@@ -62,7 +62,7 @@ export default {
 			openSettingWindow()
 		},
 		clickKnowledge() {
-			const icon = document.getElementById("knowledgeIcon")
+			const icon = document.getElementById("voiceIcon")
 			// 触发动画
 			icon.classList.add('clicked');
 			setTimeout(() => {
@@ -122,6 +122,14 @@ export default {
 			const input = document.getElementById("userInput")
 			console.log("focus")
 			input.focus()
+			// 为元素添加拖拽事件
+			document.getElementById('container').addEventListener('mousedown', async (e) => {
+				if (e.button === 0) { // 左键点击
+					console.log("drag")
+					const mainWindow = webviewWindow.getCurrentWebviewWindow()
+					await mainWindow.startDragging();
+				}
+			});
 		});
 	}
 }
@@ -135,10 +143,10 @@ export default {
 			<!-- <Bubbles ref="bubbles" style="color: black;">fff</Bubbles> -->
 			<textarea @input="onInput" @keydown="onKeyDown" @keyup="onKeyUp" id="userInput" class="no-drag" v-model="userInput" placeholder="输入指令"></textarea>
 			<button class="right_bottom" @click="clickSetting">
-				<Setting class="hover_color" id="settingIcon" :style="{color: 'black'}" />
+				<i class="iconBtn fa-solid fa-cog hover_color fa-5" id="settingIcon" :style="{color: 'black'}" ></i>
 			</button>
-			<button class="right_bottom" @click="clickKnowledge" style="right: 35px;">
-				<Coin class="hover_color" id="knowledgeIcon" :style="{color: 'black'}" />
+			<button class="right_bottom" @click="clickKnowledge" style="right: 45px;">
+				<i class="iconBtn fa fa-microphone hover_color fa-5 " id="voiceIcon" :style="{color: 'black'}"></i>
 			</button>
 		</div>
 	</main>
@@ -147,42 +155,45 @@ export default {
 <style>
 .right_bottom {
 	position: absolute;
-	right: 5px;
+	right: 15px;
 	bottom: 25px;
 	color: #0f0f0f00;
 	outline: none;
 	border: none;
+	width: 1rem;
 	background-color: #0f0f0f00;
 }
 .hover_color {
 	position: absolute;
-	width: 25px;
-	height: 25px;
+	width: 100%;
+	height: 100%;
 	top: 50%;
-	left: 0%;
+	left: 50%;
 	transform: translate(-50%, -50%);
-	transition: width 0.3s ease;
-	transition: height 0.3s ease;
+	transition: all 0.1s ease;
 }
 .hover_color:hover {
-	width: 30px;
-	height: 30px;
-	transition: width 0.3s ease;
-	transition: height 0.3s ease;
+	transform: translate(-50%, -50%) scale(1.1);
+	transition: all 0.1s ease;
 }
 .hover_color.clicked {
-	width: 25px;
-	height: 25px;
-	transition: width 0.3s ease;
-	transition: height 0.3s ease;
+	transform: translate(-50%, -50%) scale(1);
+	transition: all 0.1s ease;
 }
+
+i {
+	font-size: 0.8rem;
+}
+
 .drag-area {
 	 /* 允许拖拽 */
 	-webkit-app-region: drag;
+	app-region: drag;
 	/* cursor: grab; */
 }
 .no-drag {
 	-webkit-app-region: no-drag;
+	app-region: no-drag;
 }
 .container {
 	margin: 0;

@@ -12,7 +12,7 @@ fn greet(name_n: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name_n)
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(any(target_os = "windows", target_os = "linux"))]
 fn build_first_webview(app: &mut App) {
     WebviewWindowBuilder::new(app, "home", tauri::WebviewUrl::App("/home".into()))
         .title("智能助手")
@@ -20,7 +20,7 @@ fn build_first_webview(app: &mut App) {
         .decorations(false)
         .transparent(true)
         .maximizable(false)
-        .build()?;
+        .build().unwrap();
 }
 
 #[cfg(target_os="macos")]

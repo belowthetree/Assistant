@@ -12,6 +12,8 @@
   "dependencies": {
     "@element-plus/icons": "^0.0.11",
     "@element-plus/icons-vue": "^2.3.1",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/vue-fontawesome": "^3.0.8",
     "@tauri-apps/api": "^2.2.0",
     "@tauri-apps/plugin-clipboard-manager": "^2.2.0",
     "@tauri-apps/plugin-dialog": "^2.2.0",
@@ -27,7 +29,6 @@
     "log": "^6.3.2",
     "marked": "^15.0.6",
     "ollama": "^0.5.12",
-    "openai": "^4.77.3",
     "reflect-metadata": "^0.2.2",
     "ts-node": "^10.9.2",
     "vue": "^3.5.13",

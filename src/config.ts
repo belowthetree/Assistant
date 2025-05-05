@@ -1,4 +1,4 @@
-import { BaseDirectory } from "@tauri-apps/api/path"
+import { appConfigDir, BaseDirectory } from "@tauri-apps/api/path"
 import { exists, mkdir, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs"
 import { EModelType } from "./data"
 import { listenModelUpdateEvent } from "./events/model_event"
@@ -6,12 +6,12 @@ import { RoleCardBase } from "./rolecard/rolecardbase"
 import { ModulePrompt } from "./prompt/module_prompt"
 
 export class ModelConfig {
-    name: string = ""
-    baseUrl: string = "http://127.0.0.1:11434"
-    modelType: EModelType = EModelType.Ollama
-    apiKey: string = ""
-    modelName: string = "qwen2.5-coder:7b"
-    roleCard: string
+    public name: string = ""
+    public baseUrl: string = "http://127.0.0.1:11434"
+    public modelType: EModelType = EModelType.Ollama
+    public apiKey: string = ""
+    public modelName: string = "qwen2.5-coder:7b"
+    public roleCard: string
 
     constructor(name: string) {
         this.name = name
@@ -26,7 +26,7 @@ export class ModelListConfig {
     constructor() {
         const model = new ModelConfig("默认配置")
         this.currentConfig = model.name
-        this.Models[model.name]
+        this.Models[model.name] = model
     }
 
     getCurrentModelConfig():ModelConfig {
@@ -88,6 +88,7 @@ listenModelUpdateEvent(()=>{
 export async function loadConfig():Promise<void> {
     await loadBaseConfig()
     await loadRoleCards()
+    return Promise.resolve()
 }
 
 export function getRoleCard(name: string): RoleCardBase {
@@ -108,7 +109,6 @@ export async function saveConfig():Promise<void> {
         await mkdir("", {baseDir: BaseDirectory.AppConfig, recursive: true})
     }
     await writeTextFile("config.json", js, {baseDir: BaseDirectory.AppConfig})
-    console.log(ModelList)
     // 保存角色卡
     const rolecardJs = JSON.stringify(RoleCards, undefined, "\t")
     await writeTextFile("rolecards.json", rolecardJs, {baseDir: BaseDirectory.AppConfig})
@@ -118,22 +118,31 @@ export async function saveConfig():Promise<void> {
 async function loadBaseConfig():Promise<void> {
     try {
         const cfg = await readTextFile("config.json", {baseDir: BaseDirectory.AppConfig})
-        ModelList = JSON.parse(cfg)
+        const configs = JSON.parse(cfg)
         const t = new ModelListConfig()
-        for (const key in ModelList) {
-            t[key] = ModelList[key]
+        for (const key in configs.Models) {
+            const model = new ModelConfig(key)
+            model.apiKey = configs.Models[key].apiKey
+            model.baseUrl = configs.Models[key].baseUrl
+            model.modelName = configs.Models[key].modelName
+            model.modelType = configs.Models[key].modelType as EModelType
+            model.name = configs.Models[key].name
+            model.roleCard = configs.Models[key].roleCard
+            t.saveModel(key, model)
         }
         ModelList = t
+        ModelList.currentConfig = configs.currentConfig
         if (!ModelList.getCurrentModelConfig){
             console.log("没有配置，默认创建")
             ModelList = new ModelListConfig()
         }
         ModelList.getCurrentModelConfig()
-        console.log(ModelList)
+        return Promise.resolve()
     }
     catch(e) {
         ModelList = new ModelListConfig()
         console.warn(e)
+        return Promise.reject()
     }
 }
 
@@ -142,7 +151,6 @@ async function loadRoleCards():Promise<void> {
     try {
         const cfg = await readTextFile("rolecards.json", {baseDir: BaseDirectory.AppConfig})
         RoleCards = JSON.parse(cfg) as RoleCardBase[]
-        console.log(RoleCards)
     }
     catch(e) {
         // 加载基础角色卡

@@ -1,8 +1,8 @@
 import { ModelConfig } from "../config";
 import { EModelType } from "../data";
-import { DeepSeek } from "./deepseek";
 import { LLMBase } from "./llm_base";
 import { Ollama } from "./ollama";
+import { OpenAIModel } from "./openai";
 
 export var MainModel: LLMBase = new Ollama("http://127.0.0.1:11434/api/generate", "qwen2.5-coder:latest", "电脑小助手", "")
 
@@ -11,7 +11,7 @@ export function generateModelFromConfig(config: ModelConfig): LLMBase {
     switch(config.modelType) {
         case EModelType.OpenAI:
         case EModelType.DeepSeek:
-            model = new DeepSeek(config.baseUrl, config.modelName, config.roleCard, config.apiKey)
+            model = new OpenAIModel(config.baseUrl, config.modelName, config.roleCard, config.apiKey)
             break
         case EModelType.Ollama:
             model = new Ollama(config.baseUrl, config.modelName, config.roleCard, config.apiKey)
