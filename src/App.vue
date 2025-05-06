@@ -3,7 +3,6 @@ import { invoke } from "@tauri-apps/api/core";
 import { onMounted, ref } from "vue";
 import { chat_with_tool, inputCommand, generate_instructions, generate } from "./lib/llm_interface";
 import { ask, confirm } from "@tauri-apps/plugin-dialog";
-import { TypescriptProcess } from "./frontend/typescript_process";
 import { generateModelFromConfig } from "./model/global";
 import { getCurrentWindow, LogicalPosition } from '@tauri-apps/api/window';
 import { LogicalSize, Position } from "@tauri-apps/api/dpi";
@@ -18,6 +17,7 @@ import { addBubble } from "./view/Talk/api";
 import { moveWindow, Position as WindowPosition } from "@tauri-apps/plugin-positioner";
 import { loadConfig, ModelList } from "./config";
 import { listenTalkViewQueryEvent } from "./events/window_event";
+import { ServerConfigInfo } from "./frontend/MCPServer";
 
 var models = EModelType.Deepseek
 

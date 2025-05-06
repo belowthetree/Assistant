@@ -1,9 +1,14 @@
 mod platform;
 mod web;
+mod mcp;
+use std::sync::Arc;
+
+use mcp::*;
 use platform::*;
 use tauri::{tray::TrayIconBuilder, window::Color, App, Manager, WebviewWindowBuilder};
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_positioner::{Position, WindowExt};
+use tokio::sync::Mutex;
 use web::*;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -49,9 +54,13 @@ fn build_first_webview(app: &mut App) {
     }
 }
 
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(MCPInfo {
+            client: Arc::new(Mutex::new(MCPClient::new()))
+        })
         .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_notification::init())
@@ -84,6 +93,9 @@ pub fn run() {
             read_text_file_at_project_root,
             write_text_file_at_project_root,
             get_project_root_path,
+            add_servers,
+            get_tools,
+            call_tool,
         ])
         // This is required to get tray-relative positions to work
         .setup(|app| {

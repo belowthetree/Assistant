@@ -25,7 +25,7 @@
                 <div class="flex-row">
                     <div class="form-group">
                         <label for="model-name">接口类型</label>
-                        <select id="model-name" class="form-control form-select" v-model="apiType">
+                        <select id="model-name" class="form-control form-select" v-model="modelconfig.modelType">
                             <option v-for="item in apiTypeOptions" :value="item">{{ item }}</option>
                         </select>
                     </div>
@@ -34,7 +34,7 @@
                 <div class="flex-row">
                     <div class="form-group">
                         <label for="model-name">模型名称</label>
-                        <select id="model-name" class="form-control form-select" v-model="modelName">
+                        <select id="model-name" class="form-control form-select" v-model="modelconfig.modelName">
                             <option v-for="item in modelNameOptions" :value="item">{{ item }}</option>
                         </select>
                     </div>
@@ -42,7 +42,7 @@
 
                 <div class="form-group">
                     <label for="api-key">API 密钥</label>
-                    <input type="password" id="api-key" class="form-control" @change="modify" v-model="apiKey" placeholder="输入API密钥">
+                    <input type="password" id="api-key" class="form-control" @change="modify" v-model="modelconfig.apiKey" placeholder="输入API密钥">
                     <div class="model-status">
                         <span class="connection-status">
                             <span class="status-indicator" :class="{ connected: isConnected }"></span>
@@ -56,7 +56,7 @@
 
                 <div class="form-group">
                     <label for="api-url">API URL</label>
-                    <input type="url" id="api-url" class="form-control" v-model="apiUrl" placeholder="输入API端点URL">
+                    <input type="url" id="api-url" class="form-control" v-model="modelconfig.baseUrl" placeholder="输入API端点URL">
                 </div>
             </div>
 
@@ -115,11 +115,6 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="timeout">请求超时 (秒)</label>
-                        <input type="number" id="timeout" class="form-control" v-model="timeout" min="5" max="120">
-                    </div>
-
-                    <div class="form-group">
                         <label>启用流式响应</label>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <label class="toggle-switch">
@@ -159,6 +154,7 @@
 import { OpenAIModel } from "@/model/openai"
 import { getRoleCard, loadConfig, ModelConfig, ModelList, saveConfig } from "~/src/config";
 import { EModelType } from "~/src/data";
+import { MCPClient } from "~/src/frontend/MCPClient";
 import { generateModelFromConfig } from "~/src/model/global";
 import { Ollama } from "~/src/model/ollama";
 
@@ -167,12 +163,8 @@ export default {
     data() {
         return {
             modelconfig: new ModelConfig("默认配置"),
-            apiType: EModelType.DeepSeek,
             apiTypeOptions: Object.values(EModelType),
-            modelName: '',
             modelNameOptions: [],
-            apiKey: '',
-            apiUrl: 'https://api.deepseek.com/v1',
             isConnected: true,
             apiKeyValid: true,
             systemPrompt: '你是一个有帮助的AI助手。回答要简洁专业。',
@@ -193,12 +185,6 @@ export default {
         cancel() {
         },
         modify() {
-            let card = getRoleCard("")
-            this.modelconfig = ModelList.getCurrentModelConfig()
-            this.modelconfig.baseUrl = this.apiUrl
-            this.modelconfig.modelType = this.apiType
-            this.modelconfig.apiKey = this.apiKey
-            this.modelconfig.modelName = this.modelName
             this.apiKeyValid = false
             this.isConnected = false
             let model = generateModelFromConfig(this.modelconfig)
@@ -218,12 +204,10 @@ export default {
         }
     },
     mounted() {
+        // const client = new MCPClient({})
+        // client.addServers([{name: "fetch", command: "node", args: ["/home/zgg/文档/Cline/MCP/fetch-mcp/dist/index.js"]}])
         loadConfig().then(()=>{
             this.modelconfig = ModelList.getCurrentModelConfig()
-            this.apiUrl = this.modelconfig.baseUrl
-            this.apiType = this.modelconfig.modelType
-            this.apiKey = this.modelconfig.apiKey
-            this.modelName = this.modelconfig.modelName
             this.modify()
             let card = getRoleCard(this.modelconfig.roleCard)
             this.systemPrompt = card.systemPrompt

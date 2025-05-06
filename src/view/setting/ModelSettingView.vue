@@ -162,21 +162,21 @@ export default {
                         <el-icon ><ArrowLeftBold /></el-icon>
                     </button>
                     <label>名字</label>
-                    <input class="input" @input="onConfigChange" v-model="this.model.name"/>
+                    <input class="input" @input="onConfigChange" v-model="model.name"/>
                     <label>API Key</label>
-                    <input class="input" @input="onConfigChange" type="password" v-model="this.model.apiKey"/>
+                    <input class="input" @input="onConfigChange" type="password" v-model="model.apiKey"/>
                     <label>模型地址</label>
-                    <input class="input" @input="onURLChange" v-model="this.model.baseUrl"/>
+                    <input class="input" @input="onURLChange" v-model="model.baseUrl"/>
                     <label>模型名称</label>
-                    <input v-if="this.selectableModels.length <= 0" class="input" @input="onConfigChange" v-model="this.model.modelName"/>
-                    <el-select v-else class="lightShadow" @change="onConfigChange" v-model="this.model.modelName" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
+                    <input v-if="selectableModels.length <= 0" class="input" @input="onConfigChange" v-model="model.modelName"/>
+                    <el-select v-else class="lightShadow" @change="onConfigChange" v-model="model.modelName" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
                         <el-option v-for="item in selectableModels" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>
                     </el-select>
                     <label>模型类型</label>
-                    <el-select class="lightShadow" @change="onConfigChange" v-model="this.model.modelType" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
+                    <el-select class="lightShadow" @change="onConfigChange" v-model="model.modelType" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
                         <el-option v-for="item in modelTypes" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>
                     </el-select>
-                    <el-select class="lightShadow" @change="onConfigChange" v-model="this.model.roleCard" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
+                    <el-select class="lightShadow" @change="onConfigChange" v-model="model.roleCard" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
                         <el-option v-for="item in rolecards" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>
                     </el-select>
                 </div>

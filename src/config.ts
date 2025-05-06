@@ -17,6 +17,15 @@ export class ModelConfig {
         this.name = name
         this.roleCard = "电脑小助手"
     }
+
+    fromjson(json: any) {
+        this.name = json.name
+        this.baseUrl = json.baseUrl
+        this.modelType = json.modelType as EModelType
+        this.apiKey = json.apiKey
+        this.modelName = json.modelName
+        this.roleCard = json.roleCard
+    }
 }
 
 export class ModelListConfig {
@@ -122,12 +131,7 @@ async function loadBaseConfig():Promise<void> {
         const t = new ModelListConfig()
         for (const key in configs.Models) {
             const model = new ModelConfig(key)
-            model.apiKey = configs.Models[key].apiKey
-            model.baseUrl = configs.Models[key].baseUrl
-            model.modelName = configs.Models[key].modelName
-            model.modelType = configs.Models[key].modelType as EModelType
-            model.name = configs.Models[key].name
-            model.roleCard = configs.Models[key].roleCard
+            model.fromjson(configs.Models[key])
             t.saveModel(key, model)
         }
         ModelList = t

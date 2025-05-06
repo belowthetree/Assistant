@@ -5,8 +5,6 @@ import { RoleCardBase } from "../rolecard/rolecardbase"
 import {fetch} from "@tauri-apps/plugin-http"
 import { ModulePrompt } from "../prompt/module_prompt"
 import { getRoleCard } from "../config"
-import {z} from "zod"
-import {zodToJsonSchema} from "zod-to-json-schema"
 
 export interface LLMInterface {
     modelType: EModelType
@@ -56,7 +54,7 @@ export class LLMBase implements LLMInterface {
         return this.url
     }
 
-    async chat(content:string, temperature?:number, system?:string): Promise<string> {
+    async chat(content:string, temperature?:number, system?:string, tools?:any[]): Promise<string> {
         console.log("chat", content, system)
         if (!this.checkApiKeyValid()) {
             notify("API Key 未设置", `模型${this.getModelName()} api key 未设置`)
@@ -82,6 +80,7 @@ export class LLMBase implements LLMInterface {
                 "options": {
                     "temperature": temperature || 1
                 },
+                "tools": tools
             })
         })
 
@@ -107,16 +106,13 @@ export class LLMBase implements LLMInterface {
         return this.url
     }
 
-    async generate(content: string, temperature?:number, system?:string): Promise<string> {
+    async generate(content: string, temperature?:number, system?:string, tools?:any[]): Promise<string> {
         if (!this.checkApiKeyValid()) {
             notify("API Key 未设置", `模型${this.getModelName()} api key 未设置`)
         }
         if (!system) {
             system = this.roleCard.systemPrompt
         }
-        const fmt = z.object({
-            "code": z.string()
-        })
         const response = await fetch(this.get_generate_url(), {
             method: "POST",
             headers: {
@@ -131,7 +127,7 @@ export class LLMBase implements LLMInterface {
                 "options": {
                     "temperature": temperature || 1
                 },
-                "format": zodToJsonSchema(fmt)
+                tools,
             })
         })
 
