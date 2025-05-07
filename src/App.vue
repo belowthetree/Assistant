@@ -9,7 +9,6 @@ import { LogicalSize, Position } from "@tauri-apps/api/dpi";
 import { Setting } from "@element-plus/icons-vue";
 import { openKnowledgeWindow, openSettingWindow } from "./lib/window";
 import Bubbles from "./components/Bubbles.vue";
-import { EModelType, ECmdMode } from "@/data";
 import { ModulePrompt } from "./prompt/module_prompt";
 import { emitModelResultEvent, listenModelUpdateEvent } from "./events/model_event";
 import { webviewWindow } from "@tauri-apps/api";
@@ -18,14 +17,9 @@ import { moveWindow, Position as WindowPosition } from "@tauri-apps/plugin-posit
 import { loadConfig, ModelList } from "./config";
 import { listenTalkViewQueryEvent } from "./events/window_event";
 import { ServerConfigInfo } from "./frontend/MCPServer";
+import { Talk } from "./talk/talk"
 
-var models = EModelType.Deepseek
-
-const response = ref("")
-const indexInput = ref("")
-const apiKey = ref("")
-const model = ref("qwen2.5-coder:7b")
-const cmdMode = ECmdMode.Exec
+var talk = null
 var modeSelect = "Exec"
 var commands = []
 
@@ -84,13 +78,7 @@ export default {
 		async commitCommand() {
 			try {
 				console.log("输入命令", this.userInput)
-				const model = generateModelFromConfig(ModelList.getCurrentModelConfig())
-				model.generate(this.userInput, 0.2).then((res)=>{
-					this.reply = res
-					console.log(res)
-					// addBubble(res)
-					model.execute_typescript(res)
-				})
+				talk.userSay(this.userInput)
 			}
 			catch(e) {
 				console.log(e)
@@ -107,17 +95,26 @@ export default {
 		onKeyUp(event) {
 			if (event.key == "Control")
 				this.controlDown = false
-		}
+		},
 	},
 	mounted() {
-			listenModelUpdateEvent(()=>{
-				loadConfig()
-				console.log(ModelList)
+		loadConfig().then(()=>{
+			// 生成聊天对象
+			const model = generateModelFromConfig(ModelList.getCurrentModelConfig())
+			talk = new Talk(model, "")
+		})
+		listenModelUpdateEvent(()=>{
+			loadConfig().then(()=>{
+				// 更新模型
+				const model = generateModelFromConfig(ModelList.getCurrentModelConfig())
+				talk.setModel(model)
 			})
-			this.onInput()
-			const mainWindow = webviewWindow.getCurrentWebviewWindow()
-			// 监听窗口显示事件
-			mainWindow.once('tauri://focus', () => {
+			console.log(ModelList)
+		})
+		this.onInput()
+		const mainWindow = webviewWindow.getCurrentWebviewWindow()
+		// 监听窗口显示事件
+		mainWindow.once('tauri://focus', () => {
 			// 窗口显示时，聚焦输入框
 			const input = document.getElementById("userInput")
 			console.log("focus")

@@ -4,7 +4,6 @@ import App from "./Empty.vue"
 import { registerWindowEvents } from "./events/window_event";
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import 'element-plus/dist/index.css'
-import { loadConfig } from "./config";
 import router from "./router";
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faCog } from '@fortawesome/free-solid-svg-icons'
@@ -23,5 +22,3 @@ app.use(ElementPlus.plugins)
 app.mount("#app")
 
 registerWindowEvents()
-
-loadConfig()

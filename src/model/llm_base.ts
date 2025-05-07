@@ -6,15 +6,27 @@ import {fetch} from "@tauri-apps/plugin-http"
 import { ModulePrompt } from "../prompt/module_prompt"
 import { getRoleCard } from "../config"
 
+export interface ModelMessage {
+    role: string
+    content: string
+}
+
+export interface ModelInputParam {
+    content?: string
+    system?: string
+    temperature?: number
+    tools?: any[]
+    messages?: ModelMessage[]
+}
+
 export interface LLMInterface {
     modelType: EModelType
     getModelName():string
     setModelName(name: string)
     getModels():Promise<string[]>
     setApiKey(key: string)
-    checkApiKeyValid(): Promise<boolean> 
-    chat(content:string, temperature?:number, system?:string): Promise<string>
-    generate(content: string, temperature?:number, system?:string, ctx?:any): Promise<string>
+    checkApiKeyValid(): Promise<boolean>
+    generate(param: ModelInputParam): Promise<string>
 }
 
 export class LLMBase implements LLMInterface {
@@ -23,6 +35,7 @@ export class LLMBase implements LLMInterface {
     messages: any[] = []
     url: string = ""
     modelName: string = ""
+    temperature: number = 0.6
     roleCard: RoleCardBase = new RoleCardBase()
 
     constructor(url: string, modelName: string, roleCard: string, api_key: string) {
@@ -54,64 +67,13 @@ export class LLMBase implements LLMInterface {
         return this.url
     }
 
-    async chat(content:string, temperature?:number, system?:string, tools?:any[]): Promise<string> {
-        console.log("chat", content, system)
-        if (!this.checkApiKeyValid()) {
-            notify("API Key 未设置", `模型${this.getModelName()} api key 未设置`)
-        }
-        if (!system) {
-            system = this.roleCard.systemPrompt
-        }
-        const messages = this.messages || []
-        messages.push(
-            {"role": "system", "content": `${system || ""}`},
-            {"role": "user", "content": `${content}`}
-        )
-        const response = await fetch(this.get_chat_url(), {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": this.api_key,
-            },
-            body: JSON.stringify({
-                "model": this.modelName,
-                "messages": messages,
-                "stream": false,
-                "options": {
-                    "temperature": temperature || 1
-                },
-                "tools": tools
-            })
-        })
-
-        console.log(response)
-        if (response.status == 200) {
-            const text = await response.text()
-            const js = JSON.parse(text)
-            if (js.message) {
-                const res = js.message.content
-                this.messages.push({
-                    "role": "assistant",
-                    "content": res,
-                })
-                return Promise.resolve(res)
-            }
-            else
-                return Promise.reject(text)
-        }
-        return Promise.reject(await response.text())
-    }
-
     get_generate_url(): string {
         return this.url
     }
 
-    async generate(content: string, temperature?:number, system?:string, tools?:any[]): Promise<string> {
+    async generate(param: ModelInputParam): Promise<string> {
         if (!this.checkApiKeyValid()) {
             notify("API Key 未设置", `模型${this.getModelName()} api key 未设置`)
-        }
-        if (!system) {
-            system = this.roleCard.systemPrompt
         }
         const response = await fetch(this.get_generate_url(), {
             method: "POST",
@@ -121,13 +83,13 @@ export class LLMBase implements LLMInterface {
             },
             body: JSON.stringify({
                 "model": this.modelName,
-                "system": system || "",
-                "prompt": content,
+                "system": param.system || "",
+                "prompt": param.content,
                 "stream": false,
                 "options": {
-                    "temperature": temperature || 1
+                    "temperature": param.temperature || this.temperature
                 },
-                tools,
+                "tools": param.tools,
             })
         })
 

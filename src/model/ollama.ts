@@ -1,4 +1,4 @@
-import { LLMBase } from "@/model/llm_base";
+import { LLMBase, ModelInputParam } from "@/model/llm_base";
 import { EModelType } from "@/data"
 
 export class Ollama extends LLMBase {
@@ -19,9 +19,9 @@ export class Ollama extends LLMBase {
         return this.url + "/api/generate"
     }
 
-    async generate(content: string, temperature?: number, system?: string): Promise<string> {
+    async generate(param: ModelInputParam): Promise<string> {
         this.url = this.url.replace("chat", "generate")
-        return super.generate(content, temperature, system)
+        return super.generate(param)
     }
 
     async getModels():Promise<string[]> {

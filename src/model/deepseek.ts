@@ -1,6 +1,5 @@
 import { fetch} from "@tauri-apps/plugin-http"
-import { readTextFileAtProjectTemp } from "@/lib/llm_action"
-import { LLMBase } from "@/model/llm_base"
+import { LLMBase, ModelInputParam } from "@/model/llm_base"
 import { EModelType } from "@/data"
 
 export class DeepSeek extends LLMBase {
@@ -9,32 +8,38 @@ export class DeepSeek extends LLMBase {
         this.modelType = EModelType.DeepSeek
     }
 
-    async chat(content:string, temperature?:number, system?:string): Promise<string> {
-        console.log("deep input", content)
-        const res = await this.generate(content, temperature, system, this.messages)
-        this.messages.push({
-            "role": "assistant",
-            "content": res,
+    async getModels(): Promise<string[]> {
+        const response = await fetch(this.url + "/models", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": this.api_key,
+            }
         })
-        return res
+        const res = await response.text()
+        console.log(res)
+        if (response.status == 200) {
+            const js = JSON.parse(res)
+            if (js.data && js.data.length > 0) {
+                const models = []
+                for (const model of js.data) {
+                    models.push(model.id)
+                }
+                return Promise.resolve(models)
+            }
+        }
+        return Promise.reject([])
     }
 
-    async generate(content: string, temperature?:number, system?:string, ctx?:any): Promise<string> {
-        console.log(content)
-        if (this.api_key.length <= 0) {
-            console.log("没有 api key")
-            const res = await readTextFileAtProjectTemp("resources/api_key")
-            this.api_key = "Bearer " + res
+    async generate(param: ModelInputParam): Promise<string> {
+        const messages = param.messages
+        if (messages.length <= 0) {
+            messages.push(
+                {"role": "system", "content": `${param.system || ""}`},
+                {"role": "user", "content": `${param.content}`}
+            )
         }
-        const messages = ctx || []
-        if (!system) {
-            system = this.roleCard.systemPrompt
-        }
-        messages.push(
-            {"role": "system", "content": `${system}`},
-            {"role": "user", "content": `${content}`}
-        )
-        const response = await fetch(this.url, {
+        const response = await fetch(this.url + "/chat/completions", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -44,7 +49,7 @@ export class DeepSeek extends LLMBase {
                 "model": this.modelName,
                 "messages": messages,
                 "stream": false,
-                "temperature": temperature || 1
+                "temperature": param.temperature || this.temperature
             })
         })
         console.log(response, this.modelName)
