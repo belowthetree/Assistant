@@ -1,4 +1,4 @@
-import { LLMBase } from '../model/llm_base';
+import { ModelBase } from '../model/modelbase';
 
 interface ChatMessage {
     role: 'user' | 'assistant';
@@ -7,9 +7,9 @@ interface ChatMessage {
 
 export class Chat {
     private messages: ChatMessage[] = [];
-    private llmBase: LLMBase;
+    private llmBase: ModelBase;
 
-    constructor(llmBase: LLMBase) {
+    constructor(llmBase: ModelBase) {
         this.llmBase = llmBase;
     }
 

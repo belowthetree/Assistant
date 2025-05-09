@@ -1,8 +1,8 @@
 import { fetch} from "@tauri-apps/plugin-http"
-import { LLMBase, ModelInputParam } from "@/model/llm_base"
+import { ModelBase, ModelInputParam, ModelResponse } from "~/src/model/modelbase"
 import { EModelType } from "@/data"
 
-export class DeepSeek extends LLMBase {
+export class DeepSeek extends ModelBase {
     constructor(url: string = "https://api.deepseek.com/chat/completions", model: string = "deepseek-chat", roleCard: string = "", api: string = "") {
         super(url, model, roleCard, api)
         this.modelType = EModelType.DeepSeek
@@ -31,7 +31,7 @@ export class DeepSeek extends LLMBase {
         return Promise.reject([])
     }
 
-    async generate(param: ModelInputParam): Promise<string> {
+    async generate(param: ModelInputParam): Promise<ModelResponse> {
         const messages = param.messages
         if (messages.length <= 0) {
             messages.push(

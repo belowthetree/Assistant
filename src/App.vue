@@ -17,7 +17,7 @@ import { moveWindow, Position as WindowPosition } from "@tauri-apps/plugin-posit
 import { loadConfig, ModelList } from "./config";
 import { listenTalkViewQueryEvent } from "./events/window_event";
 import { ServerConfigInfo } from "./frontend/MCPServer";
-import { Talk } from "./talk/talk"
+import { Talk } from "./life/talk/talk"
 
 var talk = null
 var modeSelect = "Exec"

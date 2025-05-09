@@ -19,6 +19,22 @@ export interface ModelInputParam {
     messages?: ModelMessage[]
 }
 
+export interface ModelResponse {
+    role: string
+    content: string
+    reasoning_content?: string
+    tool_calls?: [
+        {
+            id: string,
+            type: string,
+            function: {
+                name: string,
+                arguments: string
+            }
+        }
+    ]
+}
+
 export interface LLMInterface {
     modelType: EModelType
     getModelName():string
@@ -26,10 +42,10 @@ export interface LLMInterface {
     getModels():Promise<string[]>
     setApiKey(key: string)
     checkApiKeyValid(): Promise<boolean>
-    generate(param: ModelInputParam): Promise<string>
+    generate(param: ModelInputParam): Promise<ModelResponse>
 }
 
-export class LLMBase implements LLMInterface {
+export class ModelBase implements LLMInterface {
     modelType: EModelType
     api_key: string = ""
     messages: any[] = []
@@ -71,7 +87,7 @@ export class LLMBase implements LLMInterface {
         return this.url
     }
 
-    async generate(param: ModelInputParam): Promise<string> {
+    async generate(param: ModelInputParam): Promise<ModelResponse> {
         if (!this.checkApiKeyValid()) {
             notify("API Key 未设置", `模型${this.getModelName()} api key 未设置`)
         }
@@ -98,12 +114,13 @@ export class LLMBase implements LLMInterface {
             const js = JSON.parse(text)
             console.log(js)
             if (js.message) {
-                const code = JSON.parse(js.message.content)
-                return Promise.resolve(code.code)
+                const res = JSON.parse(js.message)
+                return Promise.resolve(res)
             }
+            // 针对 ollama generate 模式
             else if (js.response) {
-                const code = JSON.parse(js.response)
-                return Promise.resolve(code.code)
+                const res = JSON.parse(js.response)
+                return Promise.resolve(res)
             }
             else
                 return Promise.reject(text)

@@ -1,9 +1,19 @@
-import { LLMBase, ModelMessage } from "../model/llm_base";
-import { ERole, TalkContent, TalkContext } from "./context";
+import { ModelBase, ModelMessage, ModelResponse } from "../../model/modelbase";
+import { TalkContent, TalkContext } from "./context";
 
 export enum ETalkStatus {
     Idle,
     Waiting,
+}
+
+export interface Tool {
+    id: string,
+    type: string,
+    function: {
+        name: string,
+        // json 格式的参数键值对
+        arguments: string
+    }
 }
 
 export class Talk {
@@ -11,9 +21,9 @@ export class Talk {
     system: string
     status: ETalkStatus = ETalkStatus.Idle
     waitingSay: TalkContent
-    model: LLMBase
+    model: ModelBase
 
-    constructor(model: LLMBase, system: string) {
+    constructor(model: ModelBase, system: string) {
         setInterval(() => {
             this.tick()
         }, 0.5);
@@ -26,35 +36,35 @@ export class Talk {
         this.system = system
     }
 
+    // 内部循环
     tick() {
         if (this.status == ETalkStatus.Idle && this.waitingSay) {
             this.askAssistant()
         }
     }
 
-    addContent(content:TalkContent) {
-        this.context.addContent(content)
-    }
-
+    // 获取所有对话上下文
     getContextAsString(): string {
         return JSON.stringify(this.context)
     }
 
-    setModel(model: LLMBase) {
-        this.model = model
+    // 用户输入，返回助手回复
+    async userSay(content: string): Promise<ModelResponse> {
+        this.context.addUser({content, role: "User"})
+        try {
+            const res = await this.askAssistant()
+            this.context.addAssistant(res)
+            return Promise.resolve(res)
+        }
+        catch(e) {
+            console.error(e)
+            this.context.addAssistant(e)
+            return Promise.reject(e)
+        }
     }
 
-    userSay(content: string) {
-        if (this.status == ETalkStatus.Waiting) {
-            this.waitingSay.append(content)
-        }
-        else {
-            this.context.addUser(content)
-            this.askAssistant()
-        }
-    }
-
-    askAssistant() {
+    // 调用模型，内部函数
+    askAssistant(): Promise<ModelResponse> {
         if (this.status == ETalkStatus.Waiting) {
             return
         }
@@ -63,12 +73,8 @@ export class Talk {
         ]
         messages.push(...this.context.tojson())
         this.status = ETalkStatus.Waiting
-        this.model.generate({
+        return this.model.generate({
             messages,
-        }).then((v)=>{
-            console.log(v)
-        }).finally(()=>{
-            this.status = ETalkStatus.Idle
         })
     }
 }

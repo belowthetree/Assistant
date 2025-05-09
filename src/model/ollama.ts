@@ -1,7 +1,7 @@
-import { LLMBase, ModelInputParam } from "@/model/llm_base";
+import { ModelBase, ModelInputParam, ModelResponse } from "~/src/model/modelbase";
 import { EModelType } from "@/data"
 
-export class Ollama extends LLMBase {
+export class Ollama extends ModelBase {
     constructor(url: string, model: string, roleCard: string, api_key: string = "") {
         if (url.endsWith("/")) {
             url = url.slice(0, url.length)
@@ -19,7 +19,7 @@ export class Ollama extends LLMBase {
         return this.url + "/api/generate"
     }
 
-    async generate(param: ModelInputParam): Promise<string> {
+    async generate(param: ModelInputParam): Promise<ModelResponse> {
         this.url = this.url.replace("chat", "generate")
         return super.generate(param)
     }

@@ -1,12 +1,12 @@
 import { ModelConfig } from "../config";
 import { EModelType } from "../data";
-import { LLMBase } from "./llm_base";
+import { ModelBase } from "./modelbase";
 import { Ollama } from "./ollama";
 import { OpenAIModel } from "./openai";
 
-export var MainModel: LLMBase = new Ollama("http://127.0.0.1:11434/api/generate", "qwen2.5-coder:latest", "电脑小助手", "")
+export var MainModel: ModelBase = new Ollama("http://127.0.0.1:11434/api/generate", "qwen2.5-coder:latest", "电脑小助手", "")
 
-export function generateModelFromConfig(config: ModelConfig): LLMBase {
+export function generateModelFromConfig(config: ModelConfig): ModelBase {
     let model
     switch(config.modelType) {
         case EModelType.OpenAI:
