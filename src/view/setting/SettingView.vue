@@ -1,9 +1,11 @@
 <script lang="ts">
 import ModelSettingView from "~/src/view/setting/ModelSettingView.vue";
+import MCPServerListView from "./MCPServerListView.vue";
 
 export default {
     components: {
-        'modelsetting': ModelSettingView
+        'modelsetting': ModelSettingView,
+        'serversetting': MCPServerListView
     },
     setup() {
     },
@@ -48,7 +50,8 @@ export default {
 
             <!-- Tab 2 Content -->
             <div v-show="activeTab === 'rolecardtab'" class="tab-content" :class="{ 'active': activeTab === 'rolecardtab' }">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">服务</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">MCP 服务</h2>
+                <serversetting></serversetting>
             </div>
         </div>
     </div>

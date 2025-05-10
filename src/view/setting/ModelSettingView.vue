@@ -72,19 +72,7 @@
                 <div class="form-group">
                     <label for="system-prompt">系统提示词</label>
                     <textarea id="system-prompt" class="form-control form-textarea" v-model="systemPrompt"
-                        placeholder="输入系统提示词"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="user-prompt">用户默认提示词</label>
-                    <textarea id="user-prompt" class="form-control form-textarea" v-model="userPrompt"
-                        placeholder="输入用户默认提示词"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" v-model="autoAttachHistory"> 自动附加历史对话
-                    </label>
+                        placeholder="输入系统提示词" @change="modify"></textarea>
                 </div>
             </div>
 
@@ -101,24 +89,23 @@
                     <div class="flex-row">
                         <div class="form-group">
                             <label for="temperature">温度 (Temperature)</label>
-                            <input type="range" id="temperature" min="0" max="2" step="0.1" v-model="temperature"
-                                class="form-control">
-                            <div style="text-align: center; font-size: 12px; color: var(--text-light);">{{ temperature
+                            <input type="range" id="temperature" min="0" max="2" step="0.1" v-model="modelconfig.temperature"
+                                class="form-control" @change="modify">
+                            <div style="text-align: center; font-size: 12px; color: var(--text-light);">{{ modelconfig.temperature
                                 }}</div>
                         </div>
-
-                        <div class="form-group">
+                        <!-- <div class="form-group">
                             <label for="max-tokens">最大令牌数</label>
                             <input type="number" id="max-tokens" class="form-control" v-model="maxTokens" min="1"
                                 max="4096">
-                        </div>
+                        </div> -->
                     </div>
 
                     <div class="form-group">
                         <label>启用流式响应</label>
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <label class="toggle-switch">
-                                <input type="checkbox" v-model="streamResponse">
+                            <label class="toggle-switch" style="flex-direction: row;display: flex; ">
+                                <input type="checkbox" v-model="modelconfig.stream" @change="modify">
                                 <span class="slider"></span>
                             </label>
                             <span>启用</span>
@@ -168,13 +155,9 @@ export default {
             isConnected: true,
             apiKeyValid: true,
             systemPrompt: '你是一个有帮助的AI助手。回答要简洁专业。',
-            userPrompt: '',
-            autoAttachHistory: true,
             showAdvanced: false,
-            temperature: 0.7,
             maxTokens: 2048,
-            timeout: 30,
-            streamResponse: true
+            timeout: 30
         }
     },
     methods: {
@@ -184,29 +167,36 @@ export default {
         },
         cancel() {
         },
-        modify() {
+        async modify() {
+            this.saveSettings()
             this.apiKeyValid = false
             this.isConnected = false
+            // 检查 api 连接
+            if (this.modelconfig.modelName.length <= 0)
+                return
+            if (this.modelconfig.modelType.length <= 0)
+                return
+            if (this.modelconfig.modelType !== EModelType.Ollama && this.modelconfig.baseUrl <= 0)
+                return
             let model = generateModelFromConfig(this.modelconfig)
-            console.log(this.modelconfig)
-            model.checkApiKeyValid().then((val)=>{
-                this.apiKeyValid = val
-                this.isConnected = val
-            })
-            model.getModels().then((models)=>{
-                this.modelNameOptions = models
-                if (this.modelName in this.modelNameOptions === false) {
-                    this.modelName = this.modelNameOptions[0] || ""
-                }
-                this.modelconfig.modelName = this.modelName
-                this.saveSettings()
-            })
+            const val = await model.checkApiKeyValid()
+            this.apiKeyValid = val
+            if (this.apiKeyValid) {
+                model.getModels().then((models)=>{
+                    this.isConnected = val
+                    this.modelNameOptions = models
+                    if (this.modelName in this.modelNameOptions === false) {
+                        this.modelName = this.modelNameOptions[0] || ""
+                    }
+                    this.modelconfig.modelName = this.modelName
+                })
+            }
         }
     },
     mounted() {
         // const client = new MCPClient({})
         // client.addServers([{name: "fetch", command: "node", args: ["/home/zgg/文档/Cline/MCP/fetch-mcp/dist/index.js"]}])
-        loadConfig().then(()=>{
+        loadConfig().finally(()=>{
             this.modelconfig = ModelList.getCurrentModelConfig()
             this.modify()
             let card = getRoleCard(this.modelconfig.roleCard)

@@ -6,12 +6,14 @@ import { RoleCardBase } from "./rolecard/rolecardbase"
 import { ModulePrompt } from "./prompt/module_prompt"
 
 export class ModelConfig {
-    public name: string = ""
-    public baseUrl: string = "http://127.0.0.1:11434"
-    public modelType: EModelType = EModelType.Ollama
-    public apiKey: string = ""
-    public modelName: string = "qwen2.5-coder:7b"
-    public roleCard: string
+    name: string = ""
+    baseUrl: string = "http://127.0.0.1:11434"
+    modelType: EModelType = EModelType.Ollama
+    apiKey: string = ""
+    modelName: string = "qwen2.5-coder:7b"
+    temperature: number = 0.6
+    stream: boolean = false
+    roleCard: string
 
     constructor(name: string) {
         this.name = name
@@ -146,7 +148,6 @@ async function loadBaseConfig():Promise<void> {
     catch(e) {
         ModelList = new ModelListConfig()
         console.warn(e)
-        return Promise.reject()
     }
 }
 

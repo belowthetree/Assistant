@@ -18,6 +18,11 @@ const routes: Array<RouteRecordRaw> = [
         component: ()=> import('@/view/setting/SettingView.vue')
     },
     {
+        path: '/setting',
+        name: 'mcpServerListView',
+        component: ()=> import('@/view/setting/MCPServerListView.vue')
+    },
+    {
         path: '/modelSetting',
         name: 'modelSetting',
         component: ()=> import('@/view/setting/ModelSettingView.vue')
