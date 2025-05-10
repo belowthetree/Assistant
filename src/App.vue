@@ -120,7 +120,7 @@ export default {
 			console.log("focus")
 			input.focus()
 			// 为元素添加拖拽事件
-			document.getElementById('container').addEventListener('mousedown', async (e) => {
+			document.getElementById('maincontainer').addEventListener('mousedown', async (e) => {
 				if (e.button === 0) { // 左键点击
 					console.log("drag")
 					const mainWindow = webviewWindow.getCurrentWebviewWindow()
@@ -135,7 +135,7 @@ export default {
 </script>
 
 <template>
-	<main class="container drag-area" id="container">
+	<main class="maincontainer drag-area" id="maincontainer">
 		<div class="row macos-background">
 			<!-- <Bubbles ref="bubbles" style="color: black;">fff</Bubbles> -->
 			<textarea @input="onInput" @keydown="onKeyDown" @keyup="onKeyUp" id="userInput" class="no-drag" v-model="userInput" placeholder="输入指令"></textarea>
@@ -192,7 +192,7 @@ i {
 	-webkit-app-region: no-drag;
 	app-region: no-drag;
 }
-.container {
+.maincontainer {
 	margin: 0;
 	display: flex;
 	flex-direction: column;
@@ -200,7 +200,7 @@ i {
 	text-align: center;
 	width: 100%;
 	height: 100%;
-	background-color: #e8e8e800;
+	background-color: #8c070700;
 }
 
 :root {

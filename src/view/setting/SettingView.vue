@@ -1,63 +1,129 @@
 <script lang="ts">
-import "@/style/common.css"
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { moveWindow, Position } from "@tauri-apps/plugin-positioner";
-import { openModelSettingWindow, openRoleCardView } from "~/src/lib/window";
+import ModelSettingView from "~/src/view/setting/ModelSettingView.vue";
 
 export default {
+    components: {
+        'modelsetting': ModelSettingView
+    },
     setup() {
-        moveWindow(Position.RightCenter)
+    },
+    data() {
+        return {
+            activeTab: "modeltab"
+        }
+    },
+    mounted() {
     },
     methods: {
-        closeWindow() {
-            WebviewWindow.getCurrent().close()
-        },
-        openModelSettingView() {
-            openModelSettingWindow()
-        },
-        openRoleCardSettingView() {
-            openRoleCardView()
+        onClickTab(tab) {
+            this.activeTab = tab
         }
     }
 }
 </script>
 
 <template>
-    <main class="maincontainer">
-        <button class="macos-background lightshadow macosfont cardbutton" @click="openModelSettingView">模型设置</button>
-        <button class="macos-background lightshadow macosfont cardbutton" @click="openRoleCardSettingView">角色卡设置</button>
-    </main>
+    <div id="mainbody" class="bg-white overflow-hidden w-full max-w-4xl flex flex-col md:flex-row">
+        <!-- Left Tabs -->
+        <div class="bg-gray-50 w-full md:w-48 border-b md:border-b-0 md:border-r border-gray-200 flex flex-row md:flex-col">
+            <button @click="onClickTab('modeltab')" :class="['tab-btn p-4 flex items-center gap-3 text-left border-r md:border-r-0 md:border-b border-gray-200 hover:bg-gray-100 transition-colors duration-200',
+                { 'active': activeTab === 'modeltab' }]">
+                <i class="fa-solid fa-globe"></i>
+                <span class="hidden md:inline">模型</span>
+            </button>
+            <button @click="onClickTab('rolecardtab')" :class="['tab-btn p-4 flex items-center gap-3 text-left border-r md:border-r-0 md:border-b border-gray-200 hover:bg-gray-100 transition-colors duration-200',
+                { 'active': activeTab === 'rolecardtab' }]">
+                <i class="fa-solid fa-server"></i>
+                <span class="hidden md:inline">服务</span>
+            </button>
+        </div>
+
+        <!-- Right Content Area -->
+        <div class="flex-1 p-6">
+            <!-- Tab 1 Content -->
+            <div v-show="activeTab === 'modeltab'" class="tab-content" :class="{ 'active': activeTab === 'modeltab' }">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">模型</h2>
+                <modelsetting></modelsetting>
+            </div>
+
+            <!-- Tab 2 Content -->
+            <div v-show="activeTab === 'rolecardtab'" class="tab-content" :class="{ 'active': activeTab === 'rolecardtab' }">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">服务</h2>
+            </div>
+        </div>
+    </div>
 </template>
 
 <style>
-main {
-    background-color: rgba(173, 216, 230, 0.623);
+#mainbody {
+    margin: 0;
     height: 100%;
     width: 100%;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
 }
 
-.maincontainer {
-    height: 100vh;
-    /* 使背景占满整个视口高度 */
-    background: linear-gradient(135deg, #f0f0f0, #ffffff);
-    /* 浅灰色到白色的渐变 */
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    color: #333;
-    /* 深灰色文字 */
-    text-align: center;
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
 }
 
-.cardbutton {
-    height: 50px;
-    margin: 15px;
-    border-radius: 5px;
-    border: none;
-    outline: none;
+.tab-content.active {
+    display: block;
 }
-.cardbutton:active {
-    margin: 20px;
+
+.tab-btn.active {
+    background-color: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.window {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* 暗黑模式样式 */
+.dark {
+    --tw-bg-opacity: 1;
+    background-color: rgb(17 24 39 / var(--tw-bg-opacity));
+}
+
+.dark .window {
+    background-color: rgb(31 41 55 / var(--tw-bg-opacity));
+    border-color: rgb(55 65 81 / var(--tw-border-opacity));
+}
+
+.dark .bg-gray-50 {
+    background-color: rgb(31 41 55 / var(--tw-bg-opacity));
+}
+
+.dark .text-gray-800 {
+    color: rgb(229 231 235 / var(--tw-text-opacity));
+}
+
+.dark .border-gray-200 {
+    border-color: rgb(55 65 81 / var(--tw-border-opacity));
+}
+
+/* 响应式调整 */
+@media (max-width: 767px) {
+    .tab-btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .tab-btn span {
+        display: none;
+    }
 }
 </style>

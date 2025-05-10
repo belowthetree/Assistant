@@ -1,412 +1,502 @@
-<script lang="ts">
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import Toast from "~/src/components/Toast.vue";
-import { ModelConfig, ModelList, RoleCards, loadConfig, saveConfig } from "~/src/config";
+<template>
+    <div class="settings-container">
+        <div class="settings-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path
+                    d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z">
+                </path>
+                <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <h1>AI 模型设置</h1>
+        </div>
+
+        <div class="settings-body">
+            <div class="settings-section">
+                <div class="section-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <h2>基本设置</h2>
+                </div>
+
+                <div class="flex-row">
+                    <div class="form-group">
+                        <label for="model-name">接口类型</label>
+                        <select id="model-name" class="form-control form-select" v-model="modelconfig.modelType">
+                            <option v-for="item in apiTypeOptions" :value="item">{{ item }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex-row">
+                    <div class="form-group">
+                        <label for="model-name">模型名称</label>
+                        <select id="model-name" class="form-control form-select" v-model="modelconfig.modelName">
+                            <option v-for="item in modelNameOptions" :value="item">{{ item }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="api-key">API 密钥</label>
+                    <input type="password" id="api-key" class="form-control" @change="modify" v-model="modelconfig.apiKey" placeholder="输入API密钥">
+                    <div class="model-status">
+                        <span class="connection-status">
+                            <span class="status-indicator" :class="{ connected: isConnected }"></span>
+                            <span>{{ isConnected ? '已连接' : '未连接' }}</span>
+                        </span>
+                        <span class="badge" :class="apiKeyValid ? 'badge-success' : 'badge-warning'">
+                            {{ apiKeyValid ? '有效' : '无效' }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="api-url">API URL</label>
+                    <input type="url" id="api-url" class="form-control" v-model="modelconfig.baseUrl" placeholder="输入API端点URL">
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="section-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                    </svg>
+                    <h2>提示词设置</h2>
+                </div>
+
+                <div class="form-group">
+                    <label for="system-prompt">系统提示词</label>
+                    <textarea id="system-prompt" class="form-control form-textarea" v-model="systemPrompt"
+                        placeholder="输入系统提示词"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="user-prompt">用户默认提示词</label>
+                    <textarea id="user-prompt" class="form-control form-textarea" v-model="userPrompt"
+                        placeholder="输入用户默认提示词"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" v-model="autoAttachHistory"> 自动附加历史对话
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="advanced-toggle" @click="showAdvanced = !showAdvanced">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                    <span>高级选项</span>
+                </div>
+
+                <div class="advanced-options" v-if="showAdvanced">
+                    <div class="flex-row">
+                        <div class="form-group">
+                            <label for="temperature">温度 (Temperature)</label>
+                            <input type="range" id="temperature" min="0" max="2" step="0.1" v-model="temperature"
+                                class="form-control">
+                            <div style="text-align: center; font-size: 12px; color: var(--text-light);">{{ temperature
+                                }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="max-tokens">最大令牌数</label>
+                            <input type="number" id="max-tokens" class="form-control" v-model="maxTokens" min="1"
+                                max="4096">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>启用流式响应</label>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label class="toggle-switch">
+                                <input type="checkbox" v-model="streamResponse">
+                                <span class="slider"></span>
+                            </label>
+                            <span>启用</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-footer">
+            <button class="btn btn-secondary" @click="cancel">
+                <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                取消
+            </button>
+            <button class="btn btn-primary" @click="saveSettings">
+                <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                保存设置
+            </button>
+        </div>
+    </div>
+</template>
+
+<script>
+import { OpenAIModel } from "@/model/openai"
+import { getRoleCard, loadConfig, ModelConfig, ModelList, saveConfig } from "~/src/config";
 import { EModelType } from "~/src/data";
-import { emitModelUpdateEvent } from "~/src/events/model_event";
-import { moveWindow, Position as WindowPosition } from "@tauri-apps/plugin-positioner";
-import { openRoleCardView } from "~/src/lib/window";
-import { RoleCardBase } from "~/src/rolecard/rolecardbase";
-import { Ollama } from "~/src/model/ollama";
+import { MCPClient } from "~/src/frontend/MCPClient";
 import { generateModelFromConfig } from "~/src/model/global";
+import { Ollama } from "~/src/model/ollama";
 
 export default {
-    components: {
-        'toast': Toast
-    },
-    setup() {
-		moveWindow(WindowPosition.RightCenter)
-    },
+    name: 'AIModelSettings',
     data() {
         return {
-            currentPage: "modelList",
-            transitionName: "slide-left",
-            model: new ModelConfig(""),
-            modelTypes: [],
-            models: {'a':new ModelConfig("")},
-            editModelName: "",
-            currentModelName: "",
-            rolecards: [RoleCardBase],
-            created : false,
-            selectableModels: [],
+            modelconfig: new ModelConfig("默认配置"),
+            apiTypeOptions: Object.values(EModelType),
+            modelNameOptions: [],
+            isConnected: true,
+            apiKeyValid: true,
+            systemPrompt: '你是一个有帮助的AI助手。回答要简洁专业。',
+            userPrompt: '',
+            autoAttachHistory: true,
+            showAdvanced: false,
+            temperature: 0.7,
+            maxTokens: 2048,
+            timeout: 30,
+            streamResponse: true
+        }
+    },
+    methods: {
+        saveSettings() {
+            ModelList.saveModel("默认配置", this.modelconfig)
+            saveConfig()
+        },
+        cancel() {
+        },
+        modify() {
+            this.apiKeyValid = false
+            this.isConnected = false
+            let model = generateModelFromConfig(this.modelconfig)
+            console.log(this.modelconfig)
+            model.checkApiKeyValid().then((val)=>{
+                this.apiKeyValid = val
+                this.isConnected = val
+            })
+            model.getModels().then((models)=>{
+                this.modelNameOptions = models
+                if (this.modelName in this.modelNameOptions === false) {
+                    this.modelName = this.modelNameOptions[0] || ""
+                }
+                this.modelconfig.modelName = this.modelName
+                this.saveSettings()
+            })
         }
     },
     mounted() {
+        // const client = new MCPClient({})
+        // client.addServers([{name: "fetch", command: "node", args: ["/home/zgg/文档/Cline/MCP/fetch-mcp/dist/index.js"]}])
         loadConfig().then(()=>{
-            this.refresh()
+            this.modelconfig = ModelList.getCurrentModelConfig()
+            this.modify()
+            let card = getRoleCard(this.modelconfig.roleCard)
+            this.systemPrompt = card.systemPrompt
+            let model = generateModelFromConfig(this.modelconfig)
+            model.getModels().then((vals)=>{
+                this.modelNameOptions = vals
+            })
         })
-    },
-    methods: {
-        closeWindow() {
-            console.log("close")
-            WebviewWindow.getCurrent().close()
-        },
-        onConfigChange() {
-        },
-        onURLChange() {
-            this.selectableModels = []
-            const m = generateModelFromConfig(this.model)
-            console.log(m)
-            if (m instanceof Ollama) {
-                m.getModels().then((models)=>{
-                    this.selectableModels = models
-                    console.log(models)
-                }).catch((e)=>console.warn(e))
-            }
-        },
-        switchView(model) {
-            this.created = false
-            console.log(model)
-            this.model = model
-            this.editModelName = model.name
-            this.currentPage = this.currentPage === "modelList" ? "modelDetail" : "modelList"
-            if (this.currentPage !== "modelList")
-                this.transitionName = "slide-left"
-            else
-                this.transitionName = "slide-right"
-            this.onURLChange()
-        },
-        saveModel() {
-            console.log("保存配置")
-            const model = ModelList.getModelConfigByName(this.model.name)
-            if (model && this.created) {
-                this.$refs.toast.danger("存在同名配置")
-                return
-            }
-            console.log(this.model)
-            ModelList.saveModel(this.editModelName, this.model)
-            ModelList.validate()
-            console.log(ModelList)
-            console.log(this.models)
-            this.models = ModelList.Models
-            console.log(ModelList.Models)
-            saveConfig().then(()=>{
-                this.refresh()
-                this.$refs.toast.show("保存成功")
-                emitModelUpdateEvent()
-            })
-        },
-        saveSelect() {
-            ModelList.currentConfig = this.currentModelName
-            saveConfig().then(()=>{
-                this.$refs.toast.show("保存成功")
-                emitModelUpdateEvent()
-            })
-        },
-        addModel() {
-            this.model = new ModelConfig("模型")
-            this.editModelName = this.model.name
-            this.$refs.toast.show("添加配置")
-            this.created = true
-            this.onURLChange()
-        },
-        refresh() {
-            const model = ModelList.getCurrentModelConfig()
-            this.model = model
-            this.modelTypes = Object.values(EModelType)
-            this.models = ModelList.Models
-            this.editModelName = ""
-            this.currentModelName = ModelList.currentConfig
-            this.rolecards = []
-            for (let v of RoleCards) {
-                this.rolecards.push(v.name)
-            }
-            this.$forceUpdate(); // 强制刷新
-        },
-        onPromptChanged() {
-            // 
-        },
-        openRoleCardView() {
-            console.log("open role")
-            openRoleCardView()
-        },
-        selectModel(name) {
-            const model = ModelList.getModelConfigByName(name)
-            if (model) {
-                this.currentModelName = name
-            }
-        }
     }
 }
 </script>
 
-<template>
-    <main class="drag-area maincontainer">
-        <toast ref="toast" class="toast"></toast>
-        <transition :name="transitionName">
-            <div :key="currentPage" class="panel">
-                <div v-if="currentPage === 'modelList'" class="inputcontainer">
-                    <div style="display: flex;flex-direction: row;margin: 15px;margin-top: 0;">
-                        <el-button type="info" @click="saveSelect" style="width: 40%;margin-left: auto;margin-right: auto;">保存</el-button>
-                        <el-button type="info" @click="openRoleCardView" style="width: 40%;margin-left: auto;margin-right: auto;">设置角色卡</el-button>
-                    </div>
-                    <div :class="{'modelcard lightShadow no-drag': true, modelcard_selected: currentModelName===key}" v-for="(v, key) in models">
-                        <button style="text-align: left;" class="cardbutton" @click="selectModel(v.name)">
-                            <label>昵称：{{ key }}</label><br/>
-                            <label>地址：{{ v.baseUrl }}</label><br/>
-                            <label>类型：{{ v.modelType }}</label><br/>
-                            <label>名字：{{ v.modelName }}</label><br/>
-                            <label>角色：{{ v.roleCard }}</label><br/>
-                        </button>
-                        <button style="margin-left: auto;" id="rightbutton" @click="switchView(v)">
-                            <el-icon ><ArrowRightBold /></el-icon>
-                        </button>
-                    </div>
-                </div>
-                <div class="inputcontainer no-drag" v-else>
-                    <div class="" style="margin-top: 15px;">
-                        <button @click="saveModel">保存</button>
-                        <button @click="addModel">新增</button>
-                    </div>
-                    <button id="leftbutton" @click="switchView">
-                        <el-icon ><ArrowLeftBold /></el-icon>
-                    </button>
-                    <label>名字</label>
-                    <input class="input" @input="onConfigChange" v-model="model.name"/>
-                    <label>API Key</label>
-                    <input class="input" @input="onConfigChange" type="password" v-model="model.apiKey"/>
-                    <label>模型地址</label>
-                    <input class="input" @input="onURLChange" v-model="model.baseUrl"/>
-                    <label>模型名称</label>
-                    <input v-if="selectableModels.length <= 0" class="input" @input="onConfigChange" v-model="model.modelName"/>
-                    <el-select v-else class="lightShadow" @change="onConfigChange" v-model="model.modelName" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
-                        <el-option v-for="item in selectableModels" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>
-                    </el-select>
-                    <label>模型类型</label>
-                    <el-select class="lightShadow" @change="onConfigChange" v-model="model.modelType" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
-                        <el-option v-for="item in modelTypes" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>
-                    </el-select>
-                    <el-select class="lightShadow" @change="onConfigChange" v-model="model.roleCard" placeholder="Select" size="large" style="width: 240px;margin-left: auto;margin-right: auto;">
-                        <el-option v-for="item in rolecards" :key="item" :label="item" :value="item" style="border: none;outline: none;"/>
-                    </el-select>
-                </div>
-            </div>
-        </transition>
-    </main>
-</template>
-
 <style>
-/**弹窗 tips */
-.toast {
-    position: absolute;
-}
-/**模型选择 */
-.modelcard {
-    background: linear-gradient(135deg, #f0f0f0, #ffffff);
-    width: 400px;
-    height: 120px;
-    padding: 15px;
-    padding-left: 25px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 15px;
-    outline: none;
-    border: none;
-    border-radius: 10px;
-    display: flex;
-}
-.modelcard_selected {
-    background: linear-gradient(135deg, #c9dcff, #ffffff);
-}
-/**面板过度 */
-.panel {
-    position: absolute;
-    transition: transform 0.5s;
-    left: 50%;
-    top: 35px;
-    width: 100%;
-    transform: translate(-50%, 0);
-}
-.slide-left-enter-from {
-  transform: translateX(150%);
-}
-.slide-left-leave-to {
-  transform: translateX(-150%);
+:root {
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --secondary: #f3f4f6;
+    --secondary-hover: #e5e7eb;
+    --text: #111827;
+    --text-light: #6b7280;
+    --bg: #f9fafb;
+    --card-bg: #ffffff;
+    --border: #e5e7eb;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
 }
 
-/* 从右到左的动画 */
-.slide-right-enter-from {
-  transform: translateX(-150%);
-}
-.slide-right-leave-to {
-  transform: translateX(150%);
-}
-.slide-left-enter-active,
-.slide-left-leave-active,
-.slide-right-enter-active,
-.slide-right-leave-active {
-  transition: transform 0.5s;
-}
-#leftbutton {
-    background-color: #00000000;
-    outline: none;
-    border: none;
-    height: 200px;
-    transform: translate(0, -50%);
-    position: absolute;
-    left: 5px;
-    top:50%;
-}
-#leftbutton:hover {
-    background: radial-gradient(closest-side, rgba(211, 211, 211, 0.35), rgba(255, 255, 255, 0)); /* 中心向四周渐变透明 */
-}
-#rightbutton {
-    background-color: #00000000;
-    outline: none;
-    border: none;
-    height: 70px;
-    transform: translate(0, -50%);
-    position: relative;
-    right: 0%;
-    top:50%;
-}
-#rightbutton:hover {
-    background: radial-gradient(closest-side, rgba(211, 211, 211, 0.35), rgba(255, 255, 255, 0)); /* 中心向四周渐变透明 */
-}
-/**面板过度结束 */
-/**输入框 */
-.input {
-    width: 100%;
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 8px;
-    outline: none;
-    background-color: white;
-    box-shadow: 0 5px 6px rgba(0, 0, 0, 0.1);
-    outline: none;
-    border: none;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 15px;
-    width: 240px;
-}
-.lightShadow {
-    box-shadow: 0 5px 6px rgba(0, 0, 0, 0.1);
-}
-/**输入面板 */
-.inputcontainer {
-    background: #ffffff00;
-    width: 100%;
-    height: 500px;
-    text-align: center;
-    margin: auto;
-    display: flex;
-    flex-direction: column;
+* {
     overflow-y: scroll;
-}
-/**页头 */
-.header {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    height: 35px;
-    background-color: rgba(245, 245, 247, 0.8);
-    /* 浅色背景 */
-    backdrop-filter: blur(10px);
-    /* 毛玻璃效果 */
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    /* 底部边框 */
-}
-
-.cardbutton {
-    border: none;
-    outline: none;
-    background: transparent;
-    width: 100%;
-}
-.cardbutton:hover {
-    cursor: pointer;
-}
-.cardbutton:hover * {
-    cursor: pointer;
-}
-
-#rolecardbutton {
     margin: 0;
     padding: 0;
-    width: 100%;
-    height: 100%;
-    outline: none;
-    border-top: none;
-    border-bottom: none;
-    border-right: none;
-    border-left: 1px solid #00000022;
-    background-color: rgba(245, 245, 247, 0.8);
-}
-#rolecardbutton:hover {
-    background-color: rgba(214, 214, 214, 0.8);
-}
-#rolecardbutton:active {
-    background-color: rgba(214, 214, 214, 0.8);
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-#closebutton {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    outline: none;
-    border-top: none;
-    border-bottom: none;
-    border-right: none;
-    border-left: 1px solid #00000022;
-    background: linear-gradient(135deg, #f0f0f0, #ffffff);
-}
-#closebutton:hover {
-    background: linear-gradient(135deg, #ff0000de, #ff0000de);
-}
-#closebutton:active {
-    background: linear-gradient(135deg, #ad0000de, #ad0000de);
-}
-
-.header-left,
-.header-center,
-.header-right {
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    text-align: center;
-    align-content: center;
+    padding: 20px;
 }
 
-.header-left,
-.header-right {
-    width: 40px;
-    height: 100%;
+.settings-container {
+    width: 100%;
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.settings-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.settings-header h1 {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.settings-body {
+    padding: 24px;
+}
+
+.settings-section {
+    margin-bottom: 32px;
+}
+
+.settings-section:last-child {
+    margin-bottom: 0;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.section-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-light);
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.form-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
     border: none;
 }
-.header-center {
-    width: 100%;
-}
-/**页头结束 */
-.drag-area {
-    /* 允许拖拽 */
-    -webkit-app-region: drag;
-    /* cursor: grab; */
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
 }
 
-.no-drag {
-    -webkit-app-region: no-drag;
+.btn-primary:hover {
+    background-color: var(--primary-hover);
 }
 
-main {
-    background-color: rgba(173, 216, 230, 0.623);
-    height: 100%;
-    width: 100%;
-    margin: 0;
+.btn-secondary {
+    background-color: var(--secondary);
+    color: var(--text);
+}
+
+.btn-secondary:hover {
+    background-color: var(--secondary-hover);
+}
+
+.btn-icon {
+    margin-right: 8px;
+}
+
+.settings-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
     display: flex;
-    flex-direction: column;
+    justify-content: flex-end;
+    gap: 12px;
 }
 
-.maincontainer {
-    height: 100vh;
-    /* 使背景占满整个视口高度 */
-    background: linear-gradient(135deg, #f0f0f0, #ffffff);
-    /* 浅灰色到白色的渐变 */
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    color: #333;
-    /* 深灰色文字 */
-    text-align: center;
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: var(--primary);
+}
+
+input:checked+.slider:before {
+    transform: translateX(24px);
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.badge-success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.badge-warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+}
+
+.flex-row {
+    display: flex;
+    gap: 16px;
+}
+
+.flex-row .form-group {
+    flex: 1;
+}
+
+.model-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--danger);
+}
+
+.status-indicator.connected {
+    background-color: var(--success);
+}
+
+.advanced-options {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border);
+}
+
+.advanced-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 16px;
 }
 </style>

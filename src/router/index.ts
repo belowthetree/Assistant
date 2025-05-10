@@ -15,7 +15,7 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/setting',
         name: 'setting',
-        component: ()=> import('@/view/setting/CommonSettingView.vue')
+        component: ()=> import('@/view/setting/SettingView.vue')
     },
     {
         path: '/modelSetting',
