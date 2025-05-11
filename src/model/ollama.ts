@@ -25,7 +25,6 @@ export class Ollama extends ModelBase {
     }
 
     async getModels():Promise<string[]> {
-        console.log(this.url)
         const response = await fetch(this.url + "/api/tags")
         console.log(response)
         if (response.status == 200) {
@@ -38,6 +37,7 @@ export class Ollama extends ModelBase {
             return Promise.resolve(models)
         }
         else {
+            console.warn("ollama api/tags 请求失败")
             return Promise.reject([])
         }
     }

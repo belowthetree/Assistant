@@ -39,6 +39,9 @@ log = "0.4"
 tauri-plugin-log = "2"
 rmcp = { version = "0.1", features = ["client", "transport-child-process"] }
 tokio = { version = "1", features = ["full"] }
+async-trait = "0.1.88"
+directories = "5.0"
+lazy_static = "1.4.0"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-positioner = "2"

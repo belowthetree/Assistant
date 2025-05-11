@@ -15,11 +15,11 @@
                     <div class="p-4">
                         <div class="flex justify-between items-start">
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-800">{{ service.name }}</h3>
+                                <h3 class="text-lg font-semibold text-gray-800">{{ service.config.name }}</h3>
                                 <div class="flex items-center mt-1">
-                                    <span class="status-badge" :class="`status-${service.status}`"></span>
+                                    <span class="status-badge" :class="{'status-online': service.connect, 'status-offline': !service.connect}"></span>
                                     <span class="text-sm text-gray-600">
-                                        {{ capitalizeFirstLetter(service.status) }}
+                                        {{ capitalizeFirstLetter(service.connect ? "已连接" : "未连接" ) }}
                                     </span>
                                 </div>
                             </div>
@@ -29,7 +29,7 @@
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" v-model="service.active" @change="toggleServiceStatus(index)"
+                                    <input type="checkbox" v-model="service.config.enable" @change="toggleServiceStatus(index)"
                                         class="sr-only peer">
                                     <div
                                         class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500">
@@ -41,7 +41,7 @@
                         <div class="mt-2">
                             <p class="text-sm text-gray-500 mb-1 text-left">Start Command</p>
                             <div class="bg-gray-50 p-2 rounded-md " style="overflow-x: hidden;">
-                                <code class="text-sm text-gray-700 text-left text-nowrap" style="overflow-x: hidden;">{{ service.command }}</code>
+                                <code class="text-sm text-gray-700 text-left text-nowrap" style="overflow-x: hidden;">{{ service.config.command }}</code>
                             </div>
                         </div>
 
@@ -104,6 +104,11 @@
                         <input type="text" v-model="newService.command"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md">
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1 text-left">环境变量</label>
+                        <input type="text" v-model="newService.command"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md text-wrap", placeholder="">
+                    </div>
                     <!-- <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Initial Status</label>
                         <select v-model="newService.status" class="w-full px-3 py-2 border border-gray-300 rounded-md">
@@ -128,6 +133,8 @@
 </template>
 
 <script>
+import { Servers } from '~/src/data/mcp';
+
 export default {
     name: 'ServiceDashboard',
     data() {
@@ -139,22 +146,10 @@ export default {
                 desc: '',
                 command: '',
                 args: '',
+                env:'',
                 active: true
             },
-            services: [
-                {
-                    name: 'Web Server',
-                    command: 'npm run start:prod',
-                    status: 'online',
-                    active: true
-                },
-                {
-                    name: 'Database',
-                    command: 'mongod --config /etc/mongod.conf',
-                    status: 'offline',
-                    active: false
-                }
-            ]
+            services: Servers
         }
     },
     methods: {

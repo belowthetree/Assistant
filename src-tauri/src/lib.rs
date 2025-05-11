@@ -1,8 +1,13 @@
 mod platform;
 mod web;
 mod mcp;
-use std::sync::Arc;
+mod model;
+mod data;
+mod conversation;
 
+use std::sync::Arc;
+use conversation::talk;
+use data::*;
 use mcp::*;
 use platform::*;
 use tauri::{tray::TrayIconBuilder, window::Color, App, Manager, WebviewWindowBuilder};
@@ -96,9 +101,13 @@ pub fn run() {
             add_servers,
             get_tools,
             call_tool,
+            store_model_data,
+            load_model_data,
+            talk,
         ])
         // This is required to get tray-relative positions to work
         .setup(|app| {
+            conversation::init();
             // 创建第一个 webview，指向主页
             build_first_webview(app);
             if let Some(window) = app.get_webview_window("home") {

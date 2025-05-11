@@ -128,40 +128,40 @@ export class ModelBase implements LLMInterface {
         return Promise.reject(await response.text())
     }
 
-    execute_typescript(content: string) {
-        const arr = content.split("</think>")
-        console.log(arr)
-        if (arr.length > 1) {
-            content = arr[1]
-        }
-        let code = content.replace("\`\`\`javascript", "")
-        code = code.replace("\`\`\`", "")
-        code = code.trim()
-        console.log(code)
-        try {
-            let funcStr = []
-            let funcs = []
-            for (let key of Object.keys(moduleAction)) {
-                if (typeof moduleAction[key] === "function") {
-                    funcStr.push(key)
-                    funcs.push(moduleAction[key])
-                }
-            }
-            code = `const func = async function(){${code}}
-            func()`
-            new Function(...funcStr, code)(...funcs)
-        }
-        catch (e) {
-            let errorInfo = ""
-            if (e instanceof Error) {
-                console.log(e.stack)
-                errorInfo = e.stack || ""
-            }
-            else {
-                console.error(e)
-                errorInfo = e as string
-            }
-            moduleAction.notify("执行失败", errorInfo)
-        }
-    }
+    // execute_typescript(content: string) {
+    //     const arr = content.split("</think>")
+    //     console.log(arr)
+    //     if (arr.length > 1) {
+    //         content = arr[1]
+    //     }
+    //     let code = content.replace("\`\`\`javascript", "")
+    //     code = code.replace("\`\`\`", "")
+    //     code = code.trim()
+    //     console.log(code)
+    //     try {
+    //         let funcStr = []
+    //         let funcs = []
+    //         for (let key of Object.keys(moduleAction)) {
+    //             if (typeof moduleAction[key] === "function") {
+    //                 funcStr.push(key)
+    //                 funcs.push(moduleAction[key])
+    //             }
+    //         }
+    //         code = `const func = async function(){${code}}
+    //         func()`
+    //         new Function(...funcStr, code)(...funcs)
+    //     }
+    //     catch (e) {
+    //         let errorInfo = ""
+    //         if (e instanceof Error) {
+    //             console.log(e.stack)
+    //             errorInfo = e.stack || ""
+    //         }
+    //         else {
+    //             console.error(e)
+    //             errorInfo = e as string
+    //         }
+    //         moduleAction.notify("执行失败", errorInfo)
+    //     }
+    // }
 }

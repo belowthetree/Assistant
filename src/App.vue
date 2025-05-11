@@ -78,7 +78,11 @@ export default {
 		async commitCommand() {
 			try {
 				console.log("输入命令", this.userInput)
-				talk.userSay(this.userInput)
+				invoke("talk", {ctx: this.userInput}).then(e=>{
+					console.log(e)
+				}).catch(e=>{
+					console.warn(e)
+				})
 			}
 			catch(e) {
 				console.log(e)
@@ -138,7 +142,7 @@ export default {
 	<main class="maincontainer drag-area" id="maincontainer">
 		<div class="row macos-background">
 			<!-- <Bubbles ref="bubbles" style="color: black;">fff</Bubbles> -->
-			<textarea @input="onInput" @keydown="onKeyDown" @keyup="onKeyUp" id="userInput" class="no-drag" v-model="userInput" placeholder="输入指令"></textarea>
+			<textarea @input="onInput" @keydown="onKeyDown" @keyup="onKeyUp" id="userInput" class="no-drag" v-model="userInput" placeholder="输入你想说的话然后按下回车"></textarea>
 			<button class="right_bottom" @click="clickSetting">
 				<i class="iconBtn fa-solid fa-cog hover_color fa-5" id="settingIcon" :style="{color: 'black'}" ></i>
 			</button>

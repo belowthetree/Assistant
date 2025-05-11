@@ -1,11 +1,19 @@
+export interface ServerConfig {
+    name: string,
+    command: string,
+    args?: string,
+    env?: Map<string, string>
+    // 是否内部服务，默认 false
+    isInternal?: boolean
+    enable: boolean
+}
 
 export interface Server {
-    // 是否更新，未更新的需要从后端拉取
-    updated: boolean
-    // 是否内部服务
-    isInternal: boolean
+    // 是否连接，每次连接更新 tools、resources
+    connect: boolean
     tools: Tool[]
     resources: Resource[]
+    config: ServerConfig
 }
 
 export interface Tool {

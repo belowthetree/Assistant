@@ -144,12 +144,20 @@ import { EModelType } from "~/src/data";
 import { MCPClient } from "~/src/frontend/MCPClient";
 import { generateModelFromConfig } from "~/src/model/global";
 import { Ollama } from "~/src/model/ollama";
+import { ModelData } from "~/src/data"
 
 export default {
     name: 'AIModelSettings',
     data() {
         return {
-            modelconfig: new ModelConfig("默认配置"),
+            modelconfig: ref<ModelData>({
+                model_type: EModelType.DeepSeek,
+                api_key: "",
+                messages: [],
+                url: "",
+                model_name: "",
+                temperature: 0.6,
+            }),
             apiTypeOptions: Object.values(EModelType),
             modelNameOptions: [],
             isConnected: true,
@@ -160,10 +168,11 @@ export default {
             timeout: 30
         }
     },
+    setup() {
+    },
     methods: {
         saveSettings() {
-            ModelList.saveModel("默认配置", this.modelconfig)
-            saveConfig()
+            this.modelconfig
         },
         cancel() {
         },
@@ -189,8 +198,13 @@ export default {
                         this.modelName = this.modelNameOptions[0] || ""
                     }
                     this.modelconfig.modelName = this.modelName
+                }).catch(e=>{
+                    console.warn(e)
                 })
             }
+        },
+        async loadConfig() {
+            invoke("load_model_data").then()
         }
     },
     mounted() {

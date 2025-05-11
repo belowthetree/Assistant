@@ -1,3 +1,5 @@
+import { ModelMessage } from "./model/modelbase"
+
 export enum EModelType {
     Ollama = "Ollama",
     DeepSeek = "DeepSeek",
@@ -13,4 +15,13 @@ export enum ECmdMode {
 export enum EChatMode {
     Chat,
     Generate,
+}
+
+export interface ModelData {
+    model_type: EModelType
+    api_key: String
+    messages: ModelMessage[]
+    url: String,
+    model_name: String,
+    temperature: number,
 }

@@ -1,5 +1,5 @@
 import { BaseDirectory, exists, mkdir, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
-import { Servers } from "./mcp";
+import { Server, Servers } from "./mcp";
 import { appConfigDir } from "@tauri-apps/api/path";
 
 const ServerConfigFile = "server.json"
@@ -15,7 +15,7 @@ export async function saveServers() {
     await writeTextFile(ServerConfigFile, ctx, {baseDir: BaseDirectory.AppConfig})
 }
 
-export async function loadServers() {
+export async function loadServers(): Promise<Map<string, Server>> {
     const ctx = await readTextFile(ServerConfigFile, {baseDir: BaseDirectory.AppConfig})
     const obj = JSON.parse(ctx)
     Servers.clear()
@@ -24,4 +24,5 @@ export async function loadServers() {
             Servers.set(key, obj[key])
         }
     }
+    return Servers
 }
