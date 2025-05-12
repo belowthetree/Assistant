@@ -144,7 +144,7 @@ import { EModelType } from "~/src/data";
 import { MCPClient } from "~/src/frontend/MCPClient";
 import { generateModelFromConfig } from "~/src/model/global";
 import { Ollama } from "~/src/model/ollama";
-import { ModelData } from "~/src/data"
+import { ModelData } from "~/src/data";
 
 export default {
     name: 'AIModelSettings',

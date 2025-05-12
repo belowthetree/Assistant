@@ -44,6 +44,7 @@ fn build_first_webview(app: &mut App) {
         .decorations(false)
         .maximizable(false)
         .title_bar_style(TitleBarStyle::Transparent)
+        .transparent(true)
         .build().unwrap();
 
     let ns_window = window.ns_window().unwrap() as id;

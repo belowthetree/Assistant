@@ -139,10 +139,10 @@ export default {
 </script>
 
 <template>
-	<main class="maincontainer drag-area" id="maincontainer">
-		<div class="row macos-background">
+	<main class="maincontainer drag-area rounded-lg " id="maincontainer">
+		<div class="row macos-background rounded-lg ">
 			<!-- <Bubbles ref="bubbles" style="color: black;">fff</Bubbles> -->
-			<textarea @input="onInput" @keydown="onKeyDown" @keyup="onKeyUp" id="userInput" class="no-drag" v-model="userInput" placeholder="输入你想说的话然后按下回车"></textarea>
+			<textarea @input="onInput" @keydown="onKeyDown" @keyup="onKeyUp" id="userInput" class="no-drag rounded-lg " v-model="userInput" placeholder="输入你想说的话然后按下回车"></textarea>
 			<button class="right_bottom" @click="clickSetting">
 				<i class="iconBtn fa-solid fa-cog hover_color fa-5" id="settingIcon" :style="{color: 'black'}" ></i>
 			</button>
@@ -244,7 +244,6 @@ i {
 	text-align: left;
 	padding: 10px;
 	padding-bottom: 0;
-	margin: 5px;
 	margin-bottom: 40px;
 	background: linear-gradient(135deg, #f0f0f0, #ffffff); /* 浅灰色到白色的渐变 */
 	font-size: 21px;
