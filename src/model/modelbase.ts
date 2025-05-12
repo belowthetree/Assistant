@@ -1,10 +1,9 @@
-import { EModelType } from "@/data"
 import { notify } from "../lib/llm_action"
-import * as moduleAction from "../lib/llm_action"
 import { RoleCardBase } from "../rolecard/rolecardbase"
 import {fetch} from "@tauri-apps/plugin-http"
 import { ModulePrompt } from "../prompt/module_prompt"
 import { getRoleCard } from "../config"
+import { EModelType } from "../data/model"
 
 export interface ModelMessage {
     role: string

@@ -3,7 +3,6 @@ import { invoke } from "@tauri-apps/api/core";
 import { onMounted, ref } from "vue";
 import { chat_with_tool, inputCommand, generate_instructions, generate } from "./lib/llm_interface";
 import { ask, confirm } from "@tauri-apps/plugin-dialog";
-import { generateModelFromConfig } from "./model/global";
 import { getCurrentWindow, LogicalPosition } from '@tauri-apps/api/window';
 import { LogicalSize, Position } from "@tauri-apps/api/dpi";
 import { Setting } from "@element-plus/icons-vue";
@@ -14,7 +13,6 @@ import { emitModelResultEvent, listenModelUpdateEvent } from "./events/model_eve
 import { webviewWindow } from "@tauri-apps/api";
 import { addBubble } from "./view/Talk/api";
 import { moveWindow, Position as WindowPosition } from "@tauri-apps/plugin-positioner";
-import { loadConfig, ModelList } from "./config";
 import { listenTalkViewQueryEvent } from "./events/window_event";
 import { ServerConfigInfo } from "./frontend/MCPServer";
 import { Talk } from "./life/talk/talk"
@@ -42,6 +40,7 @@ export default {
 			userInput: "",
 			controlDown: false,
 			reply: "",
+			disableInput: false,
 		}
 	},
 	methods: {
@@ -78,9 +77,12 @@ export default {
 		async commitCommand() {
 			try {
 				console.log("输入命令", this.userInput)
+				this.disableInput = true
 				invoke("talk", {ctx: this.userInput}).then(e=>{
+					this.disableInput = false
 					console.log(e)
 				}).catch(e=>{
+					this.disableInput = false
 					console.warn(e)
 				})
 			}
@@ -102,19 +104,6 @@ export default {
 		},
 	},
 	mounted() {
-		loadConfig().then(()=>{
-			// 生成聊天对象
-			const model = generateModelFromConfig(ModelList.getCurrentModelConfig())
-			talk = new Talk(model, "")
-		})
-		listenModelUpdateEvent(()=>{
-			loadConfig().then(()=>{
-				// 更新模型
-				const model = generateModelFromConfig(ModelList.getCurrentModelConfig())
-				talk.setModel(model)
-			})
-			console.log(ModelList)
-		})
 		this.onInput()
 		const mainWindow = webviewWindow.getCurrentWebviewWindow()
 		// 监听窗口显示事件
@@ -142,7 +131,8 @@ export default {
 	<main class="maincontainer drag-area rounded-lg " id="maincontainer">
 		<div class="row macos-background rounded-lg ">
 			<!-- <Bubbles ref="bubbles" style="color: black;">fff</Bubbles> -->
-			<textarea @input="onInput" @keydown="onKeyDown" @keyup="onKeyUp" id="userInput" class="no-drag rounded-lg " v-model="userInput" placeholder="输入你想说的话然后按下回车"></textarea>
+			<textarea @input="onInput" :disable="disableInput" @keydown="onKeyDown" @keyup="onKeyUp" id="userInput" class="no-drag rounded-lg "
+				v-model="userInput" placeholder="输入你想说的话然后按下回车"></textarea>
 			<button class="right_bottom" @click="clickSetting">
 				<i class="iconBtn fa-solid fa-cog hover_color fa-5" id="settingIcon" :style="{color: 'black'}" ></i>
 			</button>

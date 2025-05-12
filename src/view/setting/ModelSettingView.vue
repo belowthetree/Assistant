@@ -25,7 +25,7 @@
                 <div class="flex-row">
                     <div class="form-group">
                         <label for="model-name">接口类型</label>
-                        <select id="model-name" class="form-control form-select" v-model="modelconfig.modelType">
+                        <select id="model-name" class="form-control form-select" v-model="modelconfig.model_type">
                             <option v-for="item in apiTypeOptions" :value="item">{{ item }}</option>
                         </select>
                     </div>
@@ -34,7 +34,7 @@
                 <div class="flex-row">
                     <div class="form-group">
                         <label for="model-name">模型名称</label>
-                        <select id="model-name" class="form-control form-select" v-model="modelconfig.modelName">
+                        <select id="model-name" class="form-control form-select" v-model="modelconfig.model_name">
                             <option v-for="item in modelNameOptions" :value="item">{{ item }}</option>
                         </select>
                     </div>
@@ -42,21 +42,18 @@
 
                 <div class="form-group">
                     <label for="api-key">API 密钥</label>
-                    <input type="password" id="api-key" class="form-control" @change="modify" v-model="modelconfig.apiKey" placeholder="输入API密钥">
+                    <input type="password" id="api-key" class="form-control" @change="modify" v-model="modelconfig.api_key" placeholder="输入API密钥">
                     <div class="model-status">
                         <span class="connection-status">
                             <span class="status-indicator" :class="{ connected: isConnected }"></span>
                             <span>{{ isConnected ? '已连接' : '未连接' }}</span>
-                        </span>
-                        <span class="badge" :class="apiKeyValid ? 'badge-success' : 'badge-warning'">
-                            {{ apiKeyValid ? '有效' : '无效' }}
                         </span>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="api-url">API URL</label>
-                    <input type="url" id="api-url" class="form-control" v-model="modelconfig.baseUrl" placeholder="输入API端点URL">
+                    <input type="url" id="api-url" class="form-control" v-model="modelconfig.url" placeholder="输入API端点URL">
                 </div>
             </div>
 
@@ -69,11 +66,11 @@
                     <h2>提示词设置</h2>
                 </div>
 
-                <div class="form-group">
+                <!-- <div class="form-group">
                     <label for="system-prompt">系统提示词</label>
                     <textarea id="system-prompt" class="form-control form-textarea" v-model="systemPrompt"
                         placeholder="输入系统提示词" @change="modify"></textarea>
-                </div>
+                </div> -->
             </div>
 
             <div class="settings-section">
@@ -138,31 +135,23 @@
 </template>
 
 <script>
+import { invoke } from "@tauri-apps/api/core";
 import { OpenAIModel } from "@/model/openai"
-import { getRoleCard, loadConfig, ModelConfig, ModelList, saveConfig } from "~/src/config";
-import { EModelType } from "~/src/data";
+import { getRoleCard, ModelConfig, ModelList, saveConfig } from "~/src/config";
+import { EModelType } from "~/src/data/model";
 import { MCPClient } from "~/src/frontend/MCPClient";
 import { generateModelFromConfig } from "~/src/model/global";
 import { Ollama } from "~/src/model/ollama";
-import { ModelData } from "~/src/data";
+import { ModelData } from "~/src/data/model";
 
 export default {
     name: 'AIModelSettings',
     data() {
         return {
-            modelconfig: ref<ModelData>({
-                model_type: EModelType.DeepSeek,
-                api_key: "",
-                messages: [],
-                url: "",
-                model_name: "",
-                temperature: 0.6,
-            }),
+            modelconfig: new ModelData(),
             apiTypeOptions: Object.values(EModelType),
             modelNameOptions: [],
             isConnected: true,
-            apiKeyValid: true,
-            systemPrompt: '你是一个有帮助的AI助手。回答要简洁专业。',
             showAdvanced: false,
             maxTokens: 2048,
             timeout: 30
@@ -172,53 +161,59 @@ export default {
     },
     methods: {
         saveSettings() {
-            this.modelconfig
+            invoke("store_model_data", {
+                data: this.modelconfig
+            }).finally(e=>{
+                console.log(e)
+                // 通知后端更新模型
+                invoke("update_model")
+            })
         },
         cancel() {
         },
         async modify() {
-            this.saveSettings()
-            this.apiKeyValid = false
             this.isConnected = false
             // 检查 api 连接
-            if (this.modelconfig.modelName.length <= 0)
+            if (this.modelconfig.model_type.length <= 0)
                 return
-            if (this.modelconfig.modelType.length <= 0)
+            // Ollama 才允许没有 api key
+            if (this.modelconfig.model_type !== EModelType.Ollama && this.modelconfig.api_key <= 0)
                 return
-            if (this.modelconfig.modelType !== EModelType.Ollama && this.modelconfig.baseUrl <= 0)
+            if (this.modelconfig.url.length <= 0)
                 return
-            let model = generateModelFromConfig(this.modelconfig)
-            const val = await model.checkApiKeyValid()
-            this.apiKeyValid = val
-            if (this.apiKeyValid) {
-                model.getModels().then((models)=>{
-                    this.isConnected = val
+            invoke("set_model", {
+                data: this.modelconfig
+            }).then(()=>{
+                invoke("get_models").then((models)=>{
+                    this.isConnected = models.length > 0
                     this.modelNameOptions = models
                     if (this.modelName in this.modelNameOptions === false) {
                         this.modelName = this.modelNameOptions[0] || ""
                     }
-                    this.modelconfig.modelName = this.modelName
+                    this.modelconfig.model_name = this.modelName
                 }).catch(e=>{
                     console.warn(e)
                 })
-            }
+            })
         },
         async loadConfig() {
-            invoke("load_model_data").then()
+            try {
+                const data = await invoke("load_model_data")
+                console.log("load model data", data)
+                this.modelconfig = data
+            }
+            catch (e) {
+                console.warn("未加载到模型数据，生产成默认")
+                this.modelconfig = new ModelData()
+            }
+            console.log(this.modelconfig)
         }
     },
     mounted() {
         // const client = new MCPClient({})
         // client.addServers([{name: "fetch", command: "node", args: ["/home/zgg/文档/Cline/MCP/fetch-mcp/dist/index.js"]}])
-        loadConfig().finally(()=>{
-            this.modelconfig = ModelList.getCurrentModelConfig()
+        this.loadConfig().finally(()=>{
             this.modify()
-            let card = getRoleCard(this.modelconfig.roleCard)
-            this.systemPrompt = card.systemPrompt
-            let model = generateModelFromConfig(this.modelconfig)
-            model.getModels().then((vals)=>{
-                this.modelNameOptions = vals
-            })
         })
     }
 }

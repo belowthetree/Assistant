@@ -1,9 +1,9 @@
 import { appConfigDir, BaseDirectory } from "@tauri-apps/api/path"
 import { exists, mkdir, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs"
-import { EModelType } from "./data"
 import { listenModelUpdateEvent } from "./events/model_event"
 import { RoleCardBase } from "./rolecard/rolecardbase"
 import { ModulePrompt } from "./prompt/module_prompt"
+import { EModelType } from "./data/model"
 
 export class ModelConfig {
     name: string = ""

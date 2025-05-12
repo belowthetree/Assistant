@@ -1,5 +1,5 @@
 import { ModelConfig } from "../config";
-import { EModelType } from "../data";
+import { EModelType } from "../data/model";
 import { ModelBase } from "./modelbase";
 import { Ollama } from "./ollama";
 import { OpenAIModel } from "./openai";

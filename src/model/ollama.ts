@@ -1,5 +1,5 @@
 import { ModelBase, ModelInputParam, ModelResponse } from "~/src/model/modelbase";
-import { EModelType } from "@/data"
+import { EModelType } from "../data/model";
 
 export class Ollama extends ModelBase {
     constructor(url: string, model: string, roleCard: string, api_key: string = "") {

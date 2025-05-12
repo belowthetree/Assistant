@@ -8,6 +8,9 @@ call npx ts-node %~dp0public\buildprompt.js || (
   exit /b
 )
 
+npm install
+npm run build
+
 REM 执行 tauri dev 命令
 call npx tauri dev || (
   echo 执行 tauri dev 失败

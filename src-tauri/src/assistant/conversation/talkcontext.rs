@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::model::ModelMessage;
+use crate::model::{ModelMessage, ModelResponse, ToolCall};
 
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -25,19 +25,15 @@ pub struct ToolFunction {
     arguments: String
 }
 
-pub struct ToolCall {
-    pub id: String,
-    pub r#type: String,
-    pub function: ToolFunction
-}
-
+#[derive(Debug, Clone)]
 pub struct TalkContent {
     pub role: ERole,
     pub content: String,
-    pub reasoning_content: String,
-    pub tool_calls: Vec<ToolCall>,
+    pub reasoning_content: Option<String>,
+    pub tool_calls: Option<Vec<ToolCall>>,
 }
 
+#[derive(Debug, Clone)]
 pub struct TalkContext {
     content: Vec<TalkContent>
 }
@@ -58,5 +54,22 @@ impl TalkContext {
             });
         }
         res
+    }
+
+    pub fn add_assistant(&mut self, response: &ModelResponse) {
+        self.content.push(TalkContent {
+            role: ERole::Assistant,
+            content: response.content.clone(),
+            reasoning_content: response.reasoning_content.clone(),
+            tool_calls: response.tool_calls.clone()
+        });
+    }
+
+    pub fn add_content(&mut self, content: &TalkContent) {
+        self.content.push(content.clone());
+    }
+
+    pub fn add_user(&mut self, content: String) {
+        self.content.push(TalkContent { role: ERole::User, content, reasoning_content: None, tool_calls: None });
     }
 }

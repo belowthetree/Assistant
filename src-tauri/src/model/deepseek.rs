@@ -13,6 +13,7 @@ pub trait Deepseek {
 
 impl Deepseek for ModelData {
     async fn generate(&self, param: ModelInputParam) -> Result<ModelResponse, String> {
+        debug!("{:?}", param);
         let mut messages = param.messages.unwrap_or_default();
 
         if messages.is_empty() {
@@ -44,6 +45,7 @@ impl Deepseek for ModelData {
 
         let succ = response.status().is_success();
         let text = response.text().await.unwrap_or_default();
+        debug!("{:?}", text);
         if succ {
             let json: Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
 

@@ -1,6 +1,6 @@
 import { fetch} from "@tauri-apps/plugin-http"
 import { ModelBase, ModelInputParam, ModelResponse } from "~/src/model/modelbase"
-import { EModelType } from "@/data"
+import { EModelType } from "../data/model"
 
 export class DeepSeek extends ModelBase {
     constructor(url: string = "https://api.deepseek.com/chat/completions", model: string = "deepseek-chat", roleCard: string = "", api: string = "") {

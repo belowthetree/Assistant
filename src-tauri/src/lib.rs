@@ -3,10 +3,13 @@ mod web;
 mod mcp;
 mod model;
 mod data;
-mod conversation;
+mod assistant;
+mod event;
+mod command;
 
 use std::sync::Arc;
-use conversation::talk;
+use assistant::{talk, update_model};
+use command::{get_models, set_model};
 use data::*;
 use mcp::*;
 use platform::*;
@@ -105,10 +108,13 @@ pub fn run() {
             store_model_data,
             load_model_data,
             talk,
+            update_model,
+            set_model,
+            get_models,
         ])
         // This is required to get tray-relative positions to work
         .setup(|app| {
-            conversation::init();
+            assistant::init();
             // 创建第一个 webview，指向主页
             build_first_webview(app);
             if let Some(window) = app.get_webview_window("home") {
