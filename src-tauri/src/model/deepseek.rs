@@ -1,6 +1,6 @@
 use super::{ModelData, ModelInputParam, ModelResponse};
 use futures_util::{StreamExt};
-use log::debug;
+use log::{debug, warn};
 use reqwest::{header, Client};
 use serde_json::Value;
 
@@ -51,7 +51,7 @@ impl Deepseek for ModelData {
         let mut text = "".into();
         if succ {
             // 区分流式和非流式
-            if self.stream {
+            if true {
                 let mut stream = response.bytes_stream();
                 let mut content = String::new();
                 
@@ -76,28 +76,40 @@ impl Deepseek for ModelData {
                                             }
                                         }
                                         
-                                        if let Some(index) = choice.get("index") {
+                                        if let Some(_) = choice.get("index") {
                                             // 处理索引信息
                                         }
                                         
-                                        if let Some(message) = choice.get("message") {
+                                        let mut ret: Option<Value> = None;
+                                        if let Some(t) = choice.get("message") {
+                                            ret = Some(t.clone());
+                                        }
+                                        else if let Some(t) = choice.get("delta") {
+                                            ret = Some(t.clone());
+                                        }
+                                        else {
+                                            warn!("未知格式 {:?}", choice);
+                                        }
+                                        if let Some(message) = ret {
+                                            let mut tx: String = String::new();
                                             if let Some(ctx) = message.get("content") {
                                                 if let Some(text_str) = ctx.as_str() {
-                                                    content.push_str(text_str);
+                                                    tx += text_str;
                                                 }
                                             }
-                                            if let Some(reasoning_content) = message.get("reasoning_content") {
-                                                // 处理推理内容
-                                            }
-                                            if let Some(tool_calls) = message.get("tool_calls") {
-                                                // 处理工具调用
-                                            }
-                                        } else if let Some(delta) = choice.get("delta") {
-                                            // 兼容旧版 delta 格式
-                                            if let Some(text) = delta.get("content") {
-                                                if let Some(text_str) = text.as_str() {
-                                                    content.push_str(text_str);
+                                            if let Some(ctx) = message.get("reasoning_content") {
+                                                if let Some(text_str) = ctx.as_str() {
+                                                    tx += text_str;
                                                 }
+                                            }
+                                            if let Some(ctx) = message.get("tool_calls") {
+                                                if let Some(text_str) = ctx.as_str() {
+                                                    tx += text_str;
+                                                }
+                                            }
+                                            content.push_str(&tx);
+                                            if let Some(callback) = &mut stream_callback {
+                                                callback(content.clone());
                                             }
                                         }
                                     }

@@ -87,7 +87,7 @@
                         <div class="form-group">
                             <label for="temperature">温度 (Temperature)</label>
                             <input type="range" id="temperature" min="0" max="2" step="0.1" v-model="modelconfig.temperature"
-                                class="form-control" @change="modify">
+                                class="form-control" @change="modifyParam">
                             <div style="text-align: center; font-size: 12px; color: var(--text-light);">{{ modelconfig.temperature
                                 }}</div>
                         </div>
@@ -102,7 +102,7 @@
                         <label>启用流式响应</label>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <label class="toggle-switch" style="flex-direction: row;display: flex; ">
-                                <input type="checkbox" v-model="modelconfig.stream" @change="modify">
+                                <input type="checkbox" v-model="modelconfig.stream" @change="modifyParam">
                                 <span class="slider"></span>
                             </label>
                             <span>启用</span>
@@ -165,6 +165,11 @@ export default {
                 }).catch(e=>{
                     console.warn(e)
                 })
+            })
+        },
+        async modifyParam() {
+            invoke("set_model", {
+                data: this.modelconfig
             })
         },
         async loadConfig() {

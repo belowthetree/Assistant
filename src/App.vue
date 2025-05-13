@@ -17,6 +17,7 @@ import { listenTalkViewQueryEvent } from "./events/window_event";
 import { ServerConfigInfo } from "./frontend/MCPServer";
 import { Talk } from "./life/talk/talk"
 import Conversation from "./components/Conversation.vue"
+import { listen } from '@tauri-apps/api/event';
 
 var talk = null
 var modeSelect = "Exec"
@@ -46,6 +47,7 @@ export default {
 			conversationHeight: 0,
 			inputMaxHeight: 150,
 			modelOutputVisible: false,
+			modelReplyUnlisten: undefined,
 		}
 	},
 	methods: {
@@ -120,8 +122,19 @@ export default {
 			if (event.key == "Control")
 				this.controlDown = false
 		},
+		onModelReply(content) {
+			console.log(content)
+			this.modelOutput = content
+			this.updateConversationHeight()
+		}
 	},
 	mounted() {
+		// 监听模型更新
+		listen("AssistantReplyEventName", (ev)=>{
+			this.onModelReply(ev.payload)
+		}).then((unli)=>{
+			this.modelReplyUnlisten = unli
+		})
 		this.updateConversationHeight()
 		this.onInput() // 触发窗口高度更新
 		const mainWindow = webviewWindow.getCurrentWebviewWindow()
@@ -146,6 +159,11 @@ export default {
 				this.updateConversationHeight()
 			})
 		})
+	},
+	destroyed() {
+		if (this.unli) {
+			this.unli();
+		}
 	}
 }
 //创建 vue 页面基本模板并复制到剪贴板

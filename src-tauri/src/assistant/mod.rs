@@ -3,7 +3,8 @@ use std::{sync::Arc};
 use conversation::Conversation;
 use life::Life;
 use lazy_static::lazy_static;
-use log::debug;
+use log::{debug, warn};
+use tauri::AppHandle;
 use tokio::sync::Mutex;
 
 use crate::{data::{load_model_data, load_server_data, store_model_data, store_server_data, ServerData}, model::{Deepseek, EModelType, ModelData, ModelResponse, Ollama}};
@@ -37,9 +38,9 @@ pub fn init() {
 }
 
 #[tauri::command]
-pub async fn talk(ctx: String)->Result<String, String> {
+pub async fn talk(ctx: String, app: AppHandle)->Result<String, String> {
     let mut con = ASSISTANT.lock().await;
-    let res = con.talk(ctx).await;
+    let res = con.talk(ctx, app).await;
     if res.is_ok() {
         Ok(res.unwrap().content)
     }
@@ -63,8 +64,8 @@ impl Assistant {
         }
     }
 
-    pub async fn talk(&mut self, ctx: String)->Result<ModelResponse, String> {
-        self.conversation.talk(ctx).await
+    pub async fn talk(&mut self, ctx: String, app: AppHandle)->Result<ModelResponse, String> {
+        self.conversation.talk(ctx, app).await
     }
 
     // mcp 服务数据
@@ -97,10 +98,13 @@ impl Assistant {
 
     pub fn set_model_data(&mut self, data: ModelData) {
         self.conversation.set_model(data);
+        self.store_model_data();
     }
 
     pub fn store_model_data(&self) {
-        store_model_data(self.conversation.get_model_data().clone().unwrap_or_default());
+        if let Err(e) = store_model_data(self.conversation.get_model_data().clone().unwrap_or_default()) {
+            warn!("存储失败：{}", e);
+        }
     }
 
     pub async fn get_models(&self)->Result<Vec<String>, String> {
