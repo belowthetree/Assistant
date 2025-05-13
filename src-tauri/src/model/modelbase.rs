@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
-use reqwest::Client;
 use rmcp::model::Tool;
-use async_trait::async_trait;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelMessage {
@@ -37,20 +35,13 @@ pub struct ModelResponse {
     pub content: String,
     pub reasoning_content: Option<String>,
     pub tool_calls: Option<Vec<ToolCall>>,
+    pub finish_reason: Option<String>,
 }
 
 impl ModelResponse {
     pub fn tostring(&self)->String {
         serde_json::to_string(&serde_json::json!(self.clone())).unwrap()
     }
-}
-
-#[async_trait]
-pub trait ModelInteract {
-    fn get_model_name(&self) -> String;
-    fn set_api_key(&mut self, key: String);
-    async fn check_api_key_valid(&self) -> Result<bool, String>;
-    async fn generate(&self, param: ModelInputParam) -> Result<ModelResponse, String>;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -60,13 +51,21 @@ pub enum EModelType {
     OpenAI,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+impl Default for EModelType {
+    fn default() -> Self {
+        EModelType::Deepseek
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ModelData {
     pub model_type: EModelType,
     pub api_key: String,
     pub url: String,
     pub model_name: String,
-    pub temperature: f64,
+    pub temperature: String,
+    #[serde(default)]
+    pub stream: bool,
 }
 
 impl ModelData {
@@ -76,7 +75,8 @@ impl ModelData {
             api_key,
             url,
             model_name,
-            temperature: 0.6,
+            temperature: "0.6".into(),
+            stream: true,
         }
     }
 

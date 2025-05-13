@@ -16,6 +16,7 @@ import { moveWindow, Position as WindowPosition } from "@tauri-apps/plugin-posit
 import { listenTalkViewQueryEvent } from "./events/window_event";
 import { ServerConfigInfo } from "./frontend/MCPServer";
 import { Talk } from "./life/talk/talk"
+import Conversation from "./components/Conversation.vue"
 
 var talk = null
 var modeSelect = "Exec"
@@ -27,7 +28,7 @@ var startY = 0
 
 export default {
 	components: {
-		Bubbles,
+		'conversation': Conversation
 	},
 	setup() {
 		moveWindow(WindowPosition.RightCenter)
@@ -40,7 +41,8 @@ export default {
 			userInput: "",
 			controlDown: false,
 			reply: "",
-			disableInput: false,
+			disableInput: true,
+			modelOutput: "HHHHHHHHHHHHHHHHHHHHHHHHH\nLLLLLLLLLLLLLLLLLLLLLLLll"
 		}
 	},
 	methods: {
@@ -75,6 +77,8 @@ export default {
 			Window.setSize(new LogicalSize(300, height + 35)).catch(e=>console.log(e))
 		},
 		async commitCommand() {
+			if (this.disableInput)
+				return
 			try {
 				console.log("输入命令", this.userInput)
 				this.disableInput = true
@@ -110,7 +114,6 @@ export default {
 		mainWindow.once('tauri://focus', () => {
 			// 窗口显示时，聚焦输入框
 			const input = document.getElementById("userInput")
-			console.log("focus")
 			input.focus()
 			// 为元素添加拖拽事件
 			document.getElementById('maincontainer').addEventListener('mousedown', async (e) => {
@@ -121,6 +124,7 @@ export default {
 				}
 			});
 		});
+		this.modelOutput = "HHHHHHHHHHHHHHHHHHHH\nJJJJJJJJJJJJJJJJJJJJJJ"
 	}
 }
 //创建 vue 页面基本模板并复制到剪贴板
@@ -129,9 +133,10 @@ export default {
 
 <template>
 	<main class="maincontainer drag-area rounded-lg " id="maincontainer">
-		<div class="row macos-background rounded-lg ">
+		<div class="row macos-background rounded-lg flex flex-col justify-end">
 			<!-- <Bubbles ref="bubbles" style="color: black;">fff</Bubbles> -->
-			<textarea @input="onInput" :disable="disableInput" @keydown="onKeyDown" @keyup="onKeyUp" id="userInput" class="no-drag rounded-lg "
+			<conversation ref="conversation" :content="modelOutput"></conversation>
+			<textarea @input="onInput" :readonly="disableInput" @keydown="onKeyDown" @keyup="onKeyUp" id="userInput" class="no-drag rounded-lg "
 				v-model="userInput" placeholder="输入你想说的话然后按下回车"></textarea>
 			<button class="right_bottom" @click="clickSetting">
 				<i class="iconBtn fa-solid fa-cog hover_color fa-5" id="settingIcon" :style="{color: 'black'}" ></i>

@@ -63,3 +63,7 @@ export async function openRoleCardView() {
 export async function openKnowledgeWindow() {
     return createWindow('knowledge', {title: "知识库", width: 500, height: 600, resizable: true, decorations: true, minHeight: 450})
 }
+
+export async function openConversationWindow() {
+    return createWindow('conversation', {title: "对话", width: 500, height: 600, resizable: false, decorations: false, minHeight: 250})
+}

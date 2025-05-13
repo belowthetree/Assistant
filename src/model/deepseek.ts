@@ -5,7 +5,7 @@ import { EModelType } from "../data/model"
 export class DeepSeek extends ModelBase {
     constructor(url: string = "https://api.deepseek.com/chat/completions", model: string = "deepseek-chat", roleCard: string = "", api: string = "") {
         super(url, model, roleCard, api)
-        this.modelType = EModelType.DeepSeek
+        this.modelType = EModelType.Deepseek
     }
 
     async getModels(): Promise<string[]> {

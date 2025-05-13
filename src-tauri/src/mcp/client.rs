@@ -20,14 +20,21 @@ impl MCPClient {
         }
     }
 
-    pub fn add_server(&mut self, config: MCPServerConfig) {
+    pub fn add_server(&mut self, config: &MCPServerConfig) {
         debug!("添加服务 {:?}", config);
         if !self.servers.contains_key(&config.name) {
-            let mut server = MCPServer::new(config);
+            let mut server = MCPServer::new(config.clone());
             if self.connted_server_num < self.max_server_num {
                 let _ = server.connect();
             }
             self.servers.insert(server.config.name.clone(), server);
+        }
+    }
+
+    pub fn set_servers(&mut self, servers: &Vec<MCPServerConfig>) {
+        self.servers.clear();
+        for server in servers {
+            self.add_server(server);
         }
     }
 

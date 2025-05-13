@@ -62,7 +62,7 @@ impl Ollama for ModelData {
                 "prompt": param.content.unwrap_or_default(),
                 "stream": false,
                 "options": {
-                    "temperature": param.temperature.unwrap_or(self.temperature)
+                    "temperature": param.temperature.unwrap_or(self.temperature.parse().unwrap())
                 },
                 "tools": param.tools,
             })).unwrap())

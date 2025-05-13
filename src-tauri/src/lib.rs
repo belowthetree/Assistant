@@ -9,7 +9,7 @@ mod command;
 
 use std::sync::Arc;
 use assistant::{talk, update_model};
-use command::{get_models, set_model};
+use command::{add_server, get_models, set_model};
 use data::*;
 use mcp::*;
 use platform::*;
@@ -102,7 +102,7 @@ pub fn run() {
             read_text_file_at_project_root,
             write_text_file_at_project_root,
             get_project_root_path,
-            add_servers,
+            add_server,
             get_tools,
             call_tool,
             store_model_data,

@@ -13,15 +13,6 @@ pub struct MCPInfo {
 }
 
 #[tauri::command]
-pub async fn add_servers(configs: Vec<MCPServerConfig>, state: State<'_, MCPInfo>)->Result<(), ()> {
-    let mut clt = state.client.lock().await;
-    for cfg in configs {
-        clt.add_server(cfg);
-    }
-    Ok(())
-}
-
-#[tauri::command]
 pub async fn get_tools(name: String, state: State<'_, MCPInfo>)->Result<Vec<Tool>, String> {
     let mut clt = state.client.lock().await;
     clt.get_tools(name).await

@@ -111,26 +111,6 @@
                 </div>
             </div>
         </div>
-
-        <div class="settings-footer">
-            <button class="btn btn-secondary" @click="cancel">
-                <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-                取消
-            </button>
-            <button class="btn btn-primary" @click="saveSettings">
-                <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                    <polyline points="7 3 7 8 15 8"></polyline>
-                </svg>
-                保存设置
-            </button>
-        </div>
     </div>
 </template>
 
@@ -160,15 +140,6 @@ export default {
     setup() {
     },
     methods: {
-        saveSettings() {
-            invoke("store_model_data", {
-                data: this.modelconfig
-            }).finally(e=>{
-                console.log(e)
-                // 通知后端更新模型
-                invoke("update_model")
-            })
-        },
         cancel() {
         },
         async modify() {

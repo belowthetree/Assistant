@@ -1,13 +1,12 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{sync::Arc};
 
 use conversation::Conversation;
 use life::Life;
 use lazy_static::lazy_static;
 use log::debug;
-use rmcp::model;
 use tokio::sync::Mutex;
 
-use crate::{data::{load_model_data, load_server_data, store_server_data, ServerData}, mcp::MCPServerConfig, model::{Deepseek, EModelType, ModelData, ModelResponse, Ollama}};
+use crate::{data::{load_model_data, load_server_data, store_model_data, store_server_data, ServerData}, model::{Deepseek, EModelType, ModelData, ModelResponse, Ollama}};
 
 mod conversation;
 mod life;
@@ -98,6 +97,10 @@ impl Assistant {
 
     pub fn set_model_data(&mut self, data: ModelData) {
         self.conversation.set_model(data);
+    }
+
+    pub fn store_model_data(&self) {
+        store_model_data(self.conversation.get_model_data().clone().unwrap_or_default());
     }
 
     pub async fn get_models(&self)->Result<Vec<String>, String> {

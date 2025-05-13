@@ -31,7 +31,7 @@ tauri-plugin-clipboard-manager = "2.2.0"
 tauri-plugin-notification = "2"
 tauri-plugin-single-instance = "2.0.0"
 tauri-plugin-autostart = "2.0.0"
-reqwest = "0.12.12"
+reqwest = { version = "0.12.12", features = ["stream", "json"] }
 urlencoding = "2.1"
 project-root = "0.2.2"
 tauri-plugin-positioner = { version = "2.0.0", features = ["tray-icon"] }
@@ -43,6 +43,8 @@ async-trait = "0.1.88"
 directories = "5.0"
 lazy_static = "1.4.0"
 chrono = "0.4.41"
+futures-util = "0.3"
+eventsource = "0.5.0"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-positioner = "2"

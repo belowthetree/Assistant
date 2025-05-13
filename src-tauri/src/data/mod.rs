@@ -1,9 +1,10 @@
 mod server_data;
 
-use std::{collections::HashMap, fs};
+use std::{fs};
+use log::debug;
 use serde_json;
 use directories::ProjectDirs;
-use crate::{mcp::MCPServerConfig, model::ModelData};
+use crate::{model::ModelData};
 pub use server_data::*;
 
 const MODEL_FILE_NAME: &str = "modeldata.json";
@@ -40,7 +41,11 @@ pub fn load_model_data()->Result<ModelData, ()> {
     let path = config_dir.join(MODEL_FILE_NAME);
     match fs::read_to_string(path) {
         Ok(content) => {
-            let data: ModelData = serde_json::from_str(&content).unwrap();
+            let t = serde_json::from_str(&content);
+            if t.is_err() {
+                debug!("{:?}", t)
+            }
+            let data: ModelData = t.unwrap();
             Ok(data)
         }
         Err(_) => Err(())

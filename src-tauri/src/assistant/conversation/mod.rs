@@ -1,19 +1,7 @@
 mod talkcontext;
 
-use std::sync::Arc;
-
-use lazy_static::lazy_static;
-use log::debug;
 use talkcontext::{ERole, TalkContext};
-use tokio::sync::Mutex;
-use crate::{data::load_model_data, model::{EModelType, ModelData, ModelInputParam, ModelInteract, ModelResponse}};
-
-lazy_static! {
-    static ref CONVERSATION: Arc<Mutex<Conversation>> = Arc::new(Mutex::new(Conversation::new()));
-}
-
-pub fn init() {
-}
+use crate::{model::{ModelData, ModelInputParam, ModelResponse}};
 
 #[derive(Debug, Clone)]
 pub struct Conversation {
@@ -46,7 +34,7 @@ impl Conversation {
                         temperature: None,
                         tools: None,
                         messages: Some(self.context.get_messages()),
-                    }).await;
+                    }, None).await;
                 },
                 crate::model::EModelType::Ollama => {
                     res = crate::model::Ollama::generate(model, ModelInputParam {
