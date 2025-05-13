@@ -41,8 +41,11 @@ export default {
 			userInput: "",
 			controlDown: false,
 			reply: "",
-			disableInput: true,
-			modelOutput: "HHHHHHHHHHHHHHHHHHHHHHHHH\nLLLLLLLLLLLLLLLLLLLLLLLll"
+			disableInput: false,
+			modelOutput: "",
+			conversationHeight: 0,
+			inputMaxHeight: 150,
+			modelOutputVisible: false,
 		}
 	},
 	methods: {
@@ -69,28 +72,39 @@ export default {
 			const Window = getCurrentWindow()
 			const input = document.getElementById("userInput")
 			input.style.height = 'auto'
-			const height = Math.min(input.scrollHeight, this.maxHeight)
-			input.style.height = `${height}px`;
-			if (input.scrollHeight > this.maxHeight) {
+			const inputHeight = Math.min(input.scrollHeight, this.inputMaxHeight)
+			input.style.height = `${inputHeight}px`;
+			if (input.scrollHeight > this.inputMaxHeight) {
 				input.style.overflowY = 'scroll'
 			}
-			Window.setSize(new LogicalSize(300, height + 35)).catch(e=>console.log(e))
+			console.log(inputHeight, this.conversationHeight)
+			const totalHeight = Math.min(this.maxHeight, inputHeight + this.conversationHeight + 35)
+			Window.setSize(new LogicalSize(300, totalHeight)).catch(e => console.log(e))
+		},
+
+		updateConversationHeight() {
+			if (this.$refs.conversation) {
+				const conversationEl = this.$refs.conversation.$el
+				this.conversationHeight = conversationEl.scrollHeight + 15
+			}
+			else {
+				this.conversationHeight = 0
+			}
+			this.modelOutputVisible = this.modelOutput && this.modelOutput.length > 0
 		},
 		async commitCommand() {
-			if (this.disableInput)
-				return
 			try {
 				console.log("输入命令", this.userInput)
 				this.disableInput = true
-				invoke("talk", {ctx: this.userInput}).then(e=>{
+				invoke("talk", { ctx: this.userInput }).then(e => {
 					this.disableInput = false
 					console.log(e)
-				}).catch(e=>{
+				}).catch(e => {
 					this.disableInput = false
 					console.warn(e)
 				})
 			}
-			catch(e) {
+			catch (e) {
 				console.log(e)
 			}
 		},
@@ -108,7 +122,8 @@ export default {
 		},
 	},
 	mounted() {
-		this.onInput()
+		this.updateConversationHeight()
+		this.onInput() // 触发窗口高度更新
 		const mainWindow = webviewWindow.getCurrentWebviewWindow()
 		// 监听窗口显示事件
 		mainWindow.once('tauri://focus', () => {
@@ -124,7 +139,13 @@ export default {
 				}
 			});
 		});
-		this.modelOutput = "HHHHHHHHHHHHHHHHHHHH\nJJJJJJJJJJJJJJJJJJJJJJ"
+
+		// 监听 Conversation 内容变化
+		this.$watch('modelOutput', () => {
+			this.$nextTick(() => {
+				this.updateConversationHeight()
+			})
+		})
 	}
 }
 //创建 vue 页面基本模板并复制到剪贴板
@@ -132,17 +153,19 @@ export default {
 </script>
 
 <template>
-	<main class="maincontainer drag-area rounded-lg " id="maincontainer">
+	<main class="maincontainer rounded-lg " id="maincontainer">
 		<div class="row macos-background rounded-lg flex flex-col justify-end">
 			<!-- <Bubbles ref="bubbles" style="color: black;">fff</Bubbles> -->
-			<conversation ref="conversation" :content="modelOutput"></conversation>
-			<textarea @input="onInput" :readonly="disableInput" @keydown="onKeyDown" @keyup="onKeyUp" id="userInput" class="no-drag rounded-lg "
-				v-model="userInput" placeholder="输入你想说的话然后按下回车"></textarea>
+			<conversation v-if="modelOutputVisible" ref="conversation" :content="modelOutput"
+				class="no-drag rounded-lg"></conversation>
+			<hr style="width: 80%;margin: auto; margin-bottom: 15px;margin-top: 15px;" />
+			<textarea @input="onInput" :readonly="disableInput" @keydown="onKeyDown" @keyup="onKeyUp" id="userInput"
+				class="no-drag rounded-lg " v-model="userInput" placeholder="输入你想说的话然后按下回车"></textarea>
 			<button class="right_bottom" @click="clickSetting">
-				<i class="iconBtn fa-solid fa-cog hover_color fa-5" id="settingIcon" :style="{color: 'black'}" ></i>
+				<i class="iconBtn fa-solid fa-cog hover_color fa-5" id="settingIcon" :style="{ color: 'black' }"></i>
 			</button>
 			<button class="right_bottom" @click="clickKnowledge" style="right: 45px;">
-				<i class="iconBtn fa fa-microphone hover_color fa-5 " id="voiceIcon" :style="{color: 'black'}"></i>
+				<i class="iconBtn fa fa-microphone hover_color fa-5 " id="voiceIcon" :style="{ color: 'black' }"></i>
 			</button>
 		</div>
 	</main>
@@ -159,6 +182,7 @@ export default {
 	width: 1rem;
 	background-color: #0f0f0f00;
 }
+
 .hover_color {
 	position: absolute;
 	width: 100%;
@@ -168,10 +192,12 @@ export default {
 	transform: translate(-50%, -50%);
 	transition: all 0.1s ease;
 }
+
 .hover_color:hover {
 	transform: translate(-50%, -50%) scale(1.1);
 	transition: all 0.1s ease;
 }
+
 .hover_color.clicked {
 	transform: translate(-50%, -50%) scale(1);
 	transition: all 0.1s ease;
@@ -182,15 +208,17 @@ i {
 }
 
 .drag-area {
-	 /* 允许拖拽 */
+	/* 允许拖拽 */
 	-webkit-app-region: drag;
 	app-region: drag;
 	/* cursor: grab; */
 }
+
 .no-drag {
 	-webkit-app-region: no-drag;
 	app-region: no-drag;
 }
+
 .maincontainer {
 	margin: 0;
 	display: flex;
@@ -199,7 +227,6 @@ i {
 	text-align: center;
 	width: 100%;
 	height: 100%;
-	background-color: #8c070700;
 }
 
 :root {
@@ -240,17 +267,20 @@ i {
 	padding: 10px;
 	padding-bottom: 0;
 	margin-bottom: 40px;
-	background: linear-gradient(135deg, #f0f0f0, #ffffff); /* 浅灰色到白色的渐变 */
+	background: transparent;
 	font-size: 21px;
 	min-height: 100px;
 }
 
 .macos-background {
-  height: 100vh; /* 使背景占满整个视口高度 */
-  background: linear-gradient(135deg, #f0f0f0, #ffffff); /* 浅灰色到白色的渐变 */
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  color: #333; /* 深灰色文字 */
-  text-align: center;
+	height: 100vh;
+	/* 使背景占满整个视口高度 */
+	background: linear-gradient(135deg, #f0f0f0, #ffffff);
+	/* 浅灰色到白色的渐变 */
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	color: #333;
+	/* 深灰色文字 */
+	text-align: center;
 }
 
 @media (prefers-color-scheme: dark) {

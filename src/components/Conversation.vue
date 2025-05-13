@@ -1,11 +1,7 @@
 <template>
-    <div class="model-output-container">
-        <div ref="outputContainer" class="output-content" :class="{ 'manual-scroll': !autoScroll }"
+    <div class="model-output-container rounded-lg">
+        <div ref="outputContainer" class="output-content rounded-lg" :class="{ 'manual-scroll': !autoScroll }"
             @scroll="handleScroll" v-html="processedContent"></div>
-
-        <div class="status-indicator" :class="{ 'loading': isStreaming }">
-            <font-awesome-icon :icon="isStreaming ? 'spinner' : 'check'" :spin="isStreaming" />
-        </div>
     </div>
 </template>
 
@@ -28,6 +24,10 @@ export default {
         isStreaming: {
             type: Boolean,
             default: false
+        },
+        fontSize: {
+            type: String,
+            default: '0.7rem'
         }
     },
     data() {
@@ -97,55 +97,37 @@ export default {
 .model-output-container {
     position: relative;
     width: 100%;
-    /* 固定宽度 */
-    max-height: 600px;
-    /* 最大高度 */
-    margin: 0 auto;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
+    height: auto;
+    margin: auto;
+	border-radius: 5px;
+    overflow-y: scroll;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
 }
 
 .output-content {
-    padding: 16px;
-    overflow-y: auto;
+	padding: 10px;
+    overflow-y: scroll;
     height: auto;
     min-height: 100px;
-    max-height: 600px;
     line-height: 1.6;
     color: #333;
+    font-size: v-bind(fontSize);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+.output-content::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
 }
 
 .output-content.manual-scroll {
     /* 当用户手动滚动时，可以添加一些视觉提示 */
     box-shadow: inset 0 -5px 10px -5px rgba(0, 0, 0, 0.1);
-}
-
-.status-indicator {
-    position: absolute;
-    right: 16px;
-    bottom: 16px;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background-color: #f5f5f5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
-}
-
-.status-indicator.loading {
-    background-color: #e3f2fd;
-    color: #1976d2;
-}
-
-.status-indicator:not(.loading) {
-    background-color: #e8f5e9;
-    color: #388e3c;
 }
 
 /* 富文本内容样式 */
