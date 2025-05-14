@@ -8,6 +8,7 @@ struct AskWindowInfo<'a> {
     title: &'a str,
 }
 
+// 确认弹窗
 #[tauri::command]
 pub fn ask_window(app: AppHandle, msg: &str, title: &str) {
     app.emit("ask_window", AskWindowInfo { msg, title })

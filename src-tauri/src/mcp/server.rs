@@ -1,26 +1,50 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug};
 use log::debug;
 use rmcp::{model::{CallToolRequestParam, CallToolResult, JsonObject, Tool}, service::{DynService, RunningService}, transport::TokioChildProcess, RoleClient, ServiceExt};
 use serde::{Serialize, Deserialize};
 use tokio::process::Command;
+
+pub fn _default_true()->bool {
+    true
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MCPServerConfig {
     pub name: String,
     pub command: String,
+    pub desc: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub args: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub env: Option<HashMap<String, String>>,
+    #[serde(default = "_default_true")]
+    pub enable: bool,
+    // 是否是内部提供的服务
+    #[serde(default)]
+    pub internal: bool
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct MCPServer {
     pub config: MCPServerConfig,
     pub connected: bool,
     pub tools: Vec<Tool>,
+    #[serde(skip)]
     pub service: Option<RunningService<RoleClient, Box<dyn DynService<RoleClient>>>>,
     pub call_count: usize,
+}
+
+impl Debug for MCPServer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("MCPServer").field("config", &self.config).field("connected", &self.connected).field("tools", &self.tools).field("call_count", &self.call_count).finish()
+    }
+}
+
+impl Clone for MCPServer {
+    fn clone(&self) -> Self {
+        Self { config: self.config.clone(), connected: self.connected.clone(), tools: self.tools.clone(), service: None, call_count: self.call_count.clone() }
+    }
 }
 
 impl MCPServer {
@@ -34,7 +58,7 @@ impl MCPServer {
         }
     }
     pub async fn connect(&mut self)->Result<(), Box<dyn std::error::Error>> {
-        if self.connected {
+        if self.connected || !self.config.enable {
             return Ok(())
         }
         let mut transport = Command::new(self.config.command.clone());

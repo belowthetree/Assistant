@@ -3,23 +3,28 @@ mod server;
 use std::sync::Arc;
 
 pub use client::*;
+use log::debug;
 use rmcp::model::{CallToolResult, JsonObject, Tool};
 pub use server::*;
 use tauri::State;
 use tokio::sync::Mutex;
+use lazy_static::lazy_static;
 
 pub struct MCPInfo {
     pub client: Arc<Mutex<MCPClient>>
 }
 
-#[tauri::command]
-pub async fn get_tools(name: String, state: State<'_, MCPInfo>)->Result<Vec<Tool>, String> {
-    let mut clt = state.client.lock().await;
-    clt.get_tools(name).await
+lazy_static! {
+    pub static ref MCP_CLIENT: Arc<Mutex<MCPClient>> = Arc::new(Mutex::new(MCPClient::new()));
 }
 
-#[tauri::command]
-pub async fn call_tool(server_name: String, tool_name: String, args: Option<JsonObject>, state: State<'_, MCPInfo>)->Result<CallToolResult, String> {
-    let mut clt = state.client.lock().await;
-    clt.call_tool(server_name, tool_name, args).await
+pub fn init() {
+    debug!("初始化 mcp");
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    rt.block_on(async {
+        let mut client = MCP_CLIENT.lock().await;
+        debug!("加载 mcp 配置");
+        client.refresh_mcp_config().await;
+        debug!("初始化结束");
+    });
 }

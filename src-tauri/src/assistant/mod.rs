@@ -31,8 +31,6 @@ pub fn init() {
         let mut ass: tokio::sync::MutexGuard<'_, Assistant> = ASSISTANT.lock().await;
         debug!("加载模型");
         ass.refresh_model_data();
-        debug!("加载 mcp 服务");
-        ass.refresh_server_config();
         debug!("初始化结束：{:?}", ass);
     });
 }
@@ -66,14 +64,6 @@ impl Assistant {
 
     pub async fn talk(&mut self, ctx: String, app: AppHandle)->Result<ModelResponse, String> {
         self.conversation.talk(ctx, app).await
-    }
-
-    // mcp 服务数据
-    pub fn refresh_server_config(&mut self) {
-        match load_server_data() {
-            Ok(server) => self.server_data = server,
-            Err(_) => self.store_server_data(),
-        }
     }
 
     pub fn store_server_data(&self) {

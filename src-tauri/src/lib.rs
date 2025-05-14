@@ -9,7 +9,7 @@ mod command;
 
 use std::sync::Arc;
 use assistant::{talk, update_model};
-use command::{add_server, get_models, set_model};
+use command::*;
 use data::*;
 use mcp::*;
 use platform::*;
@@ -67,9 +67,6 @@ fn build_first_webview(app: &mut App) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .manage(MCPInfo {
-            client: Arc::new(Mutex::new(MCPClient::new()))
-        })
         .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_notification::init())
@@ -102,7 +99,8 @@ pub fn run() {
             read_text_file_at_project_root,
             write_text_file_at_project_root,
             get_project_root_path,
-            add_server,
+            get_servers,
+            set_server,
             get_tools,
             call_tool,
             store_model_data,
@@ -114,6 +112,7 @@ pub fn run() {
         ])
         // This is required to get tray-relative positions to work
         .setup(|app| {
+            mcp::init();
             assistant::init();
             // 创建第一个 webview，指向主页
             build_first_webview(app);

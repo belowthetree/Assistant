@@ -1,11 +1,11 @@
-mod server_data;
+mod mcp;
 
 use std::{fs};
 use log::debug;
 use serde_json;
 use directories::ProjectDirs;
 use crate::{model::ModelData};
-pub use server_data::*;
+pub use mcp::*;
 
 const MODEL_FILE_NAME: &str = "modeldata.json";
 const SERVER_FILE_NAME: &str = "server.json";

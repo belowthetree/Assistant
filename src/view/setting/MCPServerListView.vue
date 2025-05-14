@@ -17,9 +17,9 @@
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-800">{{ service.config.name }}</h3>
                                 <div class="flex items-center mt-1">
-                                    <span class="status-badge" :class="{'status-online': service.connect, 'status-offline': !service.connect}"></span>
+                                    <span class="status-badge" :class="{'status-online': service.connected, 'status-offline': !service.connected}"></span>
                                     <span class="text-sm text-gray-600">
-                                        {{ capitalizeFirstLetter(service.connect ? "已连接" : "未连接" ) }}
+                                        {{ capitalizeFirstLetter(service.connected ? "已连接" : "未连接" ) }}
                                     </span>
                                 </div>
                             </div>
@@ -91,7 +91,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1 text-left">描述</label>
-                        <input type="text" v-model="newService.name"
+                        <input type="text" v-model="newService.desc"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md">
                     </div>
                     <div>
@@ -101,13 +101,13 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1 text-left">参数</label>
-                        <input type="text" v-model="newService.command"
+                        <input type="text" v-model="newService.args"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1 text-left">环境变量</label>
-                        <input type="text" v-model="newService.command"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md text-wrap", placeholder="">
+                        <input type="text" v-model="newService.env"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md text-wrap" placeholder="">
                     </div>
                     <!-- <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Initial Status</label>
@@ -133,7 +133,8 @@
 </template>
 
 <script>
-import { Servers } from '~/src/data/mcp';
+import { invoke } from '@tauri-apps/api/core';
+
 
 export default {
     name: 'ServiceDashboard',
@@ -149,7 +150,7 @@ export default {
                 env:'',
                 active: true
             },
-            services: Servers
+            services: []
         }
     },
     methods: {
@@ -169,19 +170,22 @@ export default {
         confirmAdd() {
             if (!this.newService.name || !this.newService.command) return;
 
+            console.log("add ", this.newService)
             if (this.editingIndex !== null) {
                 // Update existing service
                 this.services[this.editingIndex] = { ...this.newService };
             } else {
-                // Add new service
-                this.services.push({ ...this.newService });
+                invoke("set_server", {server: this.newService}).then(res=>{
+                    console.log("res ", res)
+                    this.refreshServices()
+                })
             }
 
             this.closeModal();
         },
         editService(index) {
             this.editingIndex = index;
-            this.newService = { ...this.services[index] };
+            this.newService = { ...this.services[index].config };
             this.showAddModal = true;
         },
         toggleServiceStatus(index) {
@@ -207,8 +211,17 @@ export default {
         },
         capitalizeFirstLetter(string) {
             return string.charAt(0).toUpperCase() + string.slice(1);
+        },
+        refreshServices() {
+            invoke("get_servers").then(res=>{
+                console.log("get ", res)
+                this.services = res
+            })
         }
-    }
+    },
+    mounted() {
+        this.refreshServices()
+    },
 }
 </script>
 
