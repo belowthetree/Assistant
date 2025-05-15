@@ -7,16 +7,12 @@ mod assistant;
 mod event;
 mod command;
 
-use std::sync::Arc;
-use assistant::{talk, update_model};
 use command::*;
 use data::*;
-use mcp::*;
 use platform::*;
 use tauri::{tray::TrayIconBuilder, window::Color, App, Manager, WebviewWindowBuilder};
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_positioner::{Position, WindowExt};
-use tokio::sync::Mutex;
 use web::*;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -102,7 +98,6 @@ pub fn run() {
             get_servers,
             set_server,
             get_tools,
-            call_tool,
             store_model_data,
             load_model_data,
             talk,

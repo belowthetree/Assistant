@@ -4,7 +4,7 @@ use log::{debug, warn};
 use std::sync::{Arc, Mutex};
 use talkcontext::{ERole, TalkContext};
 use tauri::{AppHandle, Emitter};
-use crate::{event::ASSIST_REPLY_NAME, model::{ModelData, ModelInputParam, ModelResponse, SseCallback}};
+use crate::{event::ASSIST_REPLY_NAME, mcp::MCP_CLIENT, model::{ModelData, ModelInputParam, ModelResponse, SseCallback}};
 
 #[derive(Debug, Clone)]
 pub struct Conversation {
@@ -26,6 +26,8 @@ impl Conversation {
 
     pub async fn talk(&mut self, ctx: String, app: AppHandle)->Result<ModelResponse, String> {
         debug!("对话：{}", ctx);
+        let mut client = MCP_CLIENT.lock().await;
+        let tools = client.get_all_tools().await.unwrap();
         if let Some(model) = &self.model_data {
             // 会话中存储用户输入
             self.context.add_user(ctx);
@@ -34,7 +36,7 @@ impl Conversation {
                 crate::model::EModelType::Deepseek | crate::model::EModelType::OpenAI => {
                     let app = Arc::new(Mutex::new(app));
                     let handle: SseCallback = Box::new(move |data| {
-                        debug!("流式响应：{}", data);
+                        // debug!("流式响应：{}", data);
                         if let Ok(app) = app.lock() {
                             if let Err(e) = app.emit(ASSIST_REPLY_NAME, data) {
                                 warn!("emit: {:?}", e);
@@ -45,16 +47,17 @@ impl Conversation {
                         content: None,
                         system: None,
                         temperature: None,
-                        tools: None,
+                        tools: Some(tools),
                         messages: Some(self.context.get_messages()),
                     }, Some(handle)).await;
+                    debug!("{:?}", res);
                 },
                 crate::model::EModelType::Ollama => {
                     res = crate::model::Ollama::generate(model, ModelInputParam {
                         content: None,
                         system: None,
                         temperature: None,
-                        tools: None,
+                        tools: Some(tools),
                         messages: Some(self.context.get_messages()),
                     }).await;
                 },
@@ -79,9 +82,5 @@ impl Conversation {
 
     pub fn get_model_data(&self)->Option<ModelData> {
         self.model_data.clone()
-    }
-
-    pub fn stream_callback(&mut self, ctx: String) {
-        debug!("{}", ctx);
     }
 }

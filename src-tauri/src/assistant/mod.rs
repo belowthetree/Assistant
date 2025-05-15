@@ -7,7 +7,7 @@ use log::{debug, warn};
 use tauri::AppHandle;
 use tokio::sync::Mutex;
 
-use crate::{data::{load_model_data, load_server_data, store_model_data, store_server_data, ServerData}, model::{Deepseek, EModelType, ModelData, ModelResponse, Ollama}};
+use crate::{data::{load_model_data, store_model_data, store_server_data, ServerData}, model::{Deepseek, EModelType, ModelData, ModelResponse, Ollama}};
 
 mod conversation;
 mod life;
@@ -22,6 +22,8 @@ pub struct Assistant {
 
 lazy_static! {
     pub static ref ASSISTANT: Arc<Mutex<Assistant>> = Arc::new(Mutex::new(Assistant::new()));
+    // 当次有效的 app handle
+    pub static ref APP_HANDLE: Arc<Mutex<Option<AppHandle>>> = Arc::new(Mutex::new(None));
 }
 
 pub fn init() {
@@ -33,24 +35,6 @@ pub fn init() {
         ass.refresh_model_data();
         debug!("初始化结束：{:?}", ass);
     });
-}
-
-#[tauri::command]
-pub async fn talk(ctx: String, app: AppHandle)->Result<String, String> {
-    let mut con = ASSISTANT.lock().await;
-    let res = con.talk(ctx, app).await;
-    if res.is_ok() {
-        Ok(res.unwrap().content)
-    }
-    else {
-        Err(res.unwrap_err())
-    }
-}
-
-#[tauri::command]
-pub async fn update_model() {
-    let mut ass: tokio::sync::MutexGuard<'_, Assistant> = ASSISTANT.lock().await;
-    ass.refresh_model_data();
 }
 
 impl Assistant {

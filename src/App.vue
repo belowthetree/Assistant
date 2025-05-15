@@ -18,6 +18,7 @@ import { ServerConfigInfo } from "./frontend/MCPServer";
 import { Talk } from "./life/talk/talk"
 import Conversation from "./components/Conversation.vue"
 import { listen } from '@tauri-apps/api/event';
+import { notify } from './lib/llm_action';
 
 var talk = null
 var modeSelect = "Exec"
@@ -47,7 +48,7 @@ export default {
 			conversationHeight: 0,
 			inputMaxHeight: 150,
 			modelOutputVisible: false,
-			modelReplyUnlisten: undefined,
+			modelReplyUnlisten: [],
 		}
 	},
 	methods: {
@@ -135,6 +136,11 @@ export default {
 		}).then((unli)=>{
 			this.modelReplyUnlisten = unli
 		})
+		// 监听通知调用
+		listen("SystemNotify", (ev)=>{
+			console.log(ev)
+			notify("助理", ev.payload)
+		})
 		this.updateConversationHeight()
 		this.onInput() // 触发窗口高度更新
 		const mainWindow = webviewWindow.getCurrentWebviewWindow()
@@ -182,9 +188,9 @@ export default {
 			<button class="right_bottom" @click="clickSetting">
 				<i class="iconBtn fa-solid fa-cog hover_color fa-5" id="settingIcon" :style="{ color: 'black' }"></i>
 			</button>
-			<button class="right_bottom" @click="clickKnowledge" style="right: 45px;">
+			<!-- <button class="right_bottom" @click="clickKnowledge" style="right: 45px;">
 				<i class="iconBtn fa fa-microphone hover_color fa-5 " id="voiceIcon" :style="{ color: 'black' }"></i>
-			</button>
+			</button> -->
 		</div>
 	</main>
 </template>

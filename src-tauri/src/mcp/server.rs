@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Debug};
+use std::{borrow::Cow, collections::HashMap, fmt::Debug};
 use log::debug;
 use rmcp::{model::{CallToolRequestParam, CallToolResult, JsonObject, Tool}, service::{DynService, RunningService}, transport::TokioChildProcess, RoleClient, ServiceExt};
 use serde::{Serialize, Deserialize};
@@ -47,6 +47,11 @@ impl Clone for MCPServer {
     }
 }
 
+pub trait ServerOperation {
+    async fn get_tools(&mut self)->Result<Vec<Tool>, String>;
+    async fn call_tool(&mut self, name: String, args: Option<JsonObject>) ->Result<CallToolResult, String>;
+}
+
 impl MCPServer {
     pub fn new(config: MCPServerConfig)->Self {
         Self {
@@ -58,7 +63,7 @@ impl MCPServer {
         }
     }
     pub async fn connect(&mut self)->Result<(), Box<dyn std::error::Error>> {
-        if self.connected || !self.config.enable {
+        if self.connected || !self.config.enable || self.config.internal {
             return Ok(())
         }
         let mut transport = Command::new(self.config.command.clone());
@@ -86,8 +91,10 @@ impl MCPServer {
         }
         Ok(())
     }
-
-    pub async fn get_tools(&mut self)->Result<Vec<Tool>, String> {
+}
+impl ServerOperation for MCPServer {
+    // 工具名字都拼接上了服务名：servername_toolname
+    async fn get_tools(&mut self)->Result<Vec<Tool>, String> {
         if self.tools.len() > 0 {
             return Ok(self.tools.clone());
         }
@@ -95,8 +102,10 @@ impl MCPServer {
         if self.connected {
             if let Some(service) = self.service.as_ref() {
                 let res = service.list_all_tools().await;
-                if let Ok(tools) = res {
-                    debug!("工具：{:?}", tools);
+                if let Ok(mut tools) = res {
+                    for tool in tools.iter_mut() {
+                        tool.name = Cow::Owned(self.config.name.to_string() + "_" + &tool.name)
+                    }
                     return Ok(tools);
                 }
                 return Err(res.unwrap_err().to_string());
@@ -105,7 +114,7 @@ impl MCPServer {
         Err("未连接到此服务".into())
     }
 
-    pub async fn call_tool(&mut self, name: String, args: Option<JsonObject>) ->Result<CallToolResult, String> {
+    async fn call_tool(&mut self, name: String, args: Option<JsonObject>) ->Result<CallToolResult, String> {
         let _ = self.connect().await;
         if self.connected {
             if let Some(service) = self.service.as_ref() {

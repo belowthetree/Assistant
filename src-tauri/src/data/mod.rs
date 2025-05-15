@@ -7,8 +7,8 @@ use directories::ProjectDirs;
 use crate::{model::ModelData};
 pub use mcp::*;
 
-const MODEL_FILE_NAME: &str = "modeldata.json";
-const SERVER_FILE_NAME: &str = "server.json";
+const MODEL_FILE_NAME: &str = "model.json";
+const SERVER_FILE_NAME: &str = "mcp.json";
 
 #[tauri::command]
 pub fn store_model_data(data: ModelData)->Result<(), String> {

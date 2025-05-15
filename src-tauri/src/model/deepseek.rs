@@ -1,16 +1,33 @@
+use crate::model::{ToolCall};
+
 use super::{ModelData, ModelInputParam, ModelResponse};
 use futures_util::{StreamExt};
 use log::{debug, warn};
 use reqwest::{header, Client};
-use serde_json::Value;
+use rmcp::model::{JsonObject};
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 
 // 定义回调函数类型
-pub type SseCallback = Box<dyn FnMut(String) + Send>;
+pub type SseCallback = Box<dyn FnMut(&ModelResponse) + Send>;
 
 pub trait Deepseek {
     async fn generate(&self, param: ModelInputParam, stream_callback: Option<SseCallback>) -> Result<ModelResponse, String>;
     async fn get_models(&self) -> Result<Vec<String>, String>;
     fn get_api_key(&self)->String;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeepseekFunctionItem {
+    pub r#type: String,
+    pub function: DeepseekFunctionInfo,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeepseekFunctionInfo {
+    pub name: String,
+    pub description: String,
+    pub parameters: JsonObject,
 }
 
 impl Deepseek for ModelData {
@@ -31,16 +48,36 @@ impl Deepseek for ModelData {
         }
 
         let client = reqwest::Client::new();
+        let mut tools = Vec::new();
+        if let Some(ts) = param.tools {
+            for tool in ts.iter() {
+                let mut p = (*tool.input_schema).clone();
+                p.insert("required".into(), json!([]));
+                p.insert("type".into(), "object".into());
+                let func = DeepseekFunctionItem {
+                    r#type: "function".into(),
+                    function: DeepseekFunctionInfo {
+                        name: tool.name.clone().into(),
+                        description: tool.description.clone().into(),
+                        parameters: p,
+                    },
+                };
+                tools.push(func);
+            }
+        }
+        let body = serde_json::to_string(&serde_json::json!({
+                "model": self.model_name,
+                "messages": messages,
+                "stream": self.stream,
+                "tools": tools,
+                "temperature": param.temperature.unwrap_or(self.temperature.parse().unwrap())
+            })).unwrap();
+        debug!("{}", body);
         let response = client
             .post(format!("{}/chat/completions", self.url))
             .header(header::CONTENT_TYPE, "application/json")
             .header("Authorization", self.get_api_key())
-            .body(serde_json::to_string(&serde_json::json!({
-                "model": self.model_name,
-                "messages": messages,
-                "stream": self.stream,
-                "temperature": param.temperature.unwrap_or(self.temperature.parse().unwrap())
-            })).unwrap())
+            .body(body)
             .send()
             .await
             .map_err(|e| e.to_string()
@@ -51,12 +88,18 @@ impl Deepseek for ModelData {
         let mut text = "".into();
         if succ {
             // 区分流式和非流式
-            if true {
+            if self.stream {
                 let mut stream = response.bytes_stream();
-                let mut content = String::new();
+                let mut response = ModelResponse {
+                    role: "assistant".to_string(),
+                    content: "".into(),
+                    reasoning_content: None,
+                    tool_calls: None,
+                    finish_reason: None,
+                };
                 
                 while let Some(chunk) = stream.next().await {
-                    let chunk = chunk.map_err(|e| e.to_string())?;
+                    let chunk = chunk.map_err(|e| "stream err".to_string() + e.to_string().as_str())?;
                     let chunk_str = String::from_utf8_lossy(&chunk);
                     
                     // 解析SSE格式的数据
@@ -75,9 +118,7 @@ impl Deepseek for ModelData {
                                                 break;
                                             }
                                         }
-                                        
                                         if let Some(_) = choice.get("index") {
-                                            // 处理索引信息
                                         }
                                         
                                         let mut ret: Option<Value> = None;
@@ -91,25 +132,41 @@ impl Deepseek for ModelData {
                                             warn!("未知格式 {:?}", choice);
                                         }
                                         if let Some(message) = ret {
-                                            let mut tx: String = String::new();
                                             if let Some(ctx) = message.get("content") {
                                                 if let Some(text_str) = ctx.as_str() {
-                                                    tx += text_str;
+                                                    response.content += text_str;
                                                 }
                                             }
                                             if let Some(ctx) = message.get("reasoning_content") {
                                                 if let Some(text_str) = ctx.as_str() {
-                                                    tx += text_str;
+                                                    if !response.reasoning_content.is_none() {
+                                                        response.reasoning_content = Some("".into());
+                                                    }
+                                                    response.reasoning_content = Some(response.reasoning_content.unwrap() + text_str);
                                                 }
                                             }
                                             if let Some(ctx) = message.get("tool_calls") {
-                                                if let Some(text_str) = ctx.as_str() {
-                                                    tx += text_str;
+                                                if let Some(arr) = ctx.as_array() {
+                                                    for i in 0 .. arr.len() {
+                                                        let tool: ToolCall = serde_json::from_value(arr[i].clone()).map_err(|e| e.to_string())?;
+                                                        if response.tool_calls.is_none() {
+                                                            response.tool_calls = Some(Vec::new());
+                                                        }
+                                                        let ts = response.tool_calls.as_mut().unwrap();
+                                                        if ts.len() <= i {
+                                                            ts.insert(i, tool);
+                                                            continue;
+                                                        }
+                                                        let t = ts.get_mut(i).unwrap();
+                                                        t.id += &tool.id;
+                                                        t.r#type += &tool.r#type;
+                                                        t.function.name += &tool.function.name;
+                                                        t.function.arguments += &tool.function.arguments;
+                                                    }
                                                 }
                                             }
-                                            content.push_str(&tx);
                                             if let Some(callback) = &mut stream_callback {
-                                                callback(content.clone());
+                                                callback(&response);
                                             }
                                         }
                                     }
@@ -119,13 +176,7 @@ impl Deepseek for ModelData {
                     }
                 }
                 
-                return Ok(ModelResponse {
-                    role: "assistant".to_string(),
-                    content,
-                    reasoning_content: None,
-                    tool_calls: None,
-                    finish_reason: None,
-                });
+                return Ok(response);
             }
             else {
                 text = response.text().await.unwrap();
@@ -150,7 +201,7 @@ impl Deepseek for ModelData {
                                 .and_then(Value::as_str)
                                 .map(|s| s.to_string());
                             
-                            let index = first_choice.get("index")
+                            let _ = first_choice.get("index")
                                 .and_then(Value::as_u64);
                             
                             return Ok(ModelResponse {
