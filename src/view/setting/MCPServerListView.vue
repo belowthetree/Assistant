@@ -1,130 +1,94 @@
 <template>
-    <div class="bg-gray-100 min-h-screen p-6">
-        <div class="max-w-4xl mx-auto">
-            <div class="flex justify-between items-center mb-8">
-                <h1 class="text-2xl font-bold text-gray-800">MCP 服务</h1>
-                <button @click="showModal"
-                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition">
-                    <i class="fas fa-plus mr-2"></i>添加 MCP 服务
+    <div class="dashboard-container">
+        <div class="content-container">
+            <div class="header">
+                <h1>MCP 服务</h1>
+                <button @click="showModal" class="add-button">
+                    <i class="fas fa-plus"></i>添加 MCP 服务
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid-container">
                 <!-- Service Cards -->
-                <div v-for="(service, index) in services" :key="index" class="card bg-white rounded-lg overflow-hidden">
-                    <div class="p-4">
-                        <div class="flex justify-between items-start">
+                <div v-for="(service, index) in services" :key="index" class="service-card">
+                    <div class="card-content">
+                        <div class="card-header">
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-800">{{ service.config.name }}</h3>
-                                <div class="flex items-center mt-1">
+                                <h3>{{ service.config.name }}</h3>
+                                <div class="status-container">
                                     <span class="status-badge" :class="{'status-online': service.connected, 'status-offline': !service.connected}"></span>
-                                    <span class="text-sm text-gray-600">
+                                    <span class="status-text">
                                         {{ capitalizeFirstLetter(service.connected ? "已连接" : "未连接" ) }}
                                     </span>
                                 </div>
                             </div>
-                            <div class="flex space-x-2">
-                                <button @click="editService(index)"
-                                    class="text-gray-400 hover:text-blue-500 transition">
+                            <div class="action-buttons">
+                                <button @click="editService(index)" class="edit-button">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <label class="relative inline-flex items-center cursor-pointer">
+                                <label class="toggle-switch">
                                     <input type="checkbox" v-model="service.config.enable" @change="toggleServiceStatus(index)"
-                                        class="sr-only peer">
-                                    <div
-                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500">
-                                    </div>
+                                        class="toggle-input">
+                                    <div class="toggle-slider"></div>
                                 </label>
                             </div>
                         </div>
 
-                        <div class="mt-2">
-                            <p class="text-sm text-gray-500 mb-1 text-left">Start Command</p>
-                            <div class="bg-gray-50 p-2 rounded-md " style="overflow-x: hidden;">
-                                <code class="text-sm text-gray-700 text-left text-nowrap" style="overflow-x: hidden;">{{ service.config.command }}</code>
+                        <div class="command-section">
+                            <p class="command-label">Start Command</p>
+                            <div class="command-box">
+                                <code class="command-text">{{ service.config.command }}</code>
                             </div>
                         </div>
-
-                        <!-- <div class="mt-4 flex space-x-2">
-                            <button @click="startService(index)"
-                                class="flex-1 bg-green-100 hover:bg-green-200 text-green-700 py-2 px-4 rounded-md text-sm transition">
-                                <i class="fas fa-play mr-2"></i>Start
-                            </button>
-                            <button @click="stopService(index)"
-                                class="flex-1 bg-red-100 hover:bg-red-200 text-red-700 py-2 px-4 rounded-md text-sm transition">
-                                <i class="fas fa-stop mr-2"></i>Stop
-                            </button>
-                            <button @click="restartService(index)"
-                                class="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 py-2 px-4 rounded-md text-sm transition">
-                                <i class="fas fa-sync-alt mr-2"></i>Restart
-                            </button>
-                        </div> -->
                     </div>
                 </div>
 
                 <!-- Empty Card Slot -->
-                <div @click="showModal" class="card add-card rounded-lg p-5 min-h-[200px] cursor-pointer">
-                    <div class="text-center">
-                        <i class="fas fa-plus-circle text-4xl text-gray-400 mb-2"></i>
-                        <p class="text-gray-500">添加 MCP 服务</p>
+                <div @click="showModal" class="add-card">
+                    <div class="add-card-content">
+                        <i class="fas fa-plus-circle"></i>
+                        <p>添加 MCP 服务</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Add Service Modal -->
-        <div v-if="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div class="bg-white rounded-lg p-6 w-full max-w-md">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold">
+        <div v-if="showAddModal" class="modal-overlay">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3>
                         {{ editingIndex === null ? '添加 MCP 服务' : '编辑 MCP 服务' }}
                     </h3>
-                    <button @click="closeModal" class="text-gray-500 hover:text-gray-700">
-                        <i class="fas fa-times"></i>
-                    </button>
                 </div>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1 text-left">服务名字</label>
-                        <input type="text" v-model="newService.name"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>服务名字</label>
+                        <input type="text" v-model="newService.name">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1 text-left">描述</label>
-                        <input type="text" v-model="newService.desc"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <div class="form-group">
+                        <label>描述</label>
+                        <input type="text" v-model="newService.desc">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1 text-left">命令</label>
-                        <input type="text" v-model="newService.command"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <div class="form-group">
+                        <label>命令</label>
+                        <input type="text" v-model="newService.command">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1 text-left">参数</label>
-                        <input type="text" v-model="newService.args"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <div class="form-group">
+                        <label>参数</label>
+                        <input type="text" v-model="newService.args">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1 text-left">环境变量</label>
-                        <input type="text" v-model="newService.env"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md text-wrap" placeholder="">
+                    <div class="form-group">
+                        <label>环境变量</label>
+                        <input type="text" v-model="newService.env" placeholder="">
                     </div>
-                    <!-- <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Initial Status</label>
-                        <select v-model="newService.status" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                            <option value="online">Online</option>
-                            <option value="offline">Offline</option>
-                            <option value="pending">Pending</option>
-                        </select>
-                    </div> -->
                 </div>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button @click="closeModal"
-                        class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                        Cancel
+                <div class="modal-footer">
+                    <button @click="closeModal" class="cancel-button">
+                        取消
                     </button>
-                    <button @click="confirmAdd" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-                        {{ editingIndex === null ? 'Add Service' : 'Update Service' }}
+                    <button @click="confirmAdd" class="confirm-button">
+                        {{ editingIndex === null ? '添加服务' : '更新服务' }}
                     </button>
                 </div>
             </div>
@@ -134,7 +98,6 @@
 
 <script>
 import { invoke } from '@tauri-apps/api/core';
-
 
 export default {
     name: 'ServiceDashboard',
@@ -226,14 +189,94 @@ export default {
 </script>
 
 <style scoped>
-.card {
+.dashboard-container {
+    background-color: #f3f4f6;
+    min-height: 100vh;
+    padding: 1.5rem;
+}
+
+.content-container {
+    max-width: 56rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.add-button {
+    background-color: #3b82f6;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    transition: background-color 0.3s ease;
+    display: flex;
+    align-items: center;
+}
+
+.add-button:hover {
+    background-color: #2563eb;
+}
+
+.add-button i {
+    margin-right: 0.5rem;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+@media (min-width: 640px) {
+    .grid-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.service-card {
+    background-color: white;
+    border-radius: 0.5rem;
+    overflow: hidden;
     transition: all 0.3s ease;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.card:hover {
+.service-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.card-content {
+    padding: 1rem;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.card-header h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.status-container {
+    display: flex;
+    align-items: center;
+    margin-top: 0.25rem;
 }
 
 .status-badge {
@@ -256,17 +299,213 @@ export default {
     background-color: #F59E0B;
 }
 
+.status-text {
+    font-size: 0.875rem;
+    color: #4b5563;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.edit-button {
+    color: #9ca3af;
+    transition: color 0.3s ease;
+}
+
+.edit-button:hover {
+    color: #3b82f6;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.toggle-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    width: 2.75rem;
+    height: 1.5rem;
+    background-color: #e5e7eb;
+    border-radius: 9999px;
+    position: relative;
+    transition: background-color 0.3s ease;
+}
+
+.toggle-slider:after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 1.25rem;
+    height: 1.25rem;
+    background-color: white;
+    border: 1px solid #d1d5db;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+
+.toggle-input:checked + .toggle-slider {
+    background-color: #3b82f6;
+}
+
+.toggle-input:checked + .toggle-slider:after {
+    transform: translateX(1.25rem);
+    border-color: white;
+}
+
+.command-section {
+    margin-top: 0.5rem;
+}
+
+.command-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+    text-align: left;
+}
+
+.command-box {
+    background-color: #f9fafb;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    overflow-x: hidden;
+}
+
+.command-text {
+    font-size: 0.875rem;
+    color: #374151;
+    text-align: left;
+    white-space: nowrap;
+    overflow-x: hidden;
+}
+
 .add-card {
-    border: 2px dashed #CBD5E0;
+    border: 2px dashed #cbd5e0;
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    min-height: 200px;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .add-card:hover {
-    border-color: #4299E1;
-    background-color: #EBF8FF;
+    border-color: #3b82f6;
+    background-color: #ebf8ff;
+}
+
+.add-card-content {
+    text-align: center;
+}
+
+.add-card-content i {
+    font-size: 2.25rem;
+    color: #9ca3af;
+    margin-bottom: 0.5rem;
+}
+
+.add-card-content p {
+    color: #6b7280;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-container {
+    background-color: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 28rem;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.modal-header h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.25rem;
+    text-align: left;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+}
+
+.modal-footer {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.cancel-button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    color: #374151;
+    transition: background-color 0.3s ease;
+}
+
+.cancel-button:hover {
+    background-color: #f9fafb;
+}
+
+.confirm-button {
+    padding: 0.5rem 1rem;
+    background-color: #3b82f6;
+    color: white;
+    border-radius: 0.375rem;
+    transition: background-color 0.3s ease;
+}
+
+.confirm-button:hover {
+    background-color: #2563eb;
 }
 </style>

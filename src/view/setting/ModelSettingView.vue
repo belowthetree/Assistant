@@ -1,15 +1,5 @@
 <template>
     <div class="settings-container">
-        <div class="settings-header">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path
-                    d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z">
-                </path>
-                <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-            <h1>AI 模型设置</h1>
-        </div>
 
         <div class="settings-body">
             <div class="settings-section">
@@ -26,7 +16,7 @@
                     <div class="form-group">
                         <label for="model-name">接口类型</label>
                         <select id="model-name" class="form-control form-select" v-model="modelconfig.model_type">
-                            <option v-for="item in apiTypeOptions" :value="item">{{ item }}</option>
+                            <option class="option-item" v-for="item in apiTypeOptions" :value="item">{{ item }}</option>
                         </select>
                     </div>
                 </div>
@@ -35,7 +25,7 @@
                     <div class="form-group">
                         <label for="model-name">模型名称</label>
                         <select id="model-name" class="form-control form-select" v-model="modelconfig.model_name">
-                            <option v-for="item in modelNameOptions" :value="item">{{ item }}</option>
+                            <option class="option-item" v-for="item in modelNameOptions" :value="item">{{ item }}</option>
                         </select>
                     </div>
                 </div>
@@ -75,14 +65,10 @@
 
             <div class="settings-section">
                 <div class="advanced-toggle" @click="showAdvanced = !showAdvanced">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
                     <span>高级选项</span>
                 </div>
 
-                <div class="advanced-options" v-if="showAdvanced">
+                <div class="advanced-options">
                     <div class="flex-row">
                         <div class="form-group">
                             <label for="temperature">温度 (Temperature)</label>
@@ -229,25 +215,17 @@ body {
     padding: 20px;
 }
 
+.option-item {
+    background: white;
+    background-color: white;
+    color: white;
+}
+
 .settings-container {
     width: 100%;
     background-color: var(--card-bg);
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     overflow: hidden;
-}
-
-.settings-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.settings-header h1 {
-    font-size: 20px;
-    font-weight: 600;
 }
 
 .settings-body {
@@ -293,7 +271,6 @@ body {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid var(--border);
-    border-radius: 6px;
     font-size: 14px;
     transition: border-color 0.2s;
 }
