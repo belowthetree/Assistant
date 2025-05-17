@@ -5,12 +5,12 @@ use super::rolecard::RoleCard;
 #[derive(Debug, Clone)]
 pub struct ThinkConfig {
     pub pulse_interval: u64,
-    pub role: RoleCard,
 }
 
 pub struct Think {
     pub config: ThinkConfig,
     pub life: Life,
+    pub rolecard: RoleCard,
 }
 
 impl Debug for Think {
@@ -24,14 +24,19 @@ impl Think {
         Self {
             config: ThinkConfig {
                 pulse_interval: 240,
-                role: RoleCard::new(),
+                // role: String::new(),
             },
             life: Life::new(),
+            rolecard: RoleCard::new(),
         }
     }
 
+    pub fn set_rolecard(&mut self, rolecard: RoleCard) {
+        self.rolecard = rolecard;
+    }
+
     pub fn get_think_string(&self)->String {
-        let mut ret = self.config.role.get_prompt();
+        let mut ret = self.rolecard.get_prompt();
         ret += &self.life.get_schedule().get_daily_schedules_string();
         ret += "现在你已经被唤醒";
         ret

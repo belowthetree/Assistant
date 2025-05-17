@@ -1,13 +1,12 @@
-use std::{sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 use conversation::Conversation;
 use lazy_static::lazy_static;
 use log::{debug, warn};
-use rolecard::RoleCard;
 use tauri::AppHandle;
-use think::{Think, ThinkConfig};
+use think::{Think};
 use tokio::sync::Mutex;
 
-use crate::{data::{load_model_data, store_model_data, store_server_data, ServerData}, mcp::MCP_CLIENT, model::{Deepseek, EModelType, ModelData, ModelResponse, Ollama}};
+use crate::{data::{load_model_data, load_rolecard_data, store_model_data, store_rolecard_data, store_server_data, ServerData}, mcp::MCP_CLIENT, model::{Deepseek, EModelType, ModelData, ModelResponse, Ollama}};
 
 mod conversation;
 mod life;
@@ -36,6 +35,8 @@ pub fn init() {
         let mut ass: tokio::sync::MutexGuard<'_, Assistant> = ASSISTANT.lock().await;
         debug!("加载模型");
         ass.refresh_model_data();
+        debug!("加载角色卡");
+        ass.refresh_rolecard();
         // debug!("初始化结束：{:?}", ass);
     });
 }
@@ -115,6 +116,27 @@ impl Assistant {
                 }
             },
             None => Err("未设置模型".into()),
+        }
+    }
+
+    pub fn refresh_rolecard(&mut self) {
+        let ret = load_rolecard_data();
+        if let Ok(mut data) = ret {
+            if data.cards.contains_key(ASSISTANT_NAME) {
+                self.think.set_rolecard(data.cards.get(ASSISTANT_NAME).unwrap().clone());
+                return;
+            }
+            data.cards.insert(ASSISTANT_NAME.to_string(), self.think.rolecard.clone());
+            let ret = store_rolecard_data(&data);
+            if ret.is_err() {
+                warn!("refresh_rolecard {:?}", ret);
+            }
+            return;
+        }
+        let data = RoleCardStoreData { cards: HashMap::new() };
+        let ret = store_rolecard_data(&data);
+        if ret.is_err() {
+            warn!("refresh_rolecard {:?}", ret);
         }
     }
 }

@@ -33,8 +33,8 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import("@/view/Talk/TalkView.vue")
     },
     {
-        path: '/rolecard',
-        name: 'rolecard',
+        path: '/rolecardSetting',
+        name: 'rolecardSetting',
         component: () => import("@/view/setting/RoleCardSettingView.vue")
     },
     {

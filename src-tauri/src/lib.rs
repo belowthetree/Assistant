@@ -105,6 +105,8 @@ pub fn run() {
             set_model,
             get_models,
             start_timer,
+            get_rolecard,
+            set_rolecard,
         ])
         // This is required to get tray-relative positions to work
         .setup(|app| {

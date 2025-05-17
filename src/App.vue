@@ -101,7 +101,6 @@ export default {
 				this.disableInput = true
 				invoke("talk", { ctx: this.userInput }).then(e => {
 					this.disableInput = false
-					console.log(e)
 				}).catch(e => {
 					this.disableInput = false
 					console.warn(e)
@@ -123,9 +122,8 @@ export default {
 			if (event.key == "Control")
 				this.controlDown = false
 		},
-		onModelReply(content) {
-			console.log(content)
-			this.modelOutput = content
+		onModelReply(res) {
+			this.modelOutput = res.content
 			this.updateConversationHeight()
 		}
 	},
@@ -134,12 +132,14 @@ export default {
 		listen("AssistantReplyEventName", (ev)=>{
 			this.onModelReply(ev.payload)
 		}).then((unli)=>{
-			this.modelReplyUnlisten = unli
+			this.modelReplyUnlisten.push(unli)
 		})
 		// 监听通知调用
 		listen("SystemNotify", (ev)=>{
 			console.log(ev)
 			notify("助理", ev.payload)
+		}).then((unli)=>{
+			this.modelReplyUnlisten.push(unli)
 		})
 		invoke("start_timer")
 		this.updateConversationHeight()
@@ -168,8 +168,8 @@ export default {
 		})
 	},
 	destroyed() {
-		if (this.unli) {
-			this.unli();
+		for (let unli of this.modelReplyUnlisten) {
+			unli()
 		}
 	}
 }
@@ -183,7 +183,7 @@ export default {
 			<!-- <Bubbles ref="bubbles" style="color: black;">fff</Bubbles> -->
 			<conversation v-if="modelOutputVisible" ref="conversation" :content="modelOutput"
 				class="no-drag rounded-lg com-down"></conversation>
-			<hr style="width: 80%;margin: auto; margin-bottom: 15px;margin-top: 15px;" class="com-down" />
+			<hr style="width: 80%;margin: auto; margin-bottom: 15px;" class="com-down" />
 			<textarea @input="onInput" :readonly="disableInput" @keydown="onKeyDown" @keyup="onKeyUp" id="userInput"
 				class="no-drag rounded-lg com-down" v-model="userInput" placeholder="输入你想说的话然后按下回车"></textarea>
 			<button class="right_bottom" @click="clickSetting">
@@ -292,6 +292,7 @@ i {
 	padding: 10px;
 	padding-bottom: 0;
 	margin-bottom: 40px;
+	margin-top: 0;
 	background: transparent;
 	font-size: 21px;
 	min-height: 100px;

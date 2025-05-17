@@ -1,11 +1,13 @@
 <script lang="ts">
 import ModelSettingView from "~/src/view/setting/ModelSettingView.vue";
 import MCPServerListView from "./MCPServerListView.vue";
+import RoleCardSettingView from "./RoleCardSettingView.vue";
 
 export default {
     components: {
         'modelsetting': ModelSettingView,
-        'serversetting': MCPServerListView
+        'serversetting': MCPServerListView,
+        'rolecardsetting': RoleCardSettingView,
     },
     setup() {
     },
@@ -35,25 +37,34 @@ export default {
                 <span class="tab-text">模型</span>
             </button>
             <button 
+                @click="onClickTab('servertab')" 
+                :class="['tab-btn', { 'active': activeTab === 'servertab' }]">
+                <i class="fa-solid fa-server" style="font-size: 20px;"></i>
+                <span class="tab-text">服务</span>
+            </button>
+            <button 
                 @click="onClickTab('rolecardtab')" 
                 :class="['tab-btn', { 'active': activeTab === 'rolecardtab' }]">
                 <i class="fa-solid fa-server" style="font-size: 20px;"></i>
-                <span class="tab-text">服务</span>
+                <span class="tab-text">角色</span>
             </button>
         </div>
 
         <!-- Right Content Area -->
         <div class="content-area">
-            <!-- Tab 1 Content -->
             <div v-show="activeTab === 'modeltab'" class="tab-content" :class="{ 'active': activeTab === 'modeltab' }">
                 <h2 class="content-title">模型</h2>
                 <modelsetting></modelsetting>
             </div>
 
-            <!-- Tab 2 Content -->
-            <div v-show="activeTab === 'rolecardtab'" class="tab-content" :class="{ 'active': activeTab === 'rolecardtab' }">
+            <div v-show="activeTab === 'servertab'" class="tab-content" :class="{ 'active': activeTab === 'servertab' }">
                 <h2 class="content-title">MCP 服务</h2>
                 <serversetting></serversetting>
+            </div>
+
+            <div v-show="activeTab === 'rolecardtab'" class="tab-content" :class="{ 'active': activeTab === 'rolecardtab' }">
+                <h2 class="content-title">角色</h2>
+                <rolecardsetting></rolecardsetting>
             </div>
         </div>
     </div>

@@ -1,10 +1,10 @@
-use std::time::Duration;
+use std::{collections::HashMap, time::Duration};
 
 use rmcp::model::{Tool};
 use tauri::{AppHandle};
 use tokio::time::Instant;
 
-use crate::{assistant::{Assistant, APP_HANDLE, ASSISTANT}, mcp::{MCPServerConfig, ServerDisplayInfo, MCP_CLIENT}, model::ModelData};
+use crate::{assistant::{Assistant, RoleCard, RoleCardStoreData, APP_HANDLE, ASSISTANT, ASSISTANT_NAME}, data::{load_rolecard_data, store_rolecard_data}, mcp::{MCPServerConfig, ServerDisplayInfo, MCP_CLIENT}, model::ModelData};
 
 
 #[tauri::command]
@@ -89,4 +89,32 @@ pub async fn start_timer(app: AppHandle) {
             }
         }
     }).await.unwrap();
+}
+
+#[tauri::command]
+pub async fn get_rolecard()->Vec<RoleCard> {
+    let mut ret = Vec::new();
+    if let Ok(data) = load_rolecard_data() {
+        for (_, card) in data.cards {
+            ret.push(card);
+        }
+    }
+    ret
+}
+
+#[tauri::command]
+pub async fn set_rolecard(card: RoleCard) {
+    if card.name == ASSISTANT_NAME {
+        let mut ass = ASSISTANT.lock().await;
+        ass.think.set_rolecard(card.clone());
+    }
+    if let Ok(mut data) = load_rolecard_data() {
+        data.cards.insert(card.name.clone(), card);
+        store_rolecard_data(&data).unwrap();
+    }
+    else {
+        let mut data = RoleCardStoreData {cards: HashMap::new()};
+        data.cards.insert(card.name.clone(), card);
+        store_rolecard_data(&data).unwrap();
+    }
 }
