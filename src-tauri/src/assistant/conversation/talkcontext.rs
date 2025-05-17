@@ -20,12 +20,8 @@ impl ERole {
     }
 }
 
-pub struct ToolFunction {
-    name: String,
-    arguments: String
-}
-
 #[derive(Debug, Clone)]
+#[allow(unused)]
 pub struct TalkContent {
     pub role: ERole,
     pub content: String,

@@ -80,6 +80,38 @@ impl Conversation {
         Err("未设置模型数据".into())
     }
 
+    pub async fn system(&mut self, ctx: String)->Result<ModelResponse, String> {
+        debug!("系统：{}", ctx);
+        let mut client = MCP_CLIENT.lock().await;
+        let tools = client.get_all_tools().await.unwrap();
+        if let Some(model) = &self.model_data {
+            let res;
+            match model.model_type {
+                crate::model::EModelType::Deepseek | crate::model::EModelType::OpenAI => {
+                    res = crate::model::Deepseek::generate(model, ModelInputParam {
+                        content: None,
+                        system: Some(ctx),
+                        temperature: None,
+                        tools: Some(tools),
+                        messages: None,
+                    }, None).await;
+                    debug!("{:?}", res);
+                },
+                crate::model::EModelType::Ollama => {
+                    res = crate::model::Ollama::generate(model, ModelInputParam {
+                        content: None,
+                        system: None,
+                        temperature: None,
+                        tools: Some(tools),
+                        messages: Some(self.context.get_messages()),
+                    }).await;
+                },
+            }
+            return res;
+        }
+        Err("未设置模型数据".into())
+    }
+
     pub fn get_model_data(&self)->Option<ModelData> {
         self.model_data.clone()
     }

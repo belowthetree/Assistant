@@ -33,7 +33,7 @@ pub struct DeepseekFunctionInfo {
 impl Deepseek for ModelData {
     // stream_callback 用于流式回调,可选
     async fn generate(&self, param: ModelInputParam, mut stream_callback: Option<SseCallback>) -> Result<ModelResponse, String> {
-        debug!("{:?}", param);
+        // debug!("{:?}", param);
         let mut messages = param.messages.unwrap_or_default();
 
         if messages.is_empty() {

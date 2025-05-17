@@ -104,6 +104,7 @@ pub fn run() {
             update_model,
             set_model,
             get_models,
+            start_timer,
         ])
         // This is required to get tray-relative positions to work
         .setup(|app| {

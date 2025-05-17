@@ -1,22 +1,25 @@
 use std::{sync::Arc};
-
 use conversation::Conversation;
-use life::Life;
 use lazy_static::lazy_static;
 use log::{debug, warn};
+use rolecard::RoleCard;
 use tauri::AppHandle;
+use think::{Think, ThinkConfig};
 use tokio::sync::Mutex;
 
-use crate::{data::{load_model_data, store_model_data, store_server_data, ServerData}, model::{Deepseek, EModelType, ModelData, ModelResponse, Ollama}};
+use crate::{data::{load_model_data, store_model_data, store_server_data, ServerData}, mcp::MCP_CLIENT, model::{Deepseek, EModelType, ModelData, ModelResponse, Ollama}};
 
 mod conversation;
 mod life;
 mod think;
+pub mod rolecard;
 
-#[derive(Debug, Clone)]
+pub use rolecard::*;
+
+#[derive(Debug)]
 pub struct Assistant {
     conversation: Conversation,
-    pub life: Life,
+    pub think: Think,
     pub server_data: ServerData,
 }
 
@@ -33,7 +36,7 @@ pub fn init() {
         let mut ass: tokio::sync::MutexGuard<'_, Assistant> = ASSISTANT.lock().await;
         debug!("加载模型");
         ass.refresh_model_data();
-        debug!("初始化结束：{:?}", ass);
+        // debug!("初始化结束：{:?}", ass);
     });
 }
 
@@ -41,13 +44,30 @@ impl Assistant {
     pub fn new()->Self {
         Self {
             conversation: Conversation::new(),
-            life: Life::new(),
+            think: Think::new(),
             server_data: ServerData::new(),
         }
     }
 
     pub async fn talk(&mut self, ctx: String, app: AppHandle)->Result<ModelResponse, String> {
         self.conversation.talk(ctx, app).await
+    }
+
+    pub async fn think_pulse(&mut self) {
+        let res = self.conversation.system(self.think.get_think_string()).await;
+        if res.is_err() {
+            warn!("想法报错：{:?}", res);
+            return;
+        }
+        let response = res.unwrap();
+        debug!("想法 {:?} {}", response.reasoning_content, response.content);
+        if let Some(tools) = response.tool_calls {
+            for tool in tools.iter() {
+                let mut client = MCP_CLIENT.lock().await;
+                let ret= client.call_tool(tool.clone()).await;
+                debug!("想法调用工具 {:?}", ret);
+            }
+        }
     }
 
     pub fn store_server_data(&self) {

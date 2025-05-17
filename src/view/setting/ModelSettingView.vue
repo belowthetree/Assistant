@@ -16,7 +16,7 @@
                     <div class="form-group">
                         <label for="model-name">接口类型</label>
                         <select id="model-name" class="form-control form-select" v-model="modelconfig.model_type">
-                            <option class="option-item" v-for="item in apiTypeOptions" :value="item">{{ item }}</option>
+                            <option v-bind:key="item" class="option-item" v-for="item in apiTypeOptions" :value="item">{{ item }}</option>
                         </select>
                     </div>
                 </div>
@@ -25,7 +25,7 @@
                     <div class="form-group">
                         <label for="model-name">模型名称</label>
                         <select id="model-name" class="form-control form-select" v-model="modelconfig.model_name">
-                            <option class="option-item" v-for="item in modelNameOptions" :value="item">{{ item }}</option>
+                            <option v-bind:key="item" class="option-item" v-for="item in modelNameOptions" :value="item">{{ item }}</option>
                         </select>
                     </div>
                 </div>
@@ -203,6 +203,9 @@ export default {
     padding: 0;
     box-sizing: border-box;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* 隐藏滚动条箭头 - Windows */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: transparent transparent; /* Firefox */
 }
 
 body {
@@ -230,6 +233,7 @@ body {
 
 .settings-body {
     padding: 24px;
+    width: 100%;
 }
 
 .settings-section {

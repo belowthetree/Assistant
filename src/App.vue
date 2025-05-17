@@ -141,6 +141,7 @@ export default {
 			console.log(ev)
 			notify("助理", ev.payload)
 		})
+		invoke("start_timer")
 		this.updateConversationHeight()
 		this.onInput() // 触发窗口高度更新
 		const mainWindow = webviewWindow.getCurrentWebviewWindow()
@@ -181,10 +182,10 @@ export default {
 		<div class="row macos-background rounded-lg flex flex-col justify-end">
 			<!-- <Bubbles ref="bubbles" style="color: black;">fff</Bubbles> -->
 			<conversation v-if="modelOutputVisible" ref="conversation" :content="modelOutput"
-				class="no-drag rounded-lg"></conversation>
-			<hr style="width: 80%;margin: auto; margin-bottom: 15px;margin-top: 15px;" />
+				class="no-drag rounded-lg com-down"></conversation>
+			<hr style="width: 80%;margin: auto; margin-bottom: 15px;margin-top: 15px;" class="com-down" />
 			<textarea @input="onInput" :readonly="disableInput" @keydown="onKeyDown" @keyup="onKeyUp" id="userInput"
-				class="no-drag rounded-lg " v-model="userInput" placeholder="输入你想说的话然后按下回车"></textarea>
+				class="no-drag rounded-lg com-down" v-model="userInput" placeholder="输入你想说的话然后按下回车"></textarea>
 			<button class="right_bottom" @click="clickSetting">
 				<i class="iconBtn fa-solid fa-cog hover_color fa-5" id="settingIcon" :style="{ color: 'black' }"></i>
 			</button>

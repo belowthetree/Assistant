@@ -14,30 +14,31 @@
                     <div class="card-content">
                         <div class="card-header">
                             <div>
-                                <h3>{{ service.config.name }}</h3>
+                                <h3>{{ service.name }}</h3>
                                 <div class="status-container">
-                                    <span class="status-badge" :class="{'status-online': service.connected, 'status-offline': !service.connected}"></span>
+                                    <span class="status-badge"
+                                        :class="{ 'status-online': service.connected, 'status-offline': !service.connected }"></span>
                                     <span class="status-text">
-                                        {{ capitalizeFirstLetter(service.connected ? "已连接" : "未连接" ) }}
+                                        {{ capitalizeFirstLetter(service.connected ? "已连接" : "未连接") }}
                                     </span>
                                 </div>
                             </div>
                             <div class="action-buttons">
                                 <button @click="editService(index)" class="edit-button">
-                                    <i class="fas fa-edit"></i>
+                                    <i class="fas fa-edit" style="font-size: 20px;"></i>
                                 </button>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" v-model="service.config.enable" @change="toggleServiceStatus(index)"
-                                        class="toggle-input">
-                                    <div class="toggle-slider"></div>
+                                <label class="switch-indicate-label" style="--width:80;--height:40">
+                                    <input type="checkbox" v-model="service.enable" @change="toggleServiceStatus(index)">
+                                    <span></span>
+                                    <i class="indicator"></i>
                                 </label>
                             </div>
                         </div>
 
                         <div class="command-section">
-                            <p class="command-label">Start Command</p>
+                            <p class="command-label">启动命令:</p>
                             <div class="command-box">
-                                <code class="command-text">{{ service.config.command }}</code>
+                                <code class="command-text">{{ service.command }}</code>
                             </div>
                         </div>
                     </div>
@@ -110,7 +111,7 @@ export default {
                 desc: '',
                 command: '',
                 args: '',
-                env:'',
+                env: '',
                 active: true
             },
             services: []
@@ -138,7 +139,7 @@ export default {
                 // Update existing service
                 this.services[this.editingIndex] = { ...this.newService };
             } else {
-                invoke("set_server", {server: this.newService}).then(res=>{
+                invoke("set_server", { server: this.newService }).then(res => {
                     console.log("res ", res)
                     this.refreshServices()
                 })
@@ -148,7 +149,7 @@ export default {
         },
         editService(index) {
             this.editingIndex = index;
-            this.newService = { ...this.services[index].config };
+            this.newService = { ...this.services[index] };
             this.showAddModal = true;
         },
         toggleServiceStatus(index) {
@@ -176,7 +177,7 @@ export default {
             return string.charAt(0).toUpperCase() + string.slice(1);
         },
         refreshServices() {
-            invoke("get_servers").then(res=>{
+            invoke("get_servers").then(res => {
                 console.log("get ", res)
                 this.services = res
             })
@@ -312,55 +313,53 @@ export default {
 .edit-button {
     color: #9ca3af;
     transition: color 0.3s ease;
+    background: transparent;
+    outline: none;
+    border: none;
 }
 
 .edit-button:hover {
     color: #3b82f6;
-}
-
-.toggle-switch {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
     cursor: pointer;
 }
 
-.toggle-input {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.toggle-slider {
-    width: 2.75rem;
-    height: 1.5rem;
-    background-color: #e5e7eb;
-    border-radius: 9999px;
+.switch-indicate-label {
+    margin: 5px 0;
     position: relative;
-    transition: background-color 0.3s ease;
+    cursor: pointer;
 }
 
-.toggle-slider:after {
-    content: '';
+.switch-indicate-label input {
+    display: none;
+}
+
+.switch-indicate-label span {
+    position: relative;
+    display: block;
+    width: calc(var(--width)*0.7px);
+    height: calc(var(--height)*0.7px);
+    border-radius: calc(var(--height)*1px);
+    background: #656565;
+}
+
+.switch-indicate-label input:checked + span {
+    background: #4CAF50;
+}
+
+.switch-indicate-label .indicator{
     position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 1.25rem;
-    height: 1.25rem;
-    background-color: white;
-    border: 1px solid #d1d5db;
+    left: 0;
+    top: 0;
+    width: calc(var(--height)*0.7px); 
+    height: calc(var(--height)*0.7px);
     border-radius: 50%;
-    transition: transform 0.3s ease;
+    background: linear-gradient(to bottom, #ffffff,#ffffff);
+    transition: .5s;
+    transform: scale(.9);
 }
 
-.toggle-input:checked + .toggle-slider {
-    background-color: #3b82f6;
-}
-
-.toggle-input:checked + .toggle-slider:after {
-    transform: translateX(1.25rem);
-    border-color: white;
+.switch-indicate-label input:checked ~ .indicator{
+    left: calc((var(--width) - var(--height))*0.7px);
 }
 
 .command-section {

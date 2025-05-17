@@ -31,13 +31,13 @@ export default {
             <button 
                 @click="onClickTab('modeltab')" 
                 :class="['tab-btn', { 'active': activeTab === 'modeltab' }]">
-                <i class="fa-solid fa-globe"></i>
+                <i class="fa-solid fa-globe" style="font-size: 20px;"></i>
                 <span class="tab-text">模型</span>
             </button>
             <button 
                 @click="onClickTab('rolecardtab')" 
                 :class="['tab-btn', { 'active': activeTab === 'rolecardtab' }]">
-                <i class="fa-solid fa-server"></i>
+                <i class="fa-solid fa-server" style="font-size: 20px;"></i>
                 <span class="tab-text">服务</span>
             </button>
         </div>
@@ -60,11 +60,17 @@ export default {
 </template>
 
 <style scoped>
+* {
+    
+    /* 隐藏滚动条箭头 - Windows */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: transparent transparent; /* Firefox */
+}
+
 .settings-container {
     background-color: white;
     overflow: hidden;
     width: 100%;
-    max-width: 56rem; /* 4xl = 56rem */
     margin: 0;
     height: 100%;
     display: flex;
@@ -90,6 +96,7 @@ export default {
     cursor: pointer;
     border: none;
     background: none;
+    width: 100%;
 }
 
 .tab-btn:hover {
@@ -103,12 +110,13 @@ export default {
 }
 
 .tab-text {
-    display: none;
+    display: inline;
+    font-size: 19px;
 }
 
 .content-area {
-    flex: 1;
     padding: 1.5rem;
+    width: 100%;
 }
 
 .content-title {
@@ -155,10 +163,6 @@ export default {
     .tab-btn {
         border-right: none;
         border-bottom: 1px solid #e5e7eb;
-    }
-    
-    .tab-text {
-        display: inline;
     }
 }
 

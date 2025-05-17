@@ -1,7 +1,10 @@
-use rmcp::model::{Tool};
-use tauri::{AppHandle, Emitter};
+use std::time::Duration;
 
-use crate::{assistant::{Assistant, APP_HANDLE, ASSISTANT}, event::SYSTEM_NOTIFY, mcp::{MCPServer, MCPServerConfig, MCP_CLIENT}, model::ModelData};
+use rmcp::model::{Tool};
+use tauri::{AppHandle};
+use tokio::time::Instant;
+
+use crate::{assistant::{Assistant, APP_HANDLE, ASSISTANT}, mcp::{MCPServerConfig, ServerDisplayInfo, MCP_CLIENT}, model::ModelData};
 
 
 #[tauri::command]
@@ -25,9 +28,9 @@ pub async fn set_server(server: MCPServerConfig)->Result<(), ()> {
 }
 
 #[tauri::command]
-pub async fn get_servers()->Vec<MCPServer> {
+pub async fn get_servers()->Vec<ServerDisplayInfo> {
     let client = MCP_CLIENT.lock().await;
-    client.get_servers()
+    client.get_servers_display()
 }
 
 #[tauri::command]
@@ -63,4 +66,27 @@ pub async fn talk(ctx: String, app: AppHandle)->Result<String, String> {
 pub async fn update_model() {
     let mut ass: tokio::sync::MutexGuard<'_, Assistant> = ASSISTANT.lock().await;
     ass.refresh_model_data();
+}
+
+#[tauri::command]
+pub async fn start_timer(app: AppHandle) {
+    {
+        let mut a = APP_HANDLE.lock().await;
+        *a = Some(app.clone());
+    }
+    tokio::spawn(async move {
+        let interval;
+        {
+            let ass: tokio::sync::MutexGuard<'_, Assistant> = ASSISTANT.lock().await;
+            interval = Duration::from_secs(ass.think.config.pulse_interval);
+        }
+        let mut it = tokio::time::interval_at(Instant::now() + Duration::from_secs(5), interval);
+        loop {
+            it.tick().await;
+            {
+                let mut ass: tokio::sync::MutexGuard<'_, Assistant> = ASSISTANT.lock().await;
+                ass.think_pulse().await;
+            }
+        }
+    }).await.unwrap();
 }

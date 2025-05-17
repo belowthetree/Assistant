@@ -14,7 +14,7 @@ An intelligent assistant system based on prompt engineering and API interfaces, 
     - Data Management MCP - Efficiently organizes and processes information (working)
 
 - Smart Scheduling
-    - Automated timed thinking and reminder functions (working)
+    - Automated timed thinking and reminder functions (✅)
 - Personalized Services
     - Life Planning - Intelligent daily task management (working)
     - Information Integration - One-stop data management (working)

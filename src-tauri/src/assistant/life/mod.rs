@@ -4,7 +4,7 @@ mod schedule;
 
 #[derive(Debug, Clone)]
 pub struct Life {
-    pub sche: schedule::Schedule,
+    sche: schedule::Schedule,
 }
 
 impl Life {
@@ -12,5 +12,9 @@ impl Life {
         Self {
             sche: Schedule::new()
         }
+    }
+
+    pub fn get_schedule(&self)->Schedule {
+        self.sche.clone()
     }
 }

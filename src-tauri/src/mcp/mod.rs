@@ -1,6 +1,7 @@
 mod client;
 mod server;
 mod internal_server;
+mod server_operation;
 
 use std::{collections::HashMap, sync::Arc};
 
@@ -13,6 +14,7 @@ pub use server::*;
 use tauri::Emitter;
 use tokio::sync::Mutex;
 use lazy_static::lazy_static;
+pub use server_operation::*;
 
 use crate::{assistant::APP_HANDLE, event::SYSTEM_NOTIFY};
 
@@ -27,7 +29,7 @@ pub fn init() {
         let mut client = MCP_CLIENT.lock().await;
         debug!("加载 mcp 配置");
         client.refresh_mcp_config().await;
-        client.set_internal_servers(get_internal_servers());
+        client.set_internal_servers(get_internal_servers()).await;
         let tools = client.get_all_tools().await.unwrap();
         for tool in tools {
             debug!("tool: {}: {}", tool.name, tool.description);
@@ -43,6 +45,7 @@ pub fn get_internal_servers()->HashMap<String, InternalMCPServer> {
         name: "systemutil".into(),
         desc: "use system api to help user".into(),
         tools: HashMap::new(),
+        enable: true,
     };
     server.set_tool(InternalFunction {
         name: "notify".into(),
