@@ -1,32 +1,30 @@
 mod mcp;
 
-use std::{fs};
+use crate::{assistant::RoleCardStoreData, model::ModelData};
+use directories::ProjectDirs;
 use log::debug;
+pub use mcp::*;
 use serde::{Deserialize, Serialize};
 use serde_json;
-use directories::ProjectDirs;
-use crate::{assistant::{RoleCardStoreData}, model::ModelData};
-pub use mcp::*;
+use std::fs;
 
 const MODEL_FILE_NAME: &str = "model.json";
 const SERVER_FILE_NAME: &str = "mcp.json";
 const ROLECARD_FILE_NAME: &str = "rolecard.json";
 
 #[tauri::command]
-pub fn store_model_data(data: ModelData)->Result<(), String> {
-    let project_dirs = ProjectDirs::from("", "", "assistant")
-        .ok_or_else(|| "无法获取项目目录")?;
+pub fn store_model_data(data: ModelData) -> Result<(), String> {
+    let project_dirs = ProjectDirs::from("", "", "assistant").ok_or_else(|| "无法获取项目目录")?;
 
     let config_dir = project_dirs.config_dir();
     let res = fs::create_dir_all(config_dir);
     if res.is_err() {
         return Err(res.unwrap_err().to_string());
     }
-    
+
     let file_path = config_dir.join(MODEL_FILE_NAME);
-    let json = serde_json::to_string_pretty(&data)
-        .map_err(|e| e.to_string())?;
-    
+    let json = serde_json::to_string_pretty(&data).map_err(|e| e.to_string())?;
+
     let res = fs::write(file_path, json);
     if res.is_err() {
         return Err(res.unwrap_err().to_string());
@@ -35,9 +33,8 @@ pub fn store_model_data(data: ModelData)->Result<(), String> {
 }
 
 #[tauri::command]
-pub fn load_model_data()->Result<ModelData, ()> {
-    let project_dirs = ProjectDirs::from("", "", "assistant")
-        .ok_or_else(|| ())?;
+pub fn load_model_data() -> Result<ModelData, ()> {
+    let project_dirs = ProjectDirs::from("", "", "assistant").ok_or_else(|| ())?;
 
     let config_dir = project_dirs.config_dir();
     let path = config_dir.join(MODEL_FILE_NAME);
@@ -50,34 +47,32 @@ pub fn load_model_data()->Result<ModelData, ()> {
             let data: ModelData = t.unwrap();
             Ok(data)
         }
-        Err(_) => Err(())
+        Err(_) => Err(()),
     }
 }
 
 #[tauri::command]
-pub fn load_server_data()->Result<ServerData, String> {
-    let project_dirs = ProjectDirs::from("", "", "assistant")
-        .ok_or_else(|| "无法获取项目目录".to_string())?;
+pub fn load_server_data() -> Result<ServerData, String> {
+    let project_dirs =
+        ProjectDirs::from("", "", "assistant").ok_or_else(|| "无法获取项目目录".to_string())?;
 
     let config_dir = project_dirs.config_dir();
     let path = config_dir.join(SERVER_FILE_NAME);
     match fs::read_to_string(path) {
         Ok(content) => {
-            let data: ServerData = serde_json::from_str(&content)
-                .map_err(|e| e.to_string())?;
+            let data: ServerData = serde_json::from_str(&content).map_err(|e| e.to_string())?;
             Ok(data)
         }
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             Err("Server config file not found".to_string())
         }
-        Err(e) => Err(e.to_string())
+        Err(e) => Err(e.to_string()),
     }
 }
 
 #[tauri::command]
 pub fn store_server_data(data: &ServerData) -> Result<(), String> {
-    let project_dirs = ProjectDirs::from("", "", "assistant")
-        .ok_or_else(|| "无法获取项目目录")?;
+    let project_dirs = ProjectDirs::from("", "", "assistant").ok_or_else(|| "无法获取项目目录")?;
 
     let config_dir = project_dirs.config_dir();
     let res = fs::create_dir_all(config_dir);
@@ -85,10 +80,20 @@ pub fn store_server_data(data: &ServerData) -> Result<(), String> {
         return Err(res.unwrap_err().to_string());
     }
 
+    // 内置的去掉
+    let mut tmp = data.clone();
+    let mut key_to_remove = Vec::new();
+    for (name, server) in tmp.servers.iter() {
+        if server.internal {
+            key_to_remove.push(name.clone());
+        }
+    }
+    for name in key_to_remove.iter() {
+        tmp.servers.remove(name);
+    }
     let file_path = config_dir.join(SERVER_FILE_NAME);
-    let json = serde_json::to_string_pretty(&data)
-        .map_err(|e| e.to_string())?;
-    
+    let json = serde_json::to_string_pretty(&tmp).map_err(|e| e.to_string())?;
+
     let res = fs::write(file_path, json);
     if res.is_err() {
         return Err(res.unwrap_err().to_string());
@@ -96,9 +101,8 @@ pub fn store_server_data(data: &ServerData) -> Result<(), String> {
     Ok(())
 }
 
-pub fn store_rolecard_data(data: &RoleCardStoreData)->Result<(), String> {
-    let project_dirs = ProjectDirs::from("", "", "assistant")
-        .ok_or_else(|| "无法获取项目目录")?;
+pub fn store_rolecard_data(data: &RoleCardStoreData) -> Result<(), String> {
+    let project_dirs = ProjectDirs::from("", "", "assistant").ok_or_else(|| "无法获取项目目录")?;
 
     let config_dir = project_dirs.config_dir();
     let res = fs::create_dir_all(config_dir);
@@ -107,9 +111,8 @@ pub fn store_rolecard_data(data: &RoleCardStoreData)->Result<(), String> {
     }
 
     let file_path = config_dir.join(ROLECARD_FILE_NAME);
-    let json = serde_json::to_string_pretty(&data)
-        .map_err(|e| e.to_string())?;
-    
+    let json = serde_json::to_string_pretty(&data).map_err(|e| e.to_string())?;
+
     let res = fs::write(file_path, json);
     if res.is_err() {
         return Err(res.unwrap_err().to_string());
@@ -117,47 +120,45 @@ pub fn store_rolecard_data(data: &RoleCardStoreData)->Result<(), String> {
     Ok(())
 }
 
-pub fn load_rolecard_data()->Result<RoleCardStoreData, String> {
-    let project_dirs = ProjectDirs::from("", "", "assistant")
-        .ok_or_else(|| "无法获取项目目录".to_string())?;
+pub fn load_rolecard_data() -> Result<RoleCardStoreData, String> {
+    let project_dirs =
+        ProjectDirs::from("", "", "assistant").ok_or_else(|| "无法获取项目目录".to_string())?;
 
     let config_dir = project_dirs.config_dir();
     let path = config_dir.join(ROLECARD_FILE_NAME);
     match fs::read_to_string(path) {
         Ok(content) => {
-            let data: RoleCardStoreData = serde_json::from_str(&content)
-                .map_err(|e| e.to_string())?;
+            let data: RoleCardStoreData =
+                serde_json::from_str(&content).map_err(|e| e.to_string())?;
             Ok(data)
         }
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             Err("Server config file not found".to_string())
         }
-        Err(e) => Err(e.to_string())
+        Err(e) => Err(e.to_string()),
     }
 }
 
-pub fn load_data<T: for<'a> Deserialize<'a>>()->Result<T, String> {
-    let project_dirs = ProjectDirs::from("", "", "assistant")
-        .ok_or_else(|| "无法获取项目目录".to_string())?;
+pub fn load_data<T: for<'a> Deserialize<'a>>() -> Result<T, String> {
+    let project_dirs =
+        ProjectDirs::from("", "", "assistant").ok_or_else(|| "无法获取项目目录".to_string())?;
 
     let config_dir = project_dirs.config_dir();
     let path = config_dir.join(ROLECARD_FILE_NAME);
     match fs::read_to_string(path) {
         Ok(content) => {
-            let data: T = serde_json::from_str(&content)
-                .map_err(|e| e.to_string())?;
+            let data: T = serde_json::from_str(&content).map_err(|e| e.to_string())?;
             Ok(data)
         }
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             Err("Server config file not found".to_string())
         }
-        Err(e) => Err(e.to_string())
+        Err(e) => Err(e.to_string()),
     }
 }
 
-pub fn store_data<T: Serialize>(data: T)->Result<(), String> {
-    let project_dirs = ProjectDirs::from("", "", "assistant")
-        .ok_or_else(|| "无法获取项目目录")?;
+pub fn store_data<T: Serialize>(data: T) -> Result<(), String> {
+    let project_dirs = ProjectDirs::from("", "", "assistant").ok_or_else(|| "无法获取项目目录")?;
 
     let config_dir = project_dirs.config_dir();
     let res = fs::create_dir_all(config_dir);
@@ -166,9 +167,8 @@ pub fn store_data<T: Serialize>(data: T)->Result<(), String> {
     }
 
     let file_path = config_dir.join(ROLECARD_FILE_NAME);
-    let json = serde_json::to_string_pretty(&data)
-        .map_err(|e| e.to_string())?;
-    
+    let json = serde_json::to_string_pretty(&data).map_err(|e| e.to_string())?;
+
     let res = fs::write(file_path, json);
     if res.is_err() {
         return Err(res.unwrap_err().to_string());

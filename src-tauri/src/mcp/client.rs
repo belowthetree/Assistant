@@ -1,11 +1,18 @@
 use std::collections::HashMap;
 
 use log::{debug, warn};
-use rmcp::{model::{CallToolResult, Tool}};
+use rmcp::model::{CallToolResult, Tool};
 
-use crate::{data::{load_server_data, store_server_data, ServerData}, mcp::server_operation::ServerOperation, model::ToolCall};
+use crate::{
+    data::{load_server_data, store_server_data, ServerData},
+    mcp::server_operation::ServerOperation,
+    model::ToolCall,
+};
 
-use super::{internal_server::InternalMCPServer, server_operation::MCPServerConfig, MCPServer, ServerDisplayInfo};
+use super::{
+    internal_server::InternalMCPServer, server_operation::MCPServerConfig, MCPServer,
+    ServerDisplayInfo,
+};
 
 pub struct MCPClient {
     servers: HashMap<String, Box<dyn ServerOperation + Send>>,
@@ -14,7 +21,7 @@ pub struct MCPClient {
 }
 
 impl MCPClient {
-    pub fn new() ->Self {
+    pub fn new() -> Self {
         Self {
             servers: HashMap::new(),
             // max_server_num: 10,
@@ -30,15 +37,22 @@ impl MCPClient {
         }
     }
 
-    pub async fn set_internal_servers(&mut self, internal_server: HashMap<String, InternalMCPServer>) {
+    pub async fn set_internal_servers(
+        &mut self,
+        internal_server: HashMap<String, InternalMCPServer>,
+    ) {
         for (name, server) in internal_server {
             if self.servers.contains_key(&name) {
-                self.servers.get_mut(&name).unwrap().update_config(server.get_config()).await
-            }
-            else {
+                self.servers
+                    .get_mut(&name)
+                    .unwrap()
+                    .update_config(server.get_config())
+                    .await
+            } else {
                 self.servers.insert(name, Box::new(server));
             }
         }
+        self.store_mcp_config();
     }
 
     pub fn store_mcp_config(&self) {
@@ -57,22 +71,28 @@ impl MCPClient {
         debug!("添加服务 {:?}", config);
         if !self.servers.contains_key(&config.name) {
             let mut server = MCPServer::new(config.clone());
-        // if self.connted_server_num < self.max_server_num {
+            // if self.connted_server_num < self.max_server_num {
             //     let _ = server.connect();
             // }
             let res = server.connect().await;
             if res.is_err() {
                 warn!("{:?}", res);
             }
-            self.servers.insert(server.config.name.clone(), Box::new(server));
-        }
-        else {
-            let res = self.servers.get_mut(&config.name).unwrap().disconnect().await;
+            self.servers
+                .insert(server.config.name.clone(), Box::new(server));
+        } else {
+            let res = self
+                .servers
+                .get_mut(&config.name)
+                .unwrap()
+                .disconnect()
+                .await;
             if res.is_err() {
                 warn!("{:?}", res);
             }
             let server = MCPServer::new(config.clone());
-            self.servers.insert(server.config.name.clone(), Box::new(server));
+            self.servers
+                .insert(server.config.name.clone(), Box::new(server));
         }
         self.store_mcp_config();
     }
@@ -93,7 +113,7 @@ impl MCPClient {
     //     return servers;
     // }
 
-    pub fn get_servers_display(&self)->Vec<ServerDisplayInfo> {
+    pub fn get_servers_display(&self) -> Vec<ServerDisplayInfo> {
         let mut servers: Vec<ServerDisplayInfo> = Vec::new();
         for (_, ser) in self.servers.iter() {
             servers.push(ser.get_display_info());
@@ -102,7 +122,7 @@ impl MCPClient {
         return servers;
     }
 
-    fn get_server(&mut self, name: String)->Result<&mut Box<dyn ServerOperation + Send>, ()> {
+    fn get_server(&mut self, name: String) -> Result<&mut Box<dyn ServerOperation + Send>, ()> {
         if self.servers.contains_key(&name) {
             let t = self.servers.get_mut(&name).unwrap();
             return Ok(t);
@@ -115,7 +135,12 @@ impl MCPClient {
             let res = self.get_server(server_name.to_string());
             if res.is_ok() {
                 let server = res.unwrap();
-                let ret = server.call_tool(tool_name.to_string(), serde_json::from_str(&tool.function.arguments).unwrap()).await;
+                let ret = server
+                    .call_tool(
+                        tool_name.to_string(),
+                        serde_json::from_str(&tool.function.arguments).unwrap(),
+                    )
+                    .await;
                 if !server.is_connected() {
                     return Err(format!("服务 {} 未连接", server_name));
                 }
@@ -136,7 +161,7 @@ impl MCPClient {
         server.get_tools().await
     }
 
-    pub async fn get_all_tools(&mut self)->Result<Vec<Tool>, String> {
+    pub async fn get_all_tools(&mut self) -> Result<Vec<Tool>, String> {
         let mut res = Vec::new();
         for (_, server) in self.servers.iter_mut() {
             if let Ok(mut tools) = server.get_tools().await {

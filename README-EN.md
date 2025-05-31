@@ -6,6 +6,9 @@
 ## Project Overview
 An intelligent assistant system based on prompt engineering and API interfaces, connecting to specified large model services to provide comprehensive smart assistant capabilities. By integrating internal and external MCPs (Modular Control Protocols), this system functions as your "Digital Chief Steward", offering an emperor-like smart living experience.
 
+## Example
+![示例](./doc/image/example.png)
+
 ## Key Features
 
 - MCP Service System
