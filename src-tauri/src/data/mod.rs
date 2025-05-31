@@ -139,12 +139,12 @@ pub fn load_rolecard_data() -> Result<RoleCardStoreData, String> {
     }
 }
 
-pub fn load_data<T: for<'a> Deserialize<'a>>() -> Result<T, String> {
+pub fn load_data<T: for<'a> Deserialize<'a>>(file_name: &String) -> Result<T, String> {
     let project_dirs =
         ProjectDirs::from("", "", "assistant").ok_or_else(|| "无法获取项目目录".to_string())?;
 
     let config_dir = project_dirs.config_dir();
-    let path = config_dir.join(ROLECARD_FILE_NAME);
+    let path = config_dir.join(file_name);
     match fs::read_to_string(path) {
         Ok(content) => {
             let data: T = serde_json::from_str(&content).map_err(|e| e.to_string())?;
@@ -157,7 +157,7 @@ pub fn load_data<T: for<'a> Deserialize<'a>>() -> Result<T, String> {
     }
 }
 
-pub fn store_data<T: Serialize>(data: T) -> Result<(), String> {
+pub fn store_data<T: Serialize>(data: T, file_name: &String) -> Result<(), String> {
     let project_dirs = ProjectDirs::from("", "", "assistant").ok_or_else(|| "无法获取项目目录")?;
 
     let config_dir = project_dirs.config_dir();
@@ -166,7 +166,7 @@ pub fn store_data<T: Serialize>(data: T) -> Result<(), String> {
         return Err(res.unwrap_err().to_string());
     }
 
-    let file_path = config_dir.join(ROLECARD_FILE_NAME);
+    let file_path = config_dir.join(file_name);
     let json = serde_json::to_string_pretty(&data).map_err(|e| e.to_string())?;
 
     let res = fs::write(file_path, json);

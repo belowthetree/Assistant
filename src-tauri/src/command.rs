@@ -1,14 +1,18 @@
 use std::{collections::HashMap, time::Duration};
 
-use rmcp::model::{Tool};
-use tauri::{AppHandle};
+use rmcp::model::Tool;
+use tauri::AppHandle;
 use tokio::time::Instant;
 
-use crate::{assistant::{Assistant, RoleCard, RoleCardStoreData, APP_HANDLE, ASSISTANT, ASSISTANT_NAME}, data::{load_rolecard_data, store_rolecard_data}, mcp::{MCPServerConfig, ServerDisplayInfo, MCP_CLIENT}, model::ModelData};
-
+use crate::{
+    assistant::{Assistant, RoleCard, RoleCardStoreData, APP_HANDLE, ASSISTANT, ASSISTANT_NAME},
+    data::{load_rolecard_data, store_rolecard_data},
+    mcp::{MCPServerConfig, ServerDisplayInfo, MCP_CLIENT},
+    model::ModelData,
+};
 
 #[tauri::command]
-pub async fn get_models()->Result<Vec<String>, String> {
+pub async fn get_models() -> Result<Vec<String>, String> {
     let ass = ASSISTANT.lock().await;
     ass.get_models().await
 }
@@ -21,26 +25,26 @@ pub async fn set_model(data: ModelData) {
 }
 
 #[tauri::command]
-pub async fn set_server(server: MCPServerConfig)->Result<(), ()> {
+pub async fn set_server(server: MCPServerConfig) -> Result<(), ()> {
     let mut client = MCP_CLIENT.lock().await;
     client.set_server(&server).await;
     Ok(())
 }
 
 #[tauri::command]
-pub async fn get_servers()->Vec<ServerDisplayInfo> {
+pub async fn get_servers() -> Vec<ServerDisplayInfo> {
     let client = MCP_CLIENT.lock().await;
     client.get_servers_display()
 }
 
 #[tauri::command]
-pub async fn get_tools(name: String)->Result<Vec<Tool>, String> {
+pub async fn get_tools(name: String) -> Result<Vec<Tool>, String> {
     let mut client = MCP_CLIENT.lock().await;
     client.get_tools(name).await
 }
 
 #[tauri::command]
-pub async fn talk(ctx: String, app: AppHandle)->Result<String, String> {
+pub async fn talk(ctx: String, app: AppHandle) -> Result<String, String> {
     {
         let mut a = APP_HANDLE.lock().await;
         *a = Some(app.clone());
@@ -56,8 +60,7 @@ pub async fn talk(ctx: String, app: AppHandle)->Result<String, String> {
             }
         }
         Ok(ret.content)
-    }
-    else {
+    } else {
         Err(res.unwrap_err())
     }
 }
@@ -88,11 +91,13 @@ pub async fn start_timer(app: AppHandle) {
                 ass.think_pulse().await;
             }
         }
-    }).await.unwrap();
+    })
+    .await
+    .unwrap();
 }
 
 #[tauri::command]
-pub async fn get_rolecard()->Vec<RoleCard> {
+pub async fn get_rolecard() -> Vec<RoleCard> {
     let mut ret = Vec::new();
     if let Ok(data) = load_rolecard_data() {
         for (_, card) in data.cards {
@@ -111,9 +116,11 @@ pub async fn set_rolecard(card: RoleCard) {
     if let Ok(mut data) = load_rolecard_data() {
         data.cards.insert(card.name.clone(), card);
         store_rolecard_data(&data).unwrap();
-    }
-    else {
-        let mut data = RoleCardStoreData {cards: HashMap::new()};
+    } else {
+        let mut data = RoleCardStoreData {
+            assistant_role: card.name.clone(),
+            cards: HashMap::new(),
+        };
         data.cards.insert(card.name.clone(), card);
         store_rolecard_data(&data).unwrap();
     }

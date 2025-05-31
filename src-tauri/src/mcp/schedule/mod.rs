@@ -2,18 +2,20 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use chrono::Local;
-use log::{debug, warn};
-use rmcp::model::{CallToolResult, JsonObject};
+use log::{debug, error, warn};
+use rmcp::model::{Annotated, CallToolResult, JsonObject, RawContent, RawTextContent};
 use sche_item::{EScheStatus, ScheItem};
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 
-use crate::data::load_data;
+use crate::data::{load_data, store_data};
 use lazy_static::lazy_static;
 
 use super::{get_server, internal_server::InternalFunctionCall, InternalServerInfo};
 
 mod sche_item;
+
+const SCHE_FILE_NAME: &str = "sche.json";
 
 lazy_static! {
     pub static ref SCHEDULE: Arc<Mutex<Schedule>> = Arc::new(Mutex::new(Schedule::new()));
@@ -21,18 +23,21 @@ lazy_static! {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Schedule {
-    pub schedules: Vec<ScheItem>,
+    schedules: Vec<ScheItem>,
 }
 
 impl Schedule {
     pub fn new() -> Self {
-        Self {
+        let mut ret = Self {
             schedules: Vec::new(),
-        }
+        };
+        ret.load_data();
+        ret
     }
 
     pub fn load_data(&mut self) {
-        let data = load_data::<Schedule>();
+        let data = load_data::<Schedule>(&SCHE_FILE_NAME.to_string());
+        debug!("加载日程：{:?}", data);
         match data {
             Ok(data) => {
                 self.schedules = data.schedules;
@@ -43,11 +48,23 @@ impl Schedule {
         }
     }
 
+    pub fn store_data(&self) {
+        if let Err(e) = store_data::<Schedule>(self.clone(), &SCHE_FILE_NAME.to_string()) {
+            error!("{:?}", e);
+        }
+    }
+
     pub fn add_sche(&mut self, sche: ScheItem) {
         if self.schedules.len() <= 0 {
             self.load_data();
         }
         self.schedules.push(sche);
+        self.store_data();
+    }
+
+    pub fn get_sches(&mut self) -> Vec<ScheItem> {
+        self.load_data();
+        self.schedules.clone()
     }
 }
 
@@ -58,11 +75,11 @@ impl InternalServerInfo for ScheUtilServer {
         get_server(
             "ScheduleUtil",
             "操作用户日程",
-            vec![Box::new(ScheUtilAddSche {})],
+            vec![Box::new(ScheUtilAddSche), Box::new(ScheUtilGetSche)],
         )
     }
 }
-pub struct ScheUtilAddSche {}
+pub struct ScheUtilAddSche;
 
 #[async_trait]
 impl InternalFunctionCall for ScheUtilAddSche {
@@ -84,7 +101,12 @@ impl InternalFunctionCall for ScheUtilAddSche {
             let mut sche = SCHEDULE.lock().await;
             sche.add_sche(data);
             return Ok(CallToolResult {
-                content: Vec::new(),
+                content: vec![Annotated::new(
+                    RawContent::Text(RawTextContent {
+                        text: "成功".into(),
+                    }),
+                    None,
+                )],
                 is_error: None,
             });
         }
@@ -118,5 +140,50 @@ impl InternalFunctionCall for ScheUtilAddSche {
 
     fn get_name(&self) -> String {
         "add_sche".into()
+    }
+}
+
+pub struct ScheUtilGetSche;
+
+#[async_trait]
+impl InternalFunctionCall for ScheUtilGetSche {
+    async fn call(&self, _args: Option<JsonObject>) -> Result<CallToolResult, String> {
+        let mut sche = SCHEDULE.lock().await;
+        let mut result = Vec::new();
+        for item in sche.get_sches().iter() {
+            result.push(Annotated::new(
+                RawContent::Text(RawTextContent {
+                    text: format!(
+                        "标题: {}\n内容: {}\n状态: {:?}",
+                        item.title, item.content, item.status
+                    ),
+                }),
+                None,
+            ));
+        }
+        Ok(CallToolResult {
+            content: result,
+            is_error: None,
+        })
+    }
+
+    fn get_input_schema(&self) -> Arc<JsonObject> {
+        Arc::new(
+            serde_json::from_str(
+                r#"
+    {
+        "properties":{}
+    }"#,
+            )
+            .unwrap(),
+        )
+    }
+
+    fn get_desc(&self) -> String {
+        "获取所有日程安排".into()
+    }
+
+    fn get_name(&self) -> String {
+        "get_sche".into()
     }
 }

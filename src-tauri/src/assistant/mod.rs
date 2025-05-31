@@ -56,7 +56,7 @@ impl Assistant {
             conversation: Conversation::new(),
             think: Think::new(),
             server_data: ServerData::new(),
-            max_count: 10,
+            max_count: 2,
             count: 0,
         }
     }
@@ -75,12 +75,10 @@ impl Assistant {
                 for tool in tools.iter() {
                     let ret = client.call_tool(tool.clone()).await;
                     debug!("assistant talk tool call {:?}", ret);
-                    if let Ok(tool_result) = ret {
-                        message.insert(
-                            tool.id.clone(),
-                            serde_json::to_string(&tool_result).unwrap(),
-                        );
-                    }
+                    message.insert(
+                        tool.function.name.clone(),
+                        serde_json::to_string(&ret).unwrap(),
+                    );
                 }
             }
             debug!("talk 工具调用：{:?}", message);
@@ -167,24 +165,44 @@ impl Assistant {
     pub fn refresh_rolecard(&mut self) {
         let ret = load_rolecard_data();
         if let Ok(mut data) = ret {
-            if data.cards.contains_key(ASSISTANT_NAME) {
-                self.think
-                    .set_rolecard(data.cards.get(ASSISTANT_NAME).unwrap().clone());
-                self.conversation
-                    .add_system_context(self.think.get_conversation_string());
-                return;
+            // 生成默认助手配置
+            if !data.cards.contains_key(ASSISTANT_NAME) {
+                data.cards
+                    .insert(ASSISTANT_NAME.to_string(), self.think.rolecard.clone());
+                // 写回配置
+                let ret = store_rolecard_data(&data);
+                if ret.is_err() {
+                    warn!("refresh_rolecard {:?}", ret);
+                }
             }
-            data.cards
-                .insert(ASSISTANT_NAME.to_string(), self.think.rolecard.clone());
-            let ret = store_rolecard_data(&data);
-            if ret.is_err() {
-                warn!("refresh_rolecard {:?}", ret);
+            // 获取当前配置的助手信息
+            let mut assistant_role = data.assistant_role.clone();
+            if !data.cards.contains_key(&assistant_role) {
+                assistant_role = ASSISTANT_NAME.to_string();
+                data.assistant_role = assistant_role.clone();
+                // 写回配置
+                let ret = store_rolecard_data(&data);
+                if ret.is_err() {
+                    warn!("refresh_rolecard {:?}", ret);
+                }
             }
+            self.think
+                .set_rolecard(data.cards.get(&assistant_role).unwrap().clone());
+            self.conversation
+                .add_system_context(self.think.get_conversation_string());
             return;
         }
-        let data = RoleCardStoreData {
+        // 如果读取失败，可能是因为没有存档，需要生成
+        let mut data = RoleCardStoreData {
+            assistant_role: ASSISTANT_NAME.to_string(),
             cards: HashMap::new(),
         };
+        data.cards
+            .insert(ASSISTANT_NAME.to_string(), self.think.rolecard.clone());
+        self.think
+            .set_rolecard(data.cards.get(ASSISTANT_NAME).unwrap().clone());
+        self.conversation
+            .add_system_context(self.think.get_conversation_string());
         let ret = store_rolecard_data(&data);
         if ret.is_err() {
             warn!("refresh_rolecard {:?}", ret);

@@ -6,6 +6,7 @@ pub const ASSISTANT_NAME: &str = "Assistant";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RoleCardStoreData {
+    pub assistant_role: String,
     pub cards: HashMap<String, RoleCard>,
 }
 
