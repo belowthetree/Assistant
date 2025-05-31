@@ -7,9 +7,7 @@ const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
-  plugins: [
-    vue(),
-  ],
+  plugins: [vue()],
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
@@ -19,7 +17,7 @@ export default defineConfig(async () => ({
   server: {
     port: 5710,
     strictPort: true,
-    host: '0.0.0.0',
+    host: "0.0.0.0",
     cors: false, // 配置 CORS
     hmr: host
       ? {
@@ -35,8 +33,8 @@ export default defineConfig(async () => ({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname) + "/src", // @ 指向 src 目录
-      '~': path.resolve(__dirname), // @ 指向项目根目录
+      "@": path.resolve(__dirname) + "/src", // @ 指向 src 目录
+      "~": path.resolve(__dirname), // @ 指向项目根目录
     },
   },
 }));
