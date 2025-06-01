@@ -56,7 +56,7 @@ impl Assistant {
             conversation: Conversation::new(),
             think: Think::new(),
             server_data: ServerData::new(),
-            max_count: 2,
+            max_count: 6,
             count: 0,
         }
     }
@@ -94,7 +94,7 @@ impl Assistant {
     pub async fn think_pulse(&mut self) {
         let res = self
             .conversation
-            .system(self.think.get_think_string())
+            .system(self.think.get_think_string().await)
             .await;
         if res.is_err() {
             warn!("想法报错：{:?}", res);

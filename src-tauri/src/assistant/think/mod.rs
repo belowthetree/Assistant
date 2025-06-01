@@ -37,9 +37,9 @@ impl Think {
         self.rolecard = rolecard;
     }
 
-    pub fn get_think_string(&self) -> String {
+    pub async fn get_think_string(&self) -> String {
         let mut ret = self.rolecard.get_prompt();
-        ret += &self.life.get_schedule().get_daily_schedules_string();
+        ret += &self.life.get_schedule_string().await;
         ret += "现在你已经被唤醒";
         ret
     }

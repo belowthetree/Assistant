@@ -1,17 +1,15 @@
 use std::sync::Arc;
 
+use super::{get_server, internal_server::InternalFunctionCall, InternalServerInfo};
+use crate::data::{load_data, store_data};
 use async_trait::async_trait;
-use chrono::Local;
+use chrono::{DateTime, Local, NaiveDateTime, TimeZone, Utc};
+use lazy_static::lazy_static;
 use log::{debug, error, warn};
 use rmcp::model::{Annotated, CallToolResult, JsonObject, RawContent, RawTextContent};
-use sche_item::{EScheStatus, ScheItem};
+pub use sche_item::{EScheStatus, ScheItem};
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
-
-use crate::data::{load_data, store_data};
-use lazy_static::lazy_static;
-
-use super::{get_server, internal_server::InternalFunctionCall, InternalServerInfo};
 
 mod sche_item;
 
@@ -86,15 +84,25 @@ impl InternalFunctionCall for ScheUtilAddSche {
     async fn call(&self, args: Option<JsonObject>) -> Result<CallToolResult, String> {
         debug!("AddSche {:?}", args);
         if let Some(js) = args {
-            if !js.contains_key("title") || !js.contains_key("content") {
-                return Err("AddSche no key".into());
+            if !js.contains_key("title")
+                || !js.contains_key("content")
+                || !js.contains_key("target_time")
+            {
+                return Err("AddSche 参数不完整".into());
             }
             let title = js.get("title").unwrap().as_str().unwrap().to_string();
             let content = js.get("content").unwrap().as_str().unwrap().to_string();
+            let target_time_str = js.get("target_time").unwrap().as_str().unwrap();
+            // 2015-09-05 23:56:04
+            let target_time = NaiveDateTime::parse_from_str(target_time_str, "%Y-%m-%d %H:%M:%S")
+                .unwrap()
+                .and_local_timezone(Local)
+                .unwrap();
             let data = ScheItem {
                 title,
                 content,
                 status: EScheStatus::Unfinish,
+                target_time,
                 create_time: Local::now(),
                 finish_time: Local::now(),
             };
@@ -125,6 +133,10 @@ impl InternalFunctionCall for ScheUtilAddSche {
                 },
                 "content":{
                     "description":"日程内容",
+                    "type": "string"
+                },
+                "target_time": {
+                    "description":"日程日期，格式：2015-09-05 23:56:04",
                     "type": "string"
                 }
             }

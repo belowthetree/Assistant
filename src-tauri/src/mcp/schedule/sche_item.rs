@@ -12,6 +12,7 @@ pub struct ScheItem {
     pub title: String,
     pub content: String,
     pub status: EScheStatus,
+    pub target_time: DateTime<Local>,
     pub create_time: DateTime<Local>,
     pub finish_time: DateTime<Local>,
 }

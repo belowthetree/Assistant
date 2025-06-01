@@ -1,3 +1,4 @@
+mod character;
 mod client;
 mod internal_server;
 mod schedule;
@@ -12,7 +13,7 @@ pub use client::*;
 use internal_server::{InternalFunction, InternalFunctionCall, InternalMCPServer};
 use lazy_static::lazy_static;
 use log::debug;
-use schedule::ScheUtilServer;
+pub use schedule::*;
 pub use server::*;
 pub use server_operation::*;
 use systemutil::SystemUtilServer;
