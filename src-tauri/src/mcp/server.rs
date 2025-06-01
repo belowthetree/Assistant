@@ -1,36 +1,52 @@
-use std::{borrow::Cow, fmt::Debug};
 use async_trait::async_trait;
 use log::debug;
-use rmcp::{model::{CallToolRequestParam, CallToolResult, JsonObject, Tool}, service::{DynService, RunningService}, transport::TokioChildProcess, RoleClient, ServiceExt};
-use serde::{Serialize, Deserialize};
+use rmcp::{
+    model::{CallToolRequestParam, CallToolResult, JsonObject, Tool},
+    service::{DynService, RunningService},
+    transport::TokioChildProcess,
+    RoleClient, ServiceExt,
+};
+use std::{borrow::Cow, fmt::Debug};
 use tokio::process::Command;
 
-use super::{server_operation::{MCPServerConfig, ServerOperation}, ServerDisplayInfo};
+use super::{
+    server_operation::{MCPServerConfig, ServerOperation},
+    ServerDisplayInfo,
+};
 
-#[derive(Serialize, Deserialize)]
 pub struct MCPServer {
     pub config: MCPServerConfig,
     pub connected: bool,
     pub tools: Vec<Tool>,
-    #[serde(skip)]
     pub service: Option<RunningService<RoleClient, Box<dyn DynService<RoleClient>>>>,
     pub call_count: usize,
 }
 
 impl Debug for MCPServer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("MCPServer").field("config", &self.config).field("connected", &self.connected).field("tools", &self.tools).field("call_count", &self.call_count).finish()
+        f.debug_struct("MCPServer")
+            .field("config", &self.config)
+            .field("connected", &self.connected)
+            .field("tools", &self.tools)
+            .field("call_count", &self.call_count)
+            .finish()
     }
 }
 
 impl Clone for MCPServer {
     fn clone(&self) -> Self {
-        Self { config: self.config.clone(), connected: self.connected.clone(), tools: self.tools.clone(), service: None, call_count: self.call_count.clone() }
+        Self {
+            config: self.config.clone(),
+            connected: self.connected.clone(),
+            tools: self.tools.clone(),
+            service: None,
+            call_count: self.call_count.clone(),
+        }
     }
 }
 
 impl MCPServer {
-    pub fn new(config: MCPServerConfig)->Self {
+    pub fn new(config: MCPServerConfig) -> Self {
         Self {
             config,
             connected: false,
@@ -42,9 +58,9 @@ impl MCPServer {
 }
 #[async_trait]
 impl ServerOperation for MCPServer {
-    async fn connect(&mut self)->Result<(), Box<dyn std::error::Error>> {
+    async fn connect(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         if self.connected || !self.config.enable || self.config.internal {
-            return Ok(())
+            return Ok(());
         }
         let mut transport = Command::new(self.config.command.clone());
         if let Some(args) = self.config.args.clone() {
@@ -52,9 +68,7 @@ impl ServerOperation for MCPServer {
                 transport.arg(arg);
             }
         }
-        let service = ().into_dyn().serve(
-            TokioChildProcess::new(&mut transport)?
-        ).await?;
+        let service = ().into_dyn().serve(TokioChildProcess::new(&mut transport)?).await?;
         let server_info = service.peer_info();
         debug!("服务器连接 {:?}", server_info);
         self.service = Some(service);
@@ -62,9 +76,9 @@ impl ServerOperation for MCPServer {
         Ok(())
     }
 
-    async fn disconnect(&mut self)->Result<(), Box<dyn std::error::Error>> {
+    async fn disconnect(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         if !self.connected {
-            return Ok(())
+            return Ok(());
         }
         if let Some(service) = self.service.take() {
             service.cancel().await?;
@@ -73,7 +87,7 @@ impl ServerOperation for MCPServer {
     }
 
     // 工具名字都拼接上了服务名：servername_toolname
-    async fn get_tools(&mut self)->Result<Vec<Tool>, String> {
+    async fn get_tools(&mut self) -> Result<Vec<Tool>, String> {
         if self.tools.len() > 0 {
             return Ok(self.tools.clone());
         }
@@ -93,13 +107,17 @@ impl ServerOperation for MCPServer {
         Err("未连接到此服务".into())
     }
 
-    async fn call_tool(&mut self, name: String, args: Option<JsonObject>) ->Result<CallToolResult, String> {
+    async fn call_tool(
+        &mut self,
+        name: String,
+        args: Option<JsonObject>,
+    ) -> Result<CallToolResult, String> {
         let _ = self.connect().await;
         if self.connected {
             if let Some(service) = self.service.as_ref() {
                 self.call_count += 1;
                 let param = CallToolRequestParam {
-                    name : name.into(),
+                    name: name.into(),
                     arguments: args,
                 };
                 let res = service.call_tool(param).await;
@@ -112,15 +130,15 @@ impl ServerOperation for MCPServer {
         return Err("未连接到此服务".into());
     }
 
-    fn get_config(&self)->MCPServerConfig {
+    fn get_config(&self) -> MCPServerConfig {
         self.config.clone()
     }
 
-    fn is_connected(&self)->bool {
+    fn is_connected(&self) -> bool {
         self.connected
     }
 
-    fn is_internal(&self)->bool {
+    fn is_internal(&self) -> bool {
         false
     }
 
@@ -130,7 +148,7 @@ impl ServerOperation for MCPServer {
         self.connect().await.unwrap();
     }
 
-    fn get_display_info(&self)->ServerDisplayInfo {
+    fn get_display_info(&self) -> ServerDisplayInfo {
         ServerDisplayInfo {
             name: self.config.name.clone(),
             command: self.config.command.clone(),

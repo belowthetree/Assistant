@@ -94,7 +94,7 @@ impl Conversation {
             return Err("未设置模型".into());
         }
         // 存储系统输入
-        self.context.add_system(ctx.clone());
+        self.add_system_context(ctx.clone());
         let res = self
             .send_to_model(
                 ModelInputParam {

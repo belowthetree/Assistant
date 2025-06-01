@@ -1,4 +1,4 @@
-use crate::mcp::{ScheItem, SCHEDULE};
+use crate::mcp::SCHEDULE;
 
 #[derive(Debug, Clone)]
 pub struct Life {}

@@ -5,25 +5,29 @@ import { RoleCard } from "./role/rolecard";
 import { Talk } from "./talk/talk";
 
 export enum EAssistantMode {
-    // 直接输出结果
-    Direct,
-    // 要求分步完成
-    Step,
+  // 直接输出结果
+  Direct,
+  // 要求分步完成
+  Step,
 }
 
 export class Assistant {
-    role: RoleCard
-    business: Business
-    talk: Talk
-    mode: EAssistantMode
+  role: RoleCard;
+  business: Business;
+  talk: Talk;
+  mode: EAssistantMode;
 
-    constructor(role: RoleCard, model: ModelBase, mode: EAssistantMode = EAssistantMode.Direct) {
-        this.role = role
-        this.talk = new Talk(model, role.prompt)
-    }
+  constructor(
+    role: RoleCard,
+    model: ModelBase,
+    mode: EAssistantMode = EAssistantMode.Direct,
+  ) {
+    this.role = role;
+    this.mode = mode;
+    this.talk = new Talk(model, role.prompt);
+  }
 
-    startBusiness(theme: Theme) {
-        this.talk.userSay(theme.getSystemPrompt()).then((res)=>{
-        })
-    }
+  startBusiness(theme: Theme) {
+    this.talk.userSay(theme.getSystemPrompt()).then((_) => {});
+  }
 }

@@ -1,3 +1,5 @@
+use log::debug;
+
 use super::life::Life;
 use super::rolecard::RoleCard;
 use std::fmt::Debug;
@@ -34,6 +36,7 @@ impl Think {
     }
 
     pub fn set_rolecard(&mut self, rolecard: RoleCard) {
+        debug!("设置角色卡 {:?}", rolecard);
         self.rolecard = rolecard;
     }
 

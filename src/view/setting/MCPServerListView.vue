@@ -10,25 +10,54 @@
 
             <div class="grid-container">
                 <!-- Service Cards -->
-                <div v-for="(service, index) in services" :key="index" class="service-card">
+                <div
+                    v-for="(service, index) in services"
+                    :key="index"
+                    class="service-card"
+                >
                     <div class="card-content">
                         <div class="card-header">
                             <div>
                                 <h3>{{ service.name }}</h3>
                                 <div class="status-container">
-                                    <span class="status-badge"
-                                        :class="{ 'status-online': service.connected, 'status-offline': !service.connected }"></span>
+                                    <span
+                                        class="status-badge"
+                                        :class="{
+                                            'status-online': service.connected,
+                                            'status-offline':
+                                                !service.connected,
+                                        }"
+                                    ></span>
                                     <span class="status-text">
-                                        {{ capitalizeFirstLetter(service.connected ? "已连接" : "未连接") }}
+                                        {{
+                                            capitalizeFirstLetter(
+                                                service.connected
+                                                    ? "已连接"
+                                                    : "未连接",
+                                            )
+                                        }}
                                     </span>
                                 </div>
                             </div>
                             <div class="action-buttons">
-                                <button @click="editService(index)" class="edit-button">
-                                    <i class="fas fa-edit" style="font-size: 20px;"></i>
+                                <button
+                                    @click="editService(index)"
+                                    class="edit-button"
+                                >
+                                    <i
+                                        class="fas fa-edit"
+                                        style="font-size: 20px"
+                                    ></i>
                                 </button>
-                                <label class="switch-indicate-label" style="--width:80;--height:40">
-                                    <input type="checkbox" v-model="service.enable" @change="toggleServiceStatus(index)">
+                                <label
+                                    class="switch-indicate-label"
+                                    style="--width: 80; --height: 40"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        v-model="service.enable"
+                                        @change="toggleServiceStatus(index)"
+                                    />
                                     <span></span>
                                     <i class="indicator"></i>
                                 </label>
@@ -38,7 +67,9 @@
                         <div class="command-section">
                             <p class="command-label">启动命令:</p>
                             <div class="command-box">
-                                <code class="command-text">{{ service.command }}</code>
+                                <code class="command-text">{{
+                                    service.command
+                                }}</code>
                             </div>
                         </div>
                     </div>
@@ -59,29 +90,37 @@
             <div class="modal-container">
                 <div class="modal-header">
                     <h3>
-                        {{ editingIndex === null ? '添加 MCP 服务' : '编辑 MCP 服务' }}
+                        {{
+                            editingIndex === null
+                                ? "添加 MCP 服务"
+                                : "编辑 MCP 服务"
+                        }}
                     </h3>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
                         <label>服务名字</label>
-                        <input type="text" v-model="newService.name">
+                        <input type="text" v-model="newService.name" />
                     </div>
                     <div class="form-group">
                         <label>描述</label>
-                        <input type="text" v-model="newService.desc">
+                        <input type="text" v-model="newService.desc" />
                     </div>
                     <div class="form-group">
                         <label>命令</label>
-                        <input type="text" v-model="newService.command">
+                        <input type="text" v-model="newService.command" />
                     </div>
                     <div class="form-group">
                         <label>参数</label>
-                        <input type="text" v-model="newService.args">
+                        <input type="text" v-model="newServiceArgs" />
                     </div>
                     <div class="form-group">
                         <label>环境变量</label>
-                        <input type="text" v-model="newService.env" placeholder="">
+                        <input
+                            type="text"
+                            v-model="newService.env"
+                            placeholder=""
+                        />
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -89,7 +128,7 @@
                         取消
                     </button>
                     <button @click="confirmAdd" class="confirm-button">
-                        {{ editingIndex === null ? '添加服务' : '更新服务' }}
+                        {{ editingIndex === null ? "添加服务" : "更新服务" }}
                     </button>
                 </div>
             </div>
@@ -98,32 +137,33 @@
 </template>
 
 <script>
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from "@tauri-apps/api/core";
 
 export default {
-    name: 'ServiceDashboard',
+    name: "ServiceDashboard",
     data() {
         return {
             showAddModal: false,
             editingIndex: null,
             newService: {
-                name: '',
-                desc: '',
-                command: '',
-                args: '',
-                env: '',
-                active: true
+                name: "",
+                desc: "",
+                command: "",
+                args: [],
+                env: "",
+                active: true,
             },
-            services: []
-        }
+            services: [],
+            newServiceArgs: "",
+        };
     },
     methods: {
         showModal() {
             this.newService = {
-                name: '',
-                command: '',
-                status: 'online',
-                active: true
+                name: "",
+                command: "",
+                status: "online",
+                active: true,
             };
             this.editingIndex = null;
             this.showAddModal = true;
@@ -134,15 +174,18 @@ export default {
         confirmAdd() {
             if (!this.newService.name || !this.newService.command) return;
 
-            console.log("add ", this.newService)
+            console.log("add ", this.newService);
             if (this.editingIndex !== null) {
                 // Update existing service
                 this.services[this.editingIndex] = { ...this.newService };
             } else {
-                invoke("set_server", { server: this.newService }).then(res => {
-                    console.log("res ", res)
-                    this.refreshServices()
-                })
+                this.newService.args = this.newServiceArgs.split(",");
+                invoke("set_server", { server: this.newService }).then(
+                    (res) => {
+                        console.log("res ", res);
+                        this.refreshServices();
+                    },
+                );
             }
 
             this.closeModal();
@@ -154,39 +197,40 @@ export default {
         },
         toggleServiceStatus(index) {
             const service = this.services[index];
-            service.status = service.active ? 'online' : 'offline';
+            service.status = service.active ? "online" : "offline";
         },
         startService(index) {
-            console.log('Starting service:', this.services[index].name);
-            this.services[index].status = 'online';
+            console.log("Starting service:", this.services[index].name);
+            this.services[index].status = "online";
             this.services[index].active = true;
         },
         stopService(index) {
-            console.log('Stopping service:', this.services[index].name);
-            this.services[index].status = 'offline';
+            console.log("Stopping service:", this.services[index].name);
+            this.services[index].status = "offline";
             this.services[index].active = false;
         },
         restartService(index) {
-            console.log('Restarting service:', this.services[index].name);
-            this.services[index].status = 'pending';
+            console.log("Restarting service:", this.services[index].name);
+            this.services[index].status = "pending";
             setTimeout(() => {
-                this.services[index].status = 'online';
+                this.services[index].status = "online";
             }, 1000);
         },
         capitalizeFirstLetter(string) {
             return string.charAt(0).toUpperCase() + string.slice(1);
         },
         refreshServices() {
-            invoke("get_servers").then(res => {
-                console.log("get ", res)
-                this.services = res
-            })
-        }
+            console.log("refresh services");
+            invoke("get_servers").then((res) => {
+                console.log("get ", res);
+                this.services = res;
+            });
+        },
     },
     mounted() {
-        this.refreshServices()
+        this.refreshServices();
     },
-}
+};
 </script>
 
 <style scoped>
@@ -250,12 +294,16 @@ export default {
     border-radius: 0.5rem;
     overflow: hidden;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .service-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    box-shadow:
+        0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .card-content {
@@ -289,15 +337,15 @@ export default {
 }
 
 .status-online {
-    background-color: #10B981;
+    background-color: #10b981;
 }
 
 .status-offline {
-    background-color: #EF4444;
+    background-color: #ef4444;
 }
 
 .status-pending {
-    background-color: #F59E0B;
+    background-color: #f59e0b;
 }
 
 .status-text {
@@ -336,30 +384,30 @@ export default {
 .switch-indicate-label span {
     position: relative;
     display: block;
-    width: calc(var(--width)*0.7px);
-    height: calc(var(--height)*0.7px);
-    border-radius: calc(var(--height)*1px);
+    width: calc(var(--width) * 0.7px);
+    height: calc(var(--height) * 0.7px);
+    border-radius: calc(var(--height) * 1px);
     background: #656565;
 }
 
 .switch-indicate-label input:checked + span {
-    background: #4CAF50;
+    background: #4caf50;
 }
 
-.switch-indicate-label .indicator{
+.switch-indicate-label .indicator {
     position: absolute;
     left: 0;
     top: 0;
-    width: calc(var(--height)*0.7px); 
-    height: calc(var(--height)*0.7px);
+    width: calc(var(--height) * 0.7px);
+    height: calc(var(--height) * 0.7px);
     border-radius: 50%;
-    background: linear-gradient(to bottom, #ffffff,#ffffff);
-    transition: .5s;
-    transform: scale(.9);
+    background: linear-gradient(to bottom, #ffffff, #ffffff);
+    transition: 0.5s;
+    transform: scale(0.9);
 }
 
-.switch-indicate-label input:checked ~ .indicator{
-    left: calc((var(--width) - var(--height))*0.7px);
+.switch-indicate-label input:checked ~ .indicator {
+    left: calc((var(--width) - var(--height)) * 0.7px);
 }
 
 .command-section {

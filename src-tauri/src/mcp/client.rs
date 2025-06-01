@@ -76,7 +76,9 @@ impl MCPClient {
             // }
             let res = server.connect().await;
             if res.is_err() {
-                warn!("{:?}", res);
+                warn!("服务连接失败 {:?}", res);
+            } else {
+                debug!("服务连接成功");
             }
             self.servers
                 .insert(server.config.name.clone(), Box::new(server));

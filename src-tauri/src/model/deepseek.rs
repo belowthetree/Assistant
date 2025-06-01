@@ -3,7 +3,7 @@ use crate::model::ToolCall;
 use super::{ModelData, ModelInputParam, ModelResponse};
 use futures_util::StreamExt;
 use log::{debug, warn};
-use reqwest::{header, Client, StatusCode};
+use reqwest::{header, Client};
 use rmcp::model::JsonObject;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};

@@ -2,9 +2,9 @@ use conversation::Conversation;
 use lazy_static::lazy_static;
 use log::{debug, warn};
 use std::{collections::HashMap, sync::Arc};
-use tauri::{http::response, AppHandle};
+use tauri::AppHandle;
 use think::Think;
-use tokio::{runtime::Handle, sync::Mutex};
+use tokio::sync::Mutex;
 
 use crate::{
     data::{

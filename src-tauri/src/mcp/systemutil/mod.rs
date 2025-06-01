@@ -5,9 +5,6 @@ use chrono::Local;
 use log::{debug, warn};
 use rmcp::model::{CallToolResult, Content, JsonObject, RawContent};
 use sysinfo::System;
-use tauri::Emitter;
-
-use crate::{assistant::APP_HANDLE, event::SYSTEM_NOTIFY};
 
 use super::{
     get_server,
@@ -27,19 +24,6 @@ impl InternalServerInfo for SystemUtilServer {
                 Box::new(SystemUtilNotify {}),
             ],
         )
-        // let mut server = InternalMCPServer {
-        //     name: "SystemInfo".into(),
-        //     desc: "使用一系列系统功能".into(),
-        //     tools: HashMap::new(),
-        //     enable: true,
-        // };
-        // server.set_tool(InternalFunction {
-        //     name: todo!(),
-        //     desc: todo!(),
-        //     func: todo!(),
-        //     input_schema: todo!(),
-        // });
-        // server
     }
 }
 
@@ -124,12 +108,9 @@ impl InternalFunctionCall for SystemUtilNotify {
                 }
                 let content = content.as_str().unwrap();
                 debug!("system notify {}", content);
-                let app = APP_HANDLE.lock().await;
-                if let Some(app) = &*app {
-                    debug!("send {}", SYSTEM_NOTIFY);
-                    app.emit(SYSTEM_NOTIFY, content).unwrap();
-                } else {
-                    warn!("no app");
+                let res = notifica::notify("助理", content);
+                if res.is_err() {
+                    warn!("{:?}", res);
                 }
                 return Ok(CallToolResult {
                     content: Vec::new(),
