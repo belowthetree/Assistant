@@ -1,4 +1,4 @@
-mod step_talk;
+// mod step_talk;
 mod talkcontext;
 
 use crate::{
@@ -8,7 +8,6 @@ use crate::{
 };
 use log::{debug, error, warn};
 use std::sync::{Arc, Mutex};
-use step_talk::StepTalkInfo;
 use talkcontext::{ERole, TalkContent, TalkContext};
 use tauri::{AppHandle, Emitter};
 
@@ -47,49 +46,30 @@ impl Conversation {
             error!("未设置模型");
             return Err("未设置模型".into());
         }
-        let model = self.model_data.as_mut().unwrap();
         // 会话中存储用户输入
         self.context.add_user(ctx);
-        let res;
-        match model.model_type {
-            crate::model::EModelType::Deepseek | crate::model::EModelType::OpenAI => {
-                let app = Arc::new(Mutex::new(app));
-                let handle: SseCallback = Box::new(move |data| {
-                    // debug!("流式响应：{}", data);
-                    if let Ok(app) = app.lock() {
-                        if let Err(e) = app.emit(ASSIST_REPLY_NAME, data) {
-                            warn!("emit: {:?}", e);
-                        }
-                    }
-                });
-                res = crate::model::Deepseek::generate(
-                    model,
-                    ModelInputParam {
-                        content: None,
-                        system: None,
-                        temperature: None,
-                        tools: Some(tools),
-                        messages: Some(self.context.get_messages(Some(&self.system))),
-                    },
-                    Some(handle),
-                )
-                .await;
-                debug!("{:?}", res);
+        // 流式回调
+        let app = Arc::new(Mutex::new(app));
+        let handle: SseCallback = Box::new(move |data| {
+            // debug!("流式响应：{}", data);
+            if let Ok(app) = app.lock() {
+                if let Err(e) = app.emit(ASSIST_REPLY_NAME, data) {
+                    warn!("emit: {:?}", e);
+                }
             }
-            crate::model::EModelType::Ollama => {
-                res = crate::model::Ollama::generate(
-                    model,
-                    ModelInputParam {
-                        content: None,
-                        system: None,
-                        temperature: None,
-                        tools: Some(tools),
-                        messages: Some(self.context.get_messages(Some(&self.system))),
-                    },
-                )
-                .await;
-            }
-        }
+        });
+        let res = self
+            .send_to_model(
+                ModelInputParam {
+                    content: None,
+                    system: None,
+                    temperature: None,
+                    tools: Some(tools),
+                    messages: Some(self.context.get_messages(Some(&self.system))),
+                },
+                Some(handle),
+            )
+            .await;
         let tmp = res.clone();
         // 模型的答复写回会话中
         if let Ok(response) = tmp {
@@ -113,39 +93,52 @@ impl Conversation {
             error!("未设置模型");
             return Err("未设置模型".into());
         }
-        let res;
+        // 存储系统输入
+        self.context.add_system(ctx.clone());
+        let res = self
+            .send_to_model(
+                ModelInputParam {
+                    content: None,
+                    system: Some(ctx),
+                    temperature: None,
+                    tools: Some(tools),
+                    messages: None,
+                },
+                None,
+            )
+            .await;
+        let tmp = res.clone();
+        // 模型的答复写回会话中
+        if let Ok(response) = tmp {
+            self.context.add_assistant(&response);
+        } else {
+            self.context.add_content(&talkcontext::TalkContent {
+                role: ERole::Assistant,
+                content: tmp.unwrap_err(),
+                reasoning_content: None,
+                tool_calls: None,
+            });
+        }
+        res
+    }
+
+    pub async fn send_to_model(
+        &mut self,
+        param: ModelInputParam,
+        stream_callback: Option<SseCallback>,
+    ) -> Result<ModelResponse, String> {
         let model = self.model_data.as_mut().unwrap();
+        let res;
         match model.model_type {
             crate::model::EModelType::Deepseek | crate::model::EModelType::OpenAI => {
-                res = crate::model::Deepseek::generate(
-                    model,
-                    ModelInputParam {
-                        content: None,
-                        system: Some(ctx),
-                        temperature: None,
-                        tools: Some(tools),
-                        messages: None,
-                    },
-                    None,
-                )
-                .await;
+                res = crate::model::Deepseek::generate(model, param, stream_callback).await;
                 debug!("{:?}", res);
             }
             crate::model::EModelType::Ollama => {
-                res = crate::model::Ollama::generate(
-                    model,
-                    ModelInputParam {
-                        content: None,
-                        system: None,
-                        temperature: None,
-                        tools: Some(tools),
-                        messages: Some(self.context.get_messages(Some(&self.system))),
-                    },
-                )
-                .await;
+                res = crate::model::Ollama::generate(model, param).await;
             }
         }
-        return res;
+        res
     }
 
     pub fn get_model_data(&self) -> Option<ModelData> {

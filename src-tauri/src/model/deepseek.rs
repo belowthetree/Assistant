@@ -45,14 +45,18 @@ impl Deepseek for ModelData {
         let mut messages = param.messages.unwrap_or_default();
 
         if messages.is_empty() {
-            messages.push(super::ModelMessage {
-                role: "system".to_string(),
-                content: param.system.unwrap_or_default(),
-            });
-            messages.push(super::ModelMessage {
-                role: "user".to_string(),
-                content: param.content.unwrap_or_default(),
-            });
+            if param.system.is_some() {
+                messages.push(super::ModelMessage {
+                    role: "system".to_string(),
+                    content: param.system.unwrap_or_default(),
+                });
+            }
+            if param.content.is_some() {
+                messages.push(super::ModelMessage {
+                    role: "user".to_string(),
+                    content: param.content.unwrap_or_default(),
+                });
+            }
         }
 
         let client = reqwest::Client::new();
@@ -82,7 +86,7 @@ impl Deepseek for ModelData {
         }))
         .unwrap();
         if messages.len() > 0 {
-            debug!("{:?}", messages.get(0));
+            debug!("{:?}", messages.last());
         }
         let response = client
             .post(format!("{}/chat/completions", self.url))

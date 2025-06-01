@@ -10,7 +10,7 @@ pub struct RoleCardStoreData {
     pub cards: HashMap<String, RoleCard>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RoleCard {
     pub name: String,
     pub desc: String,

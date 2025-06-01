@@ -83,7 +83,7 @@ pub async fn start_timer(app: AppHandle) {
             let ass: tokio::sync::MutexGuard<'_, Assistant> = ASSISTANT.lock().await;
             interval = Duration::from_secs(ass.think.config.pulse_interval);
         }
-        let mut it = tokio::time::interval_at(Instant::now() + Duration::from_secs(5), interval);
+        let mut it = tokio::time::interval_at(Instant::now() + Duration::from_secs(2), interval);
         loop {
             it.tick().await;
             {

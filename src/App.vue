@@ -122,7 +122,7 @@ export default {
                 invoke("talk", { ctx: this.userInput })
                     .then((e) => {
                         this.disableInput = false;
-                        this.modelOutput = e.content;
+                        this.modelOutput = e;
                     })
                     .catch((e) => {
                         this.disableInput = false;
