@@ -1,6 +1,6 @@
 use conversation::Conversation;
 use lazy_static::lazy_static;
-use log::{debug, warn};
+use log::{debug, error, warn};
 use std::{collections::HashMap, sync::Arc};
 use tauri::AppHandle;
 use think::Think;
@@ -136,6 +136,12 @@ impl Assistant {
             return;
         }
         let response = res.unwrap();
+        if response.content.len() > 0 {
+            let ret = notifica::notify(&self.think.rolecard.name, &response.content);
+            if ret.is_err() {
+                error!("{:?}", ret);
+            }
+        }
         debug!("想法 {:?} {}", response.reasoning_content, response.content);
         debug!("最终结果：{:?}", self.think_recycle(Ok(response)).await);
     }

@@ -1,4 +1,4 @@
-//mod character;
+mod character;
 mod client;
 mod internal_server;
 mod schedule;
