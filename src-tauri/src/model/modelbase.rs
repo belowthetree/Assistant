@@ -1,10 +1,16 @@
-use serde::{Deserialize, Serialize};
 use rmcp::model::Tool;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelMessage {
     pub role: String,
     pub content: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub name: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub tool_call_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_calls: Option<Vec<ToolCall>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -16,12 +22,14 @@ pub struct ModelInputParam {
     pub messages: Option<Vec<ModelMessage>>,
 }
 
-fn _default_tool_call_function()->ToolCallFunction {
+fn _default_tool_call_function() -> ToolCallFunction {
     ToolCallFunction::new()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolCall {
+    #[serde(default)]
+    pub index: usize,
     #[serde(default)]
     pub id: String,
     #[serde(default)]
@@ -32,8 +40,9 @@ pub struct ToolCall {
 
 impl ToolCall {
     #[allow(unused)]
-    pub fn new()->Self {
+    pub fn new() -> Self {
         Self {
+            index: 0,
             id: String::new(),
             r#type: String::new(),
             function: ToolCallFunction::new(),
@@ -50,7 +59,7 @@ pub struct ToolCallFunction {
 }
 
 impl ToolCallFunction {
-    pub fn new()->Self {
+    pub fn new() -> Self {
         Self {
             name: String::new(),
             arguments: String::new(),

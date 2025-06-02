@@ -12,7 +12,7 @@ use crate::{
         store_server_data, ServerData,
     },
     mcp::MCP_CLIENT,
-    model::{Deepseek, EModelType, ModelData, ModelResponse, Ollama, ToolCall},
+    model::{Deepseek, EModelType, ModelData, ModelMessage, ModelResponse, Ollama, ToolCall},
 };
 
 mod conversation;
@@ -78,26 +78,26 @@ impl Assistant {
             let message = self.process_tool_call(&res.tool_calls).await;
             // 开始循环返回工具调用信息给模型
             if message.len() > 0 {
-                response = Box::pin(self.system(serde_json::to_string(&message).unwrap())).await;
+                response = Box::pin(self.tool(&message)).await;
             }
         }
         self.count -= 1;
         response
     }
 
-    // 工具的回复以系统级反馈回去
-    async fn system(&mut self, ctx: String) -> Result<ModelResponse, String> {
+    // 工具的回复以工具身份反馈回去
+    async fn tool(&mut self, tools: &Vec<ModelMessage>) -> Result<ModelResponse, String> {
         if self.count >= self.max_count {
             return Err("达到最大循环次数".into());
         }
         self.count += 1;
-        let mut response = self.user_conversation.system(ctx).await;
+        let mut response = self.user_conversation.tool(tools).await;
         if response.is_ok() {
             let res = response.clone().unwrap();
             let message = self.process_tool_call(&res.tool_calls).await;
             // 开始循环返回工具调用信息给模型
             if message.len() > 0 {
-                response = Box::pin(self.system(serde_json::to_string(&message).unwrap())).await;
+                response = Box::pin(self.tool(&message)).await;
             }
         }
         self.count -= 1;
@@ -105,20 +105,20 @@ impl Assistant {
     }
 
     // 处理工具调用，返回工具名、结果的键值对
-    async fn process_tool_call(
-        &mut self,
-        tools: &Option<Vec<ToolCall>>,
-    ) -> HashMap<String, String> {
-        let mut message = HashMap::new();
+    async fn process_tool_call(&mut self, tools: &Option<Vec<ToolCall>>) -> Vec<ModelMessage> {
+        let mut message = Vec::<ModelMessage>::new();
         if let Some(tools) = tools {
             let mut client = MCP_CLIENT.lock().await;
             for tool in tools.iter() {
                 let ret = client.call_tool(tool.clone()).await;
                 debug!("assistant tool call {:?}", ret);
-                message.insert(
-                    tool.function.name.clone(),
-                    serde_json::to_string(&ret).unwrap(),
-                );
+                message.push(ModelMessage {
+                    role: "tool".into(),
+                    content: serde_json::to_string(&ret).unwrap(),
+                    name: tool.function.name.clone(),
+                    tool_call_id: tool.id.clone(),
+                    tool_calls: None,
+                });
             }
         }
         debug!("system 工具调用：{:?}", message);
@@ -129,7 +129,7 @@ impl Assistant {
     pub async fn think_pulse(&mut self) {
         let res = self
             .think_conversation
-            .system(self.think.get_think_string().await)
+            .think(self.think.get_think_string().await)
             .await;
         if res.is_err() {
             warn!("想法报错：{:?}", res);
@@ -157,7 +157,7 @@ impl Assistant {
             warn!("想法达到最大循环次数");
             return Err("想法达到最大循环次数".into());
         }
-        let mut message = HashMap::new();
+        let mut message = Vec::new();
         let res = response.unwrap();
         if res.tool_calls.is_none() {
             return Ok(());
@@ -167,19 +167,24 @@ impl Assistant {
                 let mut client = MCP_CLIENT.lock().await;
                 let ret = client.call_tool(tool.clone()).await;
                 debug!("想法调用工具 {:?}", ret);
-                message.insert(
-                    tool.function.name.clone(),
-                    serde_json::to_string(&ret).unwrap(),
-                );
+                message.push(ModelMessage {
+                    role: "tool".into(),
+                    content: serde_json::to_string(&ret).unwrap(),
+                    name: tool.function.name.clone(),
+                    tool_call_id: tool.id.clone(),
+                    tool_calls: None,
+                });
             }
         }
         let mut response = Err("调用无结果".into());
         self.think_count += 1;
         if message.len() > 0 {
-            let res = self
-                .think_conversation
-                .system(serde_json::to_string(&message).unwrap())
-                .await;
+            let res = self.think_conversation.tool(&message).await;
+            if res.is_ok() && res.as_ref().unwrap().content.len() > 0 {
+                if let Err(e) = notifica::notify("助理", &res.as_ref().unwrap().content.clone()) {
+                    warn!("{:?}", e);
+                }
+            }
             response = Box::pin(self.think_recycle(res)).await;
         }
         self.think_count -= 1;
@@ -271,7 +276,7 @@ impl Assistant {
             self.think
                 .set_rolecard(data.cards.get(&assistant_role).unwrap().clone());
             self.user_conversation
-                .set_system(self.think.get_conversation_string());
+                .set_system(self.think.get_conversation_system_prompt());
             return;
         }
         // 如果读取失败，可能是因为没有存档，需要生成
@@ -284,7 +289,7 @@ impl Assistant {
         self.think
             .set_rolecard(data.cards.get(ASSISTANT_NAME).unwrap().clone());
         self.user_conversation
-            .set_system(self.think.get_conversation_string());
+            .set_system(self.think.get_conversation_system_prompt());
         let ret = store_rolecard_data(&data);
         if ret.is_err() {
             warn!("refresh_rolecard {:?}", ret);

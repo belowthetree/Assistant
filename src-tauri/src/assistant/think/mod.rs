@@ -41,13 +41,17 @@ impl Think {
     }
 
     pub async fn get_think_string(&self) -> String {
-        let mut ret = self.rolecard.get_prompt();
+        let mut ret = self.rolecard.get_think_prompt();
         ret += &self.life.get_schedule_string().await;
         ret += "现在你已经被唤醒";
         ret
     }
 
-    pub fn get_conversation_string(&self) -> String {
+    pub fn get_conversation_system_prompt(&self) -> String {
         self.rolecard.get_prompt()
+    }
+
+    pub fn get_think_system_prompt(&self) -> String {
+        self.rolecard.get_think_prompt()
     }
 }

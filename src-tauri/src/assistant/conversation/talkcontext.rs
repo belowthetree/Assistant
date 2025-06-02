@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use ::serde::{Deserialize, Serialize};
 
 use crate::model::{ModelMessage, ModelResponse, ToolCall};
 
@@ -7,6 +7,7 @@ pub enum ERole {
     Assistant,
     User,
     System,
+    Tool,
 }
 
 impl ERole {
@@ -15,17 +16,22 @@ impl ERole {
             ERole::Assistant => "assistant".into(),
             ERole::User => "user".into(),
             ERole::System => "system".into(),
+            ERole::Tool => "tool".into(),
         }
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(unused)]
 pub struct TalkContent {
     pub role: ERole,
     pub content: String,
     pub reasoning_content: Option<String>,
     pub tool_calls: Option<Vec<ToolCall>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_call_id: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -48,12 +54,18 @@ impl TalkContext {
             res.push(ModelMessage {
                 role: sys.role.to_string(),
                 content: sys.content.clone(),
+                name: "".into(),
+                tool_call_id: "".into(),
+                tool_calls: None,
             });
         }
         for ctx in self.content.iter() {
             res.push(ModelMessage {
                 role: ctx.role.to_string(),
                 content: ctx.content.clone(),
+                name: ctx.clone().name.unwrap_or_default(),
+                tool_call_id: ctx.clone().tool_call_id.unwrap_or_default(),
+                tool_calls: ctx.tool_calls.clone(),
             });
         }
         res
@@ -65,6 +77,8 @@ impl TalkContext {
             content: response.content.clone(),
             reasoning_content: response.reasoning_content.clone(),
             tool_calls: response.tool_calls.clone(),
+            name: None,
+            tool_call_id: None,
         });
         if self.content.len() > self.max_conent {
             self.content.remove(0);
@@ -84,6 +98,8 @@ impl TalkContext {
             content,
             reasoning_content: None,
             tool_calls: None,
+            name: None,
+            tool_call_id: None,
         });
         if self.content.len() > self.max_conent {
             self.content.remove(0);
@@ -96,6 +112,8 @@ impl TalkContext {
             content,
             reasoning_content: None,
             tool_calls: None,
+            name: None,
+            tool_call_id: None,
         });
         if self.content.len() > self.max_conent {
             self.content.remove(0);

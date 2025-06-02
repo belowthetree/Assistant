@@ -4,7 +4,7 @@ mod talkcontext;
 use crate::{
     event::ASSIST_REPLY_NAME,
     mcp::MCP_CLIENT,
-    model::{ModelData, ModelInputParam, ModelResponse, SseCallback},
+    model::{ModelData, ModelInputParam, ModelMessage, ModelResponse, SseCallback},
 };
 use log::{debug, error, warn};
 use std::sync::{Arc, Mutex};
@@ -29,6 +29,8 @@ impl Conversation {
                 content: "".into(),
                 reasoning_content: None,
                 tool_calls: None,
+                name: None,
+                tool_call_id: None,
             },
             // step: StepTalkInfo::new(),
         }
@@ -80,11 +82,53 @@ impl Conversation {
                 content: tmp.unwrap_err(),
                 reasoning_content: None,
                 tool_calls: None,
+                name: None,
+                tool_call_id: None,
             });
         }
         return res;
     }
 
+    pub async fn think(&mut self, ctx: String) -> Result<ModelResponse, String> {
+        debug!("对话：{}", ctx);
+        let mut client = MCP_CLIENT.lock().await;
+        let tools = client.get_all_tools().await.unwrap();
+        if self.model_data.is_none() {
+            error!("未设置模型");
+            return Err("未设置模型".into());
+        }
+        // 会话中存储用户输入
+        self.context.add_user(ctx);
+        let res = self
+            .send_to_model(
+                ModelInputParam {
+                    content: None,
+                    system: None,
+                    temperature: None,
+                    tools: Some(tools),
+                    messages: Some(self.context.get_messages(Some(&self.system))),
+                },
+                None,
+            )
+            .await;
+        let tmp = res.clone();
+        // 模型的答复写回会话中
+        if let Ok(response) = tmp {
+            self.context.add_assistant(&response);
+        } else {
+            self.context.add_content(&talkcontext::TalkContent {
+                role: ERole::Assistant,
+                content: tmp.unwrap_err(),
+                reasoning_content: None,
+                tool_calls: None,
+                name: None,
+                tool_call_id: None,
+            });
+        }
+        return res;
+    }
+
+    #[allow(unused)]
     pub async fn system(&mut self, ctx: String) -> Result<ModelResponse, String> {
         debug!("系统：{}", ctx);
         let mut client = MCP_CLIENT.lock().await;
@@ -117,6 +161,56 @@ impl Conversation {
                 content: tmp.unwrap_err(),
                 reasoning_content: None,
                 tool_calls: None,
+                name: None,
+                tool_call_id: None,
+            });
+        }
+        res
+    }
+
+    pub async fn tool(
+        &mut self,
+        tool_response: &Vec<ModelMessage>,
+    ) -> Result<ModelResponse, String> {
+        debug!("工具：{:?}", tool_response);
+        let mut client = MCP_CLIENT.lock().await;
+        let tools = client.get_all_tools().await.unwrap();
+        if self.model_data.is_none() {
+            error!("未设置模型");
+            return Err("未设置模型".into());
+        }
+        // 存储工具输入
+        for res in tool_response.iter() {
+            self.add_tool_context(
+                res.content.clone(),
+                res.name.clone(),
+                res.tool_call_id.clone(),
+            );
+        }
+        let res = self
+            .send_to_model(
+                ModelInputParam {
+                    content: None,
+                    system: None,
+                    temperature: None,
+                    tools: Some(tools),
+                    messages: Some(self.context.get_messages(None)),
+                },
+                None,
+            )
+            .await;
+        let tmp = res.clone();
+        // 模型的答复写回会话中
+        if let Ok(response) = tmp {
+            self.context.add_assistant(&response);
+        } else {
+            self.context.add_content(&talkcontext::TalkContent {
+                role: ERole::Assistant,
+                content: tmp.unwrap_err(),
+                reasoning_content: None,
+                tool_calls: None,
+                name: None,
+                tool_call_id: None,
             });
         }
         res
@@ -149,6 +243,17 @@ impl Conversation {
         self.context.add_system(ctx);
     }
 
+    pub fn add_tool_context(&mut self, ctx: String, name: String, tool_call_id: String) {
+        self.context.add_content(&TalkContent {
+            role: ERole::Tool,
+            content: ctx,
+            reasoning_content: None,
+            tool_calls: None,
+            name: Some(name),
+            tool_call_id: Some(tool_call_id),
+        });
+    }
+
     // 设置系统级提示，与 add_system_context 不同，系统级提示每次都会添加在对话的最开头
     pub fn set_system(&mut self, ctx: String) {
         self.system = TalkContent {
@@ -156,6 +261,8 @@ impl Conversation {
             content: ctx,
             reasoning_content: None,
             tool_calls: None,
+            name: None,
+            tool_call_id: None,
         }
     }
 }

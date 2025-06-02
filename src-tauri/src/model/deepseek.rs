@@ -49,12 +49,18 @@ impl Deepseek for ModelData {
                 messages.push(super::ModelMessage {
                     role: "system".to_string(),
                     content: param.system.unwrap_or_default(),
+                    name: "".into(),
+                    tool_call_id: "".into(),
+                    tool_calls: None,
                 });
             }
             if param.content.is_some() {
                 messages.push(super::ModelMessage {
                     role: "user".to_string(),
                     content: param.content.unwrap_or_default(),
+                    name: "".into(),
+                    tool_call_id: "".into(),
+                    tool_calls: None,
                 });
             }
         }
@@ -88,6 +94,7 @@ impl Deepseek for ModelData {
         if messages.len() > 0 {
             debug!("{:?}", messages.last());
         }
+        debug!("{:?}", body);
         let response = client
             .post(format!("{}/chat/completions", self.url))
             .header(header::CONTENT_TYPE, "application/json")
@@ -99,7 +106,9 @@ impl Deepseek for ModelData {
 
         let succ = response.status().is_success();
         if !response.status().is_success() {
-            debug!("{:?}", response);
+            let ret = response.text().await.unwrap();
+            debug!("{:?}", ret);
+            return Err(ret);
         }
         let mut text = "".into();
         if succ {
@@ -174,11 +183,11 @@ impl Deepseek for ModelData {
                                                         }
                                                         let ts =
                                                             response.tool_calls.as_mut().unwrap();
-                                                        if ts.len() <= i {
-                                                            ts.insert(i, tool);
+                                                        if ts.len() <= tool.index {
+                                                            ts.insert(tool.index, tool);
                                                             continue;
                                                         }
-                                                        let t = ts.get_mut(i).unwrap();
+                                                        let t = ts.get_mut(tool.index).unwrap();
                                                         t.id += &tool.id;
                                                         t.r#type += &tool.r#type;
                                                         t.function.name += &tool.function.name;
