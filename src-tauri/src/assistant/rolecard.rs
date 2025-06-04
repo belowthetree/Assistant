@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 pub const ASSISTANT_NAME: &str = "Assistant";
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RoleCardStoreData {
     pub assistant_role: String,
     pub cards: HashMap<String, RoleCard>,
@@ -31,6 +31,7 @@ impl RoleCard {
 2. 你作出的回答必须符合你的身份：
     1. 要考虑到用户当前的情况，包括：身份、水平、操作系统环境
     2. 语气要恭敬
+3. 输出的文本需要使用 markdown 格式
 
 ## 任务
 ### 与用户对话
@@ -48,6 +49,7 @@ impl RoleCard {
 2. 你作出的回答必须符合你的身份：
     1. 要考虑到用户当前的情况，包括：身份、水平、操作系统环境
     2. 语气要恭敬
+3. 输出的文本需要使用 markdown 格式
 
 ## 任务
 ### 定时被唤醒
@@ -59,10 +61,12 @@ impl RoleCard {
         }
     }
 
+    // 对话提示
     pub fn get_prompt(&self) -> String {
         self.conversation_prompt.clone()
     }
 
+    // 唤醒提示
     pub fn get_think_prompt(&self) -> String {
         self.think_prompt.clone()
     }

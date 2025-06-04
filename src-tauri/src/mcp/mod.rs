@@ -9,6 +9,7 @@ mod systemutil;
 use std::{collections::HashMap, sync::Arc};
 
 use async_trait::async_trait;
+use character::CharacterOutServer;
 pub use client::*;
 use internal_server::{InternalFunction, InternalFunctionCall, InternalMCPServer};
 use lazy_static::lazy_static;
@@ -37,8 +38,9 @@ pub fn init() {
         client.refresh_mcp_config().await;
         client
             .set_internal_servers(get_internal_servers(vec![
-                Box::new(SystemUtilServer {}),
-                Box::new(ScheUtilServer {}),
+                Box::new(SystemUtilServer),
+                Box::new(ScheUtilServer),
+                Box::new(CharacterOutServer),
             ]))
             .await;
         let tools = client.get_all_tools().await.unwrap();

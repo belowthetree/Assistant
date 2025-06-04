@@ -1,11 +1,12 @@
-mod platform;
-mod web;
+mod assistant;
+mod command;
+mod conversation;
+mod data;
+mod event;
 mod mcp;
 mod model;
-mod data;
-mod assistant;
-mod event;
-mod command;
+mod platform;
+mod web;
 
 use command::*;
 use data::*;
@@ -29,10 +30,11 @@ fn build_first_webview(app: &mut App) {
         .decorations(false)
         .transparent(true)
         .maximizable(false)
-        .build().unwrap();
+        .build()
+        .unwrap();
 }
 
-#[cfg(target_os="macos")]
+#[cfg(target_os = "macos")]
 fn build_first_webview(app: &mut App) {
     use cocoa::appkit::{NSColor, NSWindow};
     use cocoa::base::{id, nil};
@@ -44,21 +46,15 @@ fn build_first_webview(app: &mut App) {
         .maximizable(false)
         .title_bar_style(TitleBarStyle::Transparent)
         .transparent(true)
-        .build().unwrap();
+        .build()
+        .unwrap();
 
     let ns_window = window.ns_window().unwrap() as id;
     unsafe {
-        let bg_color = NSColor::colorWithRed_green_blue_alpha_(
-            nil,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-        );
+        let bg_color = NSColor::colorWithRed_green_blue_alpha_(nil, 0.0, 0.0, 0.0, 0.0);
         ns_window.setBackgroundColor_(bg_color);
     }
 }
-
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -75,14 +71,16 @@ pub fn run() {
             MacosLauncher::LaunchAgent,
             Some(vec!["--flag1", "--flag2"]),
         ))
-        .plugin(tauri_plugin_log::Builder::new()
-        .target(tauri_plugin_log::Target::new(
-            tauri_plugin_log::TargetKind::LogDir {
-                file_name: Some("logs".to_string()),
-            },
-        ))
-        .max_file_size(50_000 /* bytes */)
-        .build())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .target(tauri_plugin_log::Target::new(
+                    tauri_plugin_log::TargetKind::LogDir {
+                        file_name: Some("logs".to_string()),
+                    },
+                ))
+                .max_file_size(50_000 /* bytes */)
+                .build(),
+        )
         .invoke_handler(tauri::generate_handler![
             greet,
             exec_cmd,
@@ -115,8 +113,12 @@ pub fn run() {
             // 创建第一个 webview，指向主页
             build_first_webview(app);
             if let Some(window) = app.get_webview_window("home") {
-                window.move_window(Position::RightCenter).expect("移动窗口失败");
-                window.set_background_color(Some(Color(0, 0, 0, 0))).expect("设置背景颜色失败");
+                window
+                    .move_window(Position::RightCenter)
+                    .expect("移动窗口失败");
+                window
+                    .set_background_color(Some(Color(0, 0, 0, 0)))
+                    .expect("设置背景颜色失败");
             } else {
                 println!("创建 home 失败");
             }

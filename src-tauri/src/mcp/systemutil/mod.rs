@@ -12,7 +12,7 @@ use super::{
     InternalServerInfo,
 };
 
-pub struct SystemUtilServer {}
+pub struct SystemUtilServer;
 
 impl InternalServerInfo for SystemUtilServer {
     fn get_server(&self) -> InternalMCPServer {

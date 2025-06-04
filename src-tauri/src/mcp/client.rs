@@ -153,6 +153,12 @@ impl MCPClient {
         return Err(format!("无法分离服务名字: {:?}", tool));
     }
 
+    /// 获取名字对应服务的所有工具
+    /// # 例子
+    /// ```
+    /// let mut client = MCPClient::new();
+    /// let tools = client.get_tools("server_name".into());
+    /// ```
     pub async fn get_tools(&mut self, name: String) -> Result<Vec<Tool>, String> {
         debug!("获取 tools {}", name);
         let res = self.get_server(name.clone());

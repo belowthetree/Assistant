@@ -175,3 +175,36 @@ pub fn store_data<T: Serialize>(data: T, file_name: &String) -> Result<(), Strin
     }
     Ok(())
 }
+
+pub fn store_to_role_directory(rolename: &str, path: &str, ctx: &str) -> Result<(), String> {
+    let project_dirs = ProjectDirs::from("", "", "assistant").ok_or_else(|| "无法获取项目目录")?;
+    let data_dir = project_dirs.data_dir();
+    let mut path = path.replace("\\", "/");
+    let mut dir = data_dir.join(rolename);
+    if path.contains("/") {
+        let (d, n) = path.rsplit_once("/").unwrap();
+        dir = dir.join(d);
+        path = n.to_string();
+    }
+    let res = fs::create_dir_all(dir.clone());
+    if res.is_err() {
+        return Err(res.unwrap_err().to_string());
+    }
+    let file_path = dir.join(path);
+    let res = fs::write(file_path, ctx);
+    if res.is_err() {
+        return Err(res.unwrap_err().to_string());
+    }
+    Ok(())
+}
+
+pub fn read_role_directory(rolename: &str, path: &str) -> Result<String, String> {
+    let project_dirs = ProjectDirs::from("", "", "assistant").ok_or_else(|| "无法获取项目目录")?;
+    let data_dir = project_dirs.data_dir();
+    let path = data_dir.join(rolename).join(path);
+    let res = fs::read_to_string(path);
+    if res.is_err() {
+        return Err(res.unwrap_err().to_string());
+    }
+    Ok(res.unwrap())
+}

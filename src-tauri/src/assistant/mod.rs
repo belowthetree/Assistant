@@ -1,4 +1,3 @@
-use conversation::Conversation;
 use lazy_static::lazy_static;
 use log::{debug, error, warn};
 use std::{collections::HashMap, sync::Arc};
@@ -7,6 +6,7 @@ use think::Think;
 use tokio::sync::Mutex;
 
 use crate::{
+    conversation::Conversation,
     data::{
         load_model_data, load_rolecard_data, store_model_data, store_rolecard_data,
         store_server_data, ServerData,
@@ -15,7 +15,6 @@ use crate::{
     model::{Deepseek, EModelType, ModelData, ModelMessage, ModelResponse, Ollama, ToolCall},
 };
 
-mod conversation;
 mod life;
 pub mod rolecard;
 mod think;
@@ -24,8 +23,8 @@ pub use rolecard::*;
 
 #[derive(Debug)]
 pub struct Assistant {
-    user_conversation: Conversation,
-    think_conversation: Conversation,
+    pub user_conversation: Conversation,
+    pub think_conversation: Conversation,
     pub think: Think,
     pub server_data: ServerData,
     max_count: usize,
@@ -45,6 +44,13 @@ pub fn init() {
     let rt = tokio::runtime::Runtime::new().unwrap();
     rt.block_on(async {
         let mut ass: tokio::sync::MutexGuard<'_, Assistant> = ASSISTANT.lock().await;
+        {
+            let mut client = MCP_CLIENT.lock().await;
+            ass.user_conversation
+                .set_tools(client.get_all_tools().await.unwrap());
+            ass.think_conversation
+                .set_tools(client.get_all_tools().await.unwrap());
+        }
         debug!("加载模型");
         ass.refresh_model_data();
         debug!("加载角色卡");

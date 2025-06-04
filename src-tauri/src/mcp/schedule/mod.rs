@@ -66,7 +66,7 @@ impl Schedule {
     }
 }
 
-pub struct ScheUtilServer {}
+pub struct ScheUtilServer;
 
 impl InternalServerInfo for ScheUtilServer {
     fn get_server(&self) -> super::internal_server::InternalMCPServer {
