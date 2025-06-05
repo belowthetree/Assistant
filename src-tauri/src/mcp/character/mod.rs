@@ -97,6 +97,7 @@ impl Character {
         }
     }
 
+    /// 加载人物，从角色卡中选取人物加载，如果不存在人物工作信息，会新建一个
     pub async fn load(name: &str) -> Result<Self, String> {
         let _ = CHARACTER_WRITEBACK.lock().await;
         let mut chs = CHARACTERS.lock().await;
@@ -128,15 +129,41 @@ impl Character {
             // 存在则继续沿用
             let mut character = data.unwrap();
             character.rolecard = rolecard;
+            if let Ok(mut data) = load_model_data() {
+                debug!("加载角色模型数据 {:?}", data);
+                data.stream = false;
+                character.conversation = Conversation::new();
+                character.conversation.set_model(data);
+                character
+                    .conversation
+                    .set_system(character.rolecard.get_prompt());
+            } else {
+                warn!("角色模型加载失败");
+            }
             chs.push(character);
             Ok(chs.last().unwrap().clone())
         }
     }
 
+    /// 通过与人物对话的方式为人物设置目标
     pub async fn set_target(&mut self, target: &str) -> Result<(), String> {
         debug!("设置角色目标 {:?}", target);
         self.working.target = target.to_string();
         self.conversation.clear_context();
+        let mut client = MCPClient::new();
+        client.refresh_mcp_config().await;
+        client
+            .set_internal_servers(get_internal_servers(vec![Box::new(CharacterSelfServer {
+                name: self.rolename.clone(),
+            })]))
+            .await;
+        let tools = client.get_all_tools().await;
+        if tools.is_err() {
+            return Err(tools.unwrap_err());
+        }
+        // 需要专门设置好工具
+        debug!("{:?}", tools);
+        self.conversation.set_tools(tools.unwrap());
         let res = self
             .conversation
             .think(target.to_string() + "请认真思考，然后通过提供的函数设置好各阶段的任务")
@@ -144,19 +171,18 @@ impl Character {
         if res.is_err() {
             return Err(res.unwrap_err());
         }
-        let mut client = MCPClient::new();
-        client
-            .set_internal_servers(get_internal_servers(vec![Box::new(CharacterSelfServer {
-                name: self.rolename.clone(),
-            })]))
-            .await;
         let res = res.unwrap();
         if let Some(tools) = res.tool_calls {
-            debug!(
-                "人物 {} 设置目标结果 {:?}",
-                self.rolename.clone(),
-                self.call_tools(tools, Some(&mut client)).await
-            );
+            let message = self.call_tools(tools, Some(&mut client)).await;
+            debug!("人物 {} 设置目标结果 {:?}", self.rolename.clone(), message,);
+            // 存储工具输入
+            for res in message.iter() {
+                self.conversation.add_tool_context(
+                    res.content.clone(),
+                    res.name.clone(),
+                    res.tool_call_id.clone(),
+                );
+            }
             let res = self.talk("现在开始你的工作".into()).await;
             if res.is_err() {
                 Err(res.unwrap_err())
@@ -170,12 +196,12 @@ impl Character {
 
     pub async fn talk(&mut self, ctx: String) -> Result<String, String> {
         let mut client = MCPClient::new();
+        client.refresh_mcp_config().await;
         client
             .set_internal_servers(get_internal_servers(vec![Box::new(CharacterSelfServer {
                 name: self.rolename.clone(),
             })]))
             .await;
-        client.refresh_mcp_config().await;
         let tools = client.get_all_tools().await;
         if tools.is_err() {
             return Err(tools.unwrap_err());
@@ -185,7 +211,7 @@ impl Character {
         if res.is_err() {
             return Err(res.unwrap_err());
         }
-        let res = self.recycle_think(res).await;
+        let res = self.recycle_think(res, &mut client).await;
         if res.is_err() {
             Err(res.unwrap_err())
         } else {
@@ -196,6 +222,7 @@ impl Character {
     pub async fn recycle_think(
         &mut self,
         response: Result<ModelResponse, String>,
+        client: &mut MCPClient,
     ) -> Result<ModelResponse, String> {
         if response.is_err() {
             return Err(response.unwrap_err());
@@ -209,13 +236,13 @@ impl Character {
         }
         let mut message = Vec::new();
         if let Some(tools) = res.tool_calls {
-            message = self.call_tools(tools, None).await;
+            message = self.call_tools(tools, Some(client)).await;
         }
         let mut response = Err("调用人物结果".into());
         self.think_count += 1;
         if message.len() > 0 {
             let res = self.conversation.tool(&message).await;
-            response = Box::pin(self.recycle_think(res)).await;
+            response = Box::pin(self.recycle_think(res, client)).await;
         }
         self.think_count -= 1;
         response
@@ -507,7 +534,7 @@ pub struct CharacterGetCharacterWorkingInfo;
 impl InternalFunctionCall for CharacterGetCharacterWorkingInfo {
     async fn call(&self, arg: Option<JsonObject>) -> Result<CallToolResult, String> {
         debug!("GetCharacterWorkingInfo {:?}", arg);
-        if !arg.is_none() {
+        if arg.is_none() {
             return Err("缺少参数".into());
         }
         let arg = arg.unwrap();
@@ -796,7 +823,7 @@ impl InternalFunctionCall for CharacterSetSelfTasks {
             "properties":{
                 "target": {
                     "description":"工作目标目标",
-                    "type": "string",
+                    "type": "string"
                 },
                 "tasks":{
                     "description":"工作任务列表",
@@ -872,7 +899,7 @@ impl InternalFunctionCall for CharacterReadFile {
             "properties":{
                 "path": {
                     "description":"文件相对路径",
-                    "type": "string",
+                    "type": "string"
                 }
             }
         }"#,
@@ -945,11 +972,11 @@ impl InternalFunctionCall for CharacterWriteFile {
             "properties":{
                 "path": {
                     "description":"文件相对路径",
-                    "type": "string",
+                    "type": "string"
                 },
                 "content": {
                     "description":"文件内容",
-                    "type": "string",
+                    "type": "string"
                 }
             }
         }"#,

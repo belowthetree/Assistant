@@ -43,14 +43,14 @@ pub struct TalkContent {
 #[derive(Debug, Clone, Default)]
 pub struct TalkContext {
     content: Vec<TalkContent>,
-    max_conent: usize,
+    max_content: usize,
 }
 
 impl TalkContext {
     pub fn new() -> Self {
         Self {
             content: Vec::new(),
-            max_conent: 10,
+            max_content: 10,
         }
     }
 
@@ -86,14 +86,14 @@ impl TalkContext {
             name: None,
             tool_call_id: None,
         });
-        if self.content.len() > self.max_conent {
+        if self.content.len() > self.max_content {
             self.content.remove(0);
         }
     }
 
     pub fn add_content(&mut self, content: &TalkContent) {
         self.content.push(content.clone());
-        if self.content.len() > self.max_conent {
+        if self.content.len() > self.max_content {
             self.content.remove(0);
         }
     }
@@ -107,7 +107,7 @@ impl TalkContext {
             name: None,
             tool_call_id: None,
         });
-        if self.content.len() > self.max_conent {
+        if self.content.len() > self.max_content {
             self.content.remove(0);
         }
     }
@@ -121,7 +121,7 @@ impl TalkContext {
             name: None,
             tool_call_id: None,
         });
-        if self.content.len() > self.max_conent {
+        if self.content.len() > self.max_content {
             self.content.remove(0);
         }
     }

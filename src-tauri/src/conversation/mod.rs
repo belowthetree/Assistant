@@ -95,7 +95,7 @@ impl Conversation {
     }
 
     pub async fn think(&mut self, ctx: String) -> Result<ModelResponse, String> {
-        debug!("对话：{}", ctx);
+        debug!("想法：{}", ctx);
         if self.model_data.is_none() {
             error!("未设置模型");
             return Err("未设置模型".into());
@@ -225,6 +225,7 @@ impl Conversation {
     ) -> Result<ModelResponse, String> {
         let model = self.model_data.as_mut().unwrap();
         let res;
+        debug!("send to model {:?}", param);
         match model.model_type {
             crate::model::EModelType::Deepseek | crate::model::EModelType::OpenAI => {
                 res = crate::model::Deepseek::generate(model, param, stream_callback).await;
