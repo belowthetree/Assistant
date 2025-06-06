@@ -209,6 +209,7 @@ export default {
                 ref="conversation"
                 :content="modelOutput"
                 class="no-drag rounded-lg com-down"
+                style="width: auto"
             ></conversation>
             <hr
                 style="width: 80%; margin: auto; margin-bottom: 15px"

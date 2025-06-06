@@ -146,7 +146,7 @@ impl Character {
     }
 
     /// 通过与人物对话的方式为人物设置目标
-    pub async fn set_target(&mut self, target: &str) -> Result<(), String> {
+    pub async fn set_target(&mut self, target: &str) -> Result<String, String> {
         debug!("设置角色目标 {:?}", target);
         self.working.target = target.to_string();
         self.conversation.clear_context();
@@ -187,7 +187,7 @@ impl Character {
             if res.is_err() {
                 Err(res.unwrap_err())
             } else {
-                Ok(())
+                Ok(res.unwrap())
             }
         } else {
             Err("没有调用任务设置".into())
@@ -608,17 +608,13 @@ impl InternalFunctionCall for CharacterSetTargetAndWork {
             return Err("不存在此角色数据".into());
         }
         let mut character = res.unwrap();
-        tokio::spawn(async move {
-            let res = character.set_target(&target).await;
-            if res.is_err() {
-                warn!("设置目标出错 {:?}", res);
-            }
-        });
+        let res = character.set_target(&target).await;
+        if res.is_err() {
+            return Err(format!("设置目标出错 {:?}", res));
+        }
         return Ok(CallToolResult {
             content: vec![Annotated::new(
-                RawContent::Text(RawTextContent {
-                    text: serde_json::to_string("成功").unwrap(),
-                }),
+                RawContent::Text(RawTextContent { text: res.unwrap() }),
                 None,
             )],
             is_error: None,
@@ -661,6 +657,7 @@ pub struct CharacterTalk;
 #[async_trait]
 impl InternalFunctionCall for CharacterTalk {
     async fn call(&self, arg: Option<JsonObject>) -> Result<CallToolResult, String> {
+        debug!("CharacterTalk {:?}", arg);
         if arg.is_none() {
             return Err("没有参数".into());
         }
@@ -723,7 +720,7 @@ pub struct CharacterGetSelfWorkingInfo {
 #[async_trait]
 impl InternalFunctionCall for CharacterGetSelfWorkingInfo {
     async fn call(&self, arg: Option<JsonObject>) -> Result<CallToolResult, String> {
-        debug!("CharacterGetWorkingInfo {:?}", arg);
+        debug!("CharacterGetSelfWorkingInfo {:?}", arg);
         let res = Character::load(&self.name).await;
         if res.is_err() {
             return Err("不存在此角色数据".into());
@@ -769,7 +766,7 @@ pub struct CharacterSetSelfTasks {
 #[async_trait]
 impl InternalFunctionCall for CharacterSetSelfTasks {
     async fn call(&self, arg: Option<JsonObject>) -> Result<CallToolResult, String> {
-        debug!("CharacterSetTasks {:?}", arg);
+        debug!("CharacterSetSelfTasks {:?}", arg);
         if arg.is_none() {
             return Err("缺少参数".into());
         }
@@ -861,7 +858,7 @@ pub struct CharacterReadFile {
 #[async_trait]
 impl InternalFunctionCall for CharacterReadFile {
     async fn call(&self, arg: Option<JsonObject>) -> Result<CallToolResult, String> {
-        debug!("CharacterSetTasks {:?}", arg);
+        debug!("CharacterReadFile {:?}", arg);
         if arg.is_none() {
             return Err("缺少参数".into());
         }
@@ -924,7 +921,7 @@ pub struct CharacterWriteFile {
 #[async_trait]
 impl InternalFunctionCall for CharacterWriteFile {
     async fn call(&self, arg: Option<JsonObject>) -> Result<CallToolResult, String> {
-        debug!("CharacterSetTasks {:?}", arg);
+        debug!("CharacterWriteFile {:?}", arg);
         if arg.is_none() {
             return Err("缺少参数".into());
         }

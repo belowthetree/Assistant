@@ -6,6 +6,7 @@
             :class="{ 'manual-scroll': !autoScroll }"
             @scroll="handleScroll"
             v-html="processedContent"
+            style="width: auto; text-align: left"
         ></div>
     </div>
 </template>
